@@ -117,13 +117,22 @@
   }
 
   /* TABS */
+  .tabs-nav-wrap {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    background: var(--ink2);
+    border-bottom: 2px solid var(--border);
+  }
   .tabs-wrap {
     background: var(--ink2);
     display: flex;
     overflow-x: auto;
     gap: 2px;
     padding: 0 8px;
-    border-bottom: 2px solid var(--border);
+    flex: 1 1 auto;
+    min-width: 0;
+    scroll-behavior: smooth;
   }
   .tab-btn {
     padding: 10px 18px;
@@ -146,7 +155,24 @@
     font-weight: 700;
   }
 
+  /* 分頁左右翻頁箭頭：預設桌機隱藏，手機顯示，確保即使觸控滑動失靈也能翻到所有分頁 */
+  .tabs-nav-arrow {
+    display: none;
+    flex: 0 0 auto;
+    width: 32px;
+    align-items: center;
+    justify-content: center;
+    background: var(--ink2);
+    color: var(--gold2);
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    z-index: 2;
+  }
+  .tabs-nav-arrow:active { background: rgba(196,154,46,0.2); }
+
   @media (max-width: 600px) {
+    .tabs-nav-wrap { padding: 0; }
     .tabs-wrap {
       display: flex;
       flex-wrap: nowrap;
@@ -172,6 +198,9 @@
       border-top: none;
       border-left: none;
       border-right: none;
+    }
+    .tabs-nav-arrow {
+      display: flex;
     }
   }
 
@@ -1113,16 +1142,20 @@
   </div>
 </div>
 
-<div class="tabs-wrap">
-  <button class="tab-btn active" onclick="showTab('sched-hub')" id="tab-btn-sched-hub">📅 排程 ＆ 叫貨</button>
-  <button class="tab-btn" onclick="showTab('nw-input')" id="tab-btn-nw-input">📋 製作數量輸入</button>
-  <button class="tab-btn" onclick="showTab('overview')">📊 各商品製作數量一覽表</button>
-  <button class="tab-btn" onclick="showTab('mushroom')">🌾 乾貨需備總量</button>
-  <button class="tab-btn" onclick="showTab('daily')" id="tab-btn-daily">📝 餛飩、水餃、G腿製作斤兩</button>
-  <button class="tab-btn" onclick="showTab('gleg')" id="tab-btn-gleg" style="display:none">🍗 G腿斤兩一覽表</button>
-  <button class="tab-btn" onclick="showTab('zongzi')" id="tab-btn-zongzi">🎋 粽子斤兩管理</button>
-  <button class="tab-btn" onclick="showTab('oily-rice')" id="tab-btn-oily-rice">🍚 油飯斤兩管理</button>
-  <button class="tab-btn" onclick="showTab('other-products')" id="tab-btn-other-products">🍄 其他商品斤兩</button>
+<div class="tabs-nav-wrap">
+  <button class="tabs-nav-arrow" id="tabs-nav-left" onclick="scrollTabsBy(-120)" aria-label="往左翻頁籤">‹</button>
+  <div class="tabs-wrap" id="main-tabs-wrap">
+    <button class="tab-btn active" onclick="showTab('sched-hub')" id="tab-btn-sched-hub">📅 排程 ＆ 叫貨</button>
+    <button class="tab-btn" onclick="showTab('nw-input')" id="tab-btn-nw-input">📋 製作數量輸入</button>
+    <button class="tab-btn" onclick="showTab('overview')">📊 各商品製作數量一覽表</button>
+    <button class="tab-btn" onclick="showTab('mushroom')">🌾 乾貨需備總量</button>
+    <button class="tab-btn" onclick="showTab('daily')" id="tab-btn-daily">📝 餛飩、水餃、G腿製作斤兩</button>
+    <button class="tab-btn" onclick="showTab('gleg')" id="tab-btn-gleg" style="display:none">🍗 G腿斤兩一覽表</button>
+    <button class="tab-btn" onclick="showTab('zongzi')" id="tab-btn-zongzi">🎋 粽子斤兩管理</button>
+    <button class="tab-btn" onclick="showTab('oily-rice')" id="tab-btn-oily-rice">🍚 油飯斤兩管理</button>
+    <button class="tab-btn" onclick="showTab('other-products')" id="tab-btn-other-products">🍄 其他商品斤兩</button>
+  </div>
+  <button class="tabs-nav-arrow" id="tabs-nav-right" onclick="scrollTabsBy(120)" aria-label="往右翻頁籤">›</button>
 </div>
 
 <div class="main">
@@ -17219,6 +17252,46 @@ function showLineAlertModal(dateKey, msg) {
   applyMobileZoom();
   // 視窗大小改變時重新套用
   window.addEventListener('resize', applyMobileZoom);
+})();
+
+// ===== 主分頁列：左右翻頁箭頭 & 滾動狀態提示 =====
+// 解決手機上因 body zoom 縮放導致橫向觸控滑動失準、滑不到「粽子斤兩管理」等右側分頁的問題。
+// 提供箭頭按鈕讓使用者可以用點擊方式可靠地翻到任何分頁，不依賴觸控滑動手勢。
+(function() {
+  var wrap = document.getElementById('main-tabs-wrap');
+  var leftBtn = document.getElementById('tabs-nav-left');
+  var rightBtn = document.getElementById('tabs-nav-right');
+  if (!wrap || !leftBtn || !rightBtn) return;
+
+  window.scrollTabsBy = function(amount) {
+    wrap.scrollBy({ left: amount, behavior: 'smooth' });
+  };
+
+  function updateArrowState() {
+    var maxScroll = wrap.scrollWidth - wrap.clientWidth;
+    // 已经滑到最左/最右時，將對應箭頭變淡並停用，提示使用者目前位置
+    leftBtn.style.opacity = wrap.scrollLeft <= 2 ? '0.3' : '1';
+    leftBtn.disabled = wrap.scrollLeft <= 2;
+    rightBtn.style.opacity = wrap.scrollLeft >= maxScroll - 2 ? '0.3' : '1';
+    rightBtn.disabled = wrap.scrollLeft >= maxScroll - 2;
+  }
+
+  wrap.addEventListener('scroll', updateArrowState);
+  window.addEventListener('resize', updateArrowState);
+  // 切換分頁時 active 按鈕的寬度可能改變捲動範圍，稍後重新檢查一次
+  setTimeout(updateArrowState, 100);
+  updateArrowState();
+
+  // 點擊任一分頁按鈕後，確保該按鈕自動捲動到可視範圍內
+  wrap.addEventListener('click', function(e) {
+    var btn = e.target.closest('.tab-btn');
+    if (btn) {
+      setTimeout(function() {
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        updateArrowState();
+      }, 50);
+    }
+  });
 })();
 
 // ===== 📊 實際製作記錄 & 匯出系統 v2 =====
