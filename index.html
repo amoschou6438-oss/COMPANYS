@@ -117,22 +117,13 @@
   }
 
   /* TABS */
-  .tabs-nav-wrap {
-    position: relative;
-    display: flex;
-    align-items: stretch;
-    background: var(--ink2);
-    border-bottom: 2px solid var(--border);
-  }
   .tabs-wrap {
     background: var(--ink2);
     display: flex;
     overflow-x: auto;
     gap: 2px;
     padding: 0 8px;
-    flex: 1 1 auto;
-    min-width: 0;
-    scroll-behavior: smooth;
+    border-bottom: 2px solid var(--border);
   }
   .tab-btn {
     padding: 10px 18px;
@@ -155,24 +146,7 @@
     font-weight: 700;
   }
 
-  /* 分頁左右翻頁箭頭：預設桌機隱藏，手機顯示，確保即使觸控滑動失靈也能翻到所有分頁 */
-  .tabs-nav-arrow {
-    display: none;
-    flex: 0 0 auto;
-    width: 32px;
-    align-items: center;
-    justify-content: center;
-    background: var(--ink2);
-    color: var(--gold2);
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-    z-index: 2;
-  }
-  .tabs-nav-arrow:active { background: rgba(196,154,46,0.2); }
-
   @media (max-width: 600px) {
-    .tabs-nav-wrap { padding: 0; }
     .tabs-wrap {
       display: flex;
       flex-wrap: nowrap;
@@ -198,9 +172,6 @@
       border-top: none;
       border-left: none;
       border-right: none;
-    }
-    .tabs-nav-arrow {
-      display: flex;
     }
   }
 
@@ -1142,20 +1113,16 @@
   </div>
 </div>
 
-<div class="tabs-nav-wrap">
-  <button class="tabs-nav-arrow" id="tabs-nav-left" onclick="scrollTabsBy(-120)" aria-label="往左翻頁籤">‹</button>
-  <div class="tabs-wrap" id="main-tabs-wrap">
-    <button class="tab-btn active" onclick="showTab('sched-hub')" id="tab-btn-sched-hub">📅 排程 ＆ 叫貨</button>
-    <button class="tab-btn" onclick="showTab('nw-input')" id="tab-btn-nw-input">📋 製作數量輸入</button>
-    <button class="tab-btn" onclick="showTab('overview')">📊 各商品製作數量一覽表</button>
-    <button class="tab-btn" onclick="showTab('mushroom')">🌾 乾貨需備總量</button>
-    <button class="tab-btn" onclick="showTab('daily')" id="tab-btn-daily">📝 餛飩、水餃、G腿製作斤兩</button>
-    <button class="tab-btn" onclick="showTab('gleg')" id="tab-btn-gleg" style="display:none">🍗 G腿斤兩一覽表</button>
-    <button class="tab-btn" onclick="showTab('zongzi')" id="tab-btn-zongzi">🎋 粽子斤兩管理</button>
-    <button class="tab-btn" onclick="showTab('oily-rice')" id="tab-btn-oily-rice">🍚 油飯斤兩管理</button>
-    <button class="tab-btn" onclick="showTab('other-products')" id="tab-btn-other-products">🍄 其他商品斤兩</button>
-  </div>
-  <button class="tabs-nav-arrow" id="tabs-nav-right" onclick="scrollTabsBy(120)" aria-label="往右翻頁籤">›</button>
+<div class="tabs-wrap">
+  <button class="tab-btn active" onclick="showTab('sched-hub')" id="tab-btn-sched-hub">📅 排程 ＆ 叫貨</button>
+  <button class="tab-btn" onclick="showTab('nw-input')" id="tab-btn-nw-input">📋 製作數量輸入</button>
+  <button class="tab-btn" onclick="showTab('overview')">📊 各商品製作數量一覽表</button>
+  <button class="tab-btn" onclick="showTab('mushroom')">🌾 乾貨需備總量</button>
+  <button class="tab-btn" onclick="showTab('daily')" id="tab-btn-daily">📝 餛飩、水餃、G腿製作斤兩</button>
+  <button class="tab-btn" onclick="showTab('gleg')" id="tab-btn-gleg" style="display:none">🍗 G腿斤兩一覽表</button>
+  <button class="tab-btn" onclick="showTab('zongzi')" id="tab-btn-zongzi">🎋 粽子斤兩管理</button>
+  <button class="tab-btn" onclick="showTab('oily-rice')" id="tab-btn-oily-rice">🍚 油飯斤兩管理</button>
+  <button class="tab-btn" onclick="showTab('other-products')" id="tab-btn-other-products">🍄 其他商品斤兩</button>
 </div>
 
 <div class="main">
@@ -2218,7 +2185,7 @@
         <tr><td>餛飩料</td><td class="num">15</td><td class="num">28</td><td class="num">0</td></tr>
         <tr><td>三角圓</td><td class="num">2</td><td class="num">28</td><td class="num">10</td></tr>
         <tr><td>香椿水餃</td><td class="num">2</td><td class="num">0</td><td class="num">3</td></tr>
-        <tr><td>紅麴水餃料</td><td class="num">15</td><td class="num">36</td><td class="num">0</td></tr>
+        <tr><td>紅麴水餃</td><td class="num">15</td><td class="num">36</td><td class="num">0</td></tr>
         <tr><td>素肉燥</td><td class="num">6</td><td class="num">0</td><td class="num">0</td></tr>
         <tr><td>辣椒醬</td><td class="num">6</td><td class="num">0</td><td class="num">0</td></tr>
         <tr style="background:#fdf8ed"><td>粽子<span id="zongzi-per-serving-label" style="font-size:10px;color:var(--ink3);margin-left:4px"></span></td>
@@ -2783,6 +2750,7 @@ var CONDIMENT_PACK_CFG = {
   '甘草粉': { unitG: 300,  label: '盒'  },
   '五香粉': { unitG: 600,  label: '盒'  },
   '鮮味多': { unitG: 1000, label: '包'  },
+  '素肉醬': { unitG: 1000, label: '罐'  },
   '爌肉精': { unitG: 1300, label: '罐'  },
   '焢肉精': { unitG: 1300, label: '罐'  },
   '糖':     { unitG: 600,  label: '包'  },
@@ -5077,8 +5045,8 @@ function recalcAll() {
   const mc = document.getElementById('mushroom-calc');
   if (mc) {
     const triCookPotsM = triCookPots; // 已在外層計算
-    const mHead = q.wontonFill * 15 + triCookPots * 2 + q.triNext * 2 + q.dumpXC * 2 + q.dumpHQ * 15 + q.dumpHQFill * 15 + q.minced * 6 + q.mincedChili * 6;
-    const mMince = q.wontonFill * 28 + triCookPots * 28 + q.dumpHQ * 36 + q.dumpHQFill * 36 + q.triNext * 28;
+    const mHead = q.wontonFill * 15 + triCookPots * 2 + q.triNext * 2 + q.dumpXC * 2 + q.dumpHQFill * 15 + q.minced * 6 + q.mincedChili * 6;
+    const mMince = q.wontonFill * 28 + triCookPots * 28 + q.dumpHQFill * 36 + q.triNext * 28;
     const mRadish = triCookPotsM * 10 + q.dumpXC * 3 + q.triNext * 10;
     // 庫存讀取：nw 模式時讀取庫存，優先使用本週預計剩快照（_curEstRem），已盤點則用盤點值
     var _nwCkIds = { 'nw_inv_mushrHead':'inv_mushrHead', 'nw_inv_mince':'inv_mince', 'nw_inv_radish':'inv_radish' };
@@ -5203,7 +5171,6 @@ function recalcAll() {
     if (triCookPots   > 0) headParts.push(`三角圓${triCookPots}鍋×2`);
     if (q.triNext     > 0) headParts.push(`庫存下禮拜先備${q.triNext}鍋×2`);
     if (q.dumpXC      > 0) headParts.push(`香椿水餃${q.dumpXC}鍋×2`);
-    if (q.dumpHQ      > 0) headParts.push(`紅麴水餃${q.dumpHQ}鍋×15`);
     if (q.dumpHQFill  > 0) headParts.push(`紅麴水餃料${q.dumpHQFill}鍋×15`);
     if (q.minced      > 0) headParts.push(`素肉燥${q.minced}鍋×6`);
     if (q.mincedChili > 0) headParts.push(`辣椒醬${q.mincedChili}鍋×6`);
@@ -5215,7 +5182,6 @@ function recalcAll() {
     const minceParts = [];
     if (q.wontonFill           > 0) minceParts.push(`餛飩料${q.wontonFill}鍋×28`);
     if (triCookPots            > 0) minceParts.push(`三角圓${triCookPots}鍋×28`);
-    if (q.dumpHQ               > 0) minceParts.push(`紅麴水餃${q.dumpHQ}鍋×36`);
     if (q.dumpHQFill           > 0) minceParts.push(`紅麴水餃料${q.dumpHQFill}鍋×36`);
     if (q.triNext              > 0) minceParts.push(`下禮拜先備${q.triNext}鍋×28`);
     if (zMince                 > 0) minceParts.push(totalZi > 0 ? `粽子菜脯料碎肉${zMince}斤（含庫存/油飯調整）` : `油飯需炒菜脯料碎肉${zMince}斤`);
@@ -5629,8 +5595,8 @@ function recalcAll() {
     var zMushrHead2 = totalZi2 > 0 ? Math.ceil(320 * 2 * zRatio2 * 37.5 / 600) : 0;
     var zMince2     = totalZi2 > 0 ? Math.ceil(256 * 3 * zRatio2 * 37.5 / 600) : 0;
 
-    var mHead2   = q.wontonFill*15 + triCookPots*2 + q.triNext*2 + q.dumpXC*2 + q.dumpHQ*15 + q.dumpHQFill*15 + q.minced*6 + q.mincedChili*6 + zMushrHead2;
-    var mMince2  = q.wontonFill*28 + triCookPots*28 + q.dumpHQ*36 + q.dumpHQFill*36 + q.triNext*28 + zMince2;
+    var mHead2   = q.wontonFill*15 + triCookPots*2 + q.triNext*2 + q.dumpXC*2 + q.dumpHQFill*15 + q.minced*6 + q.mincedChili*6 + zMushrHead2;
+    var mMince2  = q.wontonFill*28 + triCookPots*28 + q.dumpHQFill*36 + q.triNext*28 + zMince2;
     var mRadish2 = triCookPots*10 + q.dumpXC*3 + q.triNext*10;
 
     // nw 模式時讀取庫存，優先使用本週預計剩快照（_curEstRem），已盤點則用盤點值
@@ -6695,9 +6661,9 @@ function buildDryGoodsSummaryText(totals, prefix) {
 
   // 香菇頭需求(斤) — 與 recalcAll 完全相同
   var mHead = wontonFill*15 + triCookPots*2 + triNext*2 + dumpXC*2 +
-              dumpHQ*15 + dumpHQFill*15 + minced*6 + mincedChili*6;
+              dumpHQFill*15 + minced*6 + mincedChili*6;
   // 碎肉需求(斤)
-  var mMince = wontonFill*28 + triCookPots*28 + dumpHQ*36 + dumpHQFill*36 + triNext*28;
+  var mMince = wontonFill*28 + triCookPots*28 + dumpHQFill*36 + triNext*28;
   // 菜脯需求(斤)
   var mRadish = triCookPots*10 + dumpXC*3 + triNext*10;
 
@@ -9313,7 +9279,7 @@ function recalcOilySeasoning() {
       { name:'鮮味多',base:5,  unit:'兩' },
       { name:'青線',  base:10, unit:'斤' },
       { name:'勾芡水',base:12, unit:'斤' },
-      { name:'冬粉',  base:7,  unit:'包', perPot: true },
+      { name:'冬粉',  base:7,  unit:'包', perPot: true, xcOnly: true },
       { name:'乾碎肉',base:35, unit:'斤', showBag:true, bagJin:40, bagLabel:'袋', xcOnly:true },
       { name:'水餃碎肉調味粉',base:7,  unit:'斤', showBag:true, bagJin:4,  bagLabel:'袋', xcOnly:true },
     ];
@@ -9352,7 +9318,8 @@ function recalcOilySeasoning() {
     dumpDataToRender.forEach(function(item) {
       var display;
       if (item.perPot) {
-        display = Math.ceil(totalPots / 5 * item.base) + '包';
+        var potsForCalc = item.xcOnly ? xcQty : totalPots;
+        display = Math.ceil(potsForCalc / 5 * item.base) + '包';
       } else if (item.showBag) {
         display = dumpBagStr(item.base * (item.xcOnly ? xcMult : mult), item.bagJin, item.bagLabel);
       } else {
@@ -12220,25 +12187,28 @@ function recalcOilySeasoning() {
     schLoad();
     var mondayKey = weekKeys[0];
     var mondayRec = schedData[mondayKey];
-    // 週一有三角圓
+    // 週一有三角圓 → true
     if (mondayRec && mondayRec.items && mondayRec.items.some(function(it){
       return it.prod === 'triangle' && parseFloat(it.qty) > 0;
     })) return true;
-    // 週一有真實排程（排除隱藏項目 fry_triangle_fill / fry_triangle）
-    // → 週一是工作日但沒有三角圓，直接回傳 false
+    // 週一有真實排程但沒有三角圓 → false（週一有上班，首工作日確認無三角圓）
     var mondayRealItems = mondayRec && mondayRec.items ? mondayRec.items.filter(function(it){
       return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
     }) : [];
     if (mondayRealItems.length > 0) return false;
-    // 週一完全沒有排程資料（真正的假日），找第一個有排程的工作日
-    for (var i = 1; i < weekKeys.length; i++) {
+    // 週一沒有排程（排休或假日）→ 找本週第一個「有真實排程的工作日（週一～週五）」
+    // 注意：不跳週六日（週六日排班屬例外，不算首工作日）
+    for (var i = 1; i <= 4; i++) { // weekKeys[1]~[4] = 週二~週五
       var rec = schedData[weekKeys[i]];
       if (!rec || !rec.items) continue;
       var realItems = rec.items.filter(function(it){
         return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
       });
       if (realItems.length > 0) {
-        // 這是假日後第一個工作日，檢查有無三角圓
+        // 這是排休/假日後第一個有排程的工作日
+        // 只有當這一天「緊接在假日後」（即在她之前的所有週一～前一天都沒有排程）
+        // 才算「首工作日有三角圓」，意義是「需要上週五先炒備用」
+        // 同時這一天的炒料應寫在上週最後工作日（由 getSanJiaoYuanLabel 步驟3處理）
         return rec.items.some(function(it){
           return it.prod === 'triangle' && parseFloat(it.qty) > 0;
         });
@@ -12962,6 +12932,14 @@ function recalcOilySeasoning() {
 
     if (triDays.length === 0) return '';
 
+    // ── 若 dateKey 當天完全沒有真實排程（排休日），不顯示炒三角圓料 ──
+    // 排休日不應承接前置炒料提示（炒料應顯示在有排程的工作日）
+    var dateRec = schedData[dateKey];
+    var dateHasRealItems = dateRec && dateRec.items && dateRec.items.filter(function(it){
+      return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
+    }).length > 0;
+    if (!dateHasRealItems) return '';
+
     // 本週有三角圓
     var firstTriDk = triDays[0].dk;
     var lastTriDk  = triDays[triDays.length - 1].dk;
@@ -12987,23 +12965,44 @@ function recalcOilySeasoning() {
     // 非當週第一個工作日有三角圓 →
     // 炒三角圓料應顯示在三角圓日的「前一個工作日」，而非三角圓當天
 
-    // 計算 firstTriDk 的前一個工作日
-    function prevWorkDay(dk) {
+    // 計算 firstTriDk 的前一個「本週內」工作日
+    // 限制不跨週：若往前找不到本週內的工作日（如週二是首排程日、週一排休），回傳 null
+    var weekKeySet = {};
+    weekKeys.forEach(function(k) { weekKeySet[k] = true; });
+
+    function prevWorkDayInWeek(dk) {
       var d = new Date(dk + 'T00:00:00');
-      for (var i = 0; i < 14; i++) {
+      for (var i = 0; i < 7; i++) {
         d.setDate(d.getDate() - 1);
+        var candidate = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        // 若已跨出本週範圍，停止搜尋
+        if (!weekKeySet[candidate]) return null;
         var wd = d.getDay();
         if (wd !== 0 && wd !== 6) {
-          return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+          // 排休日（週一~五但無真實排程）也跳過，不能顯示炒料
+          var cr = schedData[candidate];
+          var hasReal = cr && cr.items && cr.items.filter(function(it){
+            return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
+          }).length > 0;
+          if (hasReal) return candidate;
+          // 排休日：繼續往前找（在本週內）
         }
       }
       return null;
     }
 
-    var prevOfFirstTri = prevWorkDay(firstTriDk);
+    var prevOfFirstTri = prevWorkDayInWeek(firstTriDk);
 
-    // 只在 firstTriDk 的前一個工作日顯示（且 firstTriDk 不是最後一個三角圓日時才計算）
-    if (dateKey === prevOfFirstTri) {
+    // 只在 firstTriDk 的前一個本週工作日顯示炒料
+    // 若 prevOfFirstTri 為 null（找不到本週前一工作日），炒料顯示在三角圓當天
+    if (prevOfFirstTri === null && dateKey === firstTriDk && !thisWeekFirstHasTri) {
+      var singleBags2 = triDays[0].qty;
+      var singleRaw2 = singleBags2 / 2.8 - triLeftPots;
+      var singlePots2 = Math.max(0, Math.ceil(singleRaw2));
+      if (singlePots2 > 0) return '🔺 炒三角圓料' + singlePots2 + '鍋';
+    }
+
+    if (prevOfFirstTri !== null && dateKey === prevOfFirstTri) {
       // 若只有一個三角圓日（非多天），才計算鍋數；最後一天不顯示的規則同舊邏輯
       if (triDays.length === 1 || firstTriDk !== lastTriDk) {
         var singleBags = triDays[0].qty;
@@ -17252,46 +17251,6 @@ function showLineAlertModal(dateKey, msg) {
   applyMobileZoom();
   // 視窗大小改變時重新套用
   window.addEventListener('resize', applyMobileZoom);
-})();
-
-// ===== 主分頁列：左右翻頁箭頭 & 滾動狀態提示 =====
-// 解決手機上因 body zoom 縮放導致橫向觸控滑動失準、滑不到「粽子斤兩管理」等右側分頁的問題。
-// 提供箭頭按鈕讓使用者可以用點擊方式可靠地翻到任何分頁，不依賴觸控滑動手勢。
-(function() {
-  var wrap = document.getElementById('main-tabs-wrap');
-  var leftBtn = document.getElementById('tabs-nav-left');
-  var rightBtn = document.getElementById('tabs-nav-right');
-  if (!wrap || !leftBtn || !rightBtn) return;
-
-  window.scrollTabsBy = function(amount) {
-    wrap.scrollBy({ left: amount, behavior: 'smooth' });
-  };
-
-  function updateArrowState() {
-    var maxScroll = wrap.scrollWidth - wrap.clientWidth;
-    // 已经滑到最左/最右時，將對應箭頭變淡並停用，提示使用者目前位置
-    leftBtn.style.opacity = wrap.scrollLeft <= 2 ? '0.3' : '1';
-    leftBtn.disabled = wrap.scrollLeft <= 2;
-    rightBtn.style.opacity = wrap.scrollLeft >= maxScroll - 2 ? '0.3' : '1';
-    rightBtn.disabled = wrap.scrollLeft >= maxScroll - 2;
-  }
-
-  wrap.addEventListener('scroll', updateArrowState);
-  window.addEventListener('resize', updateArrowState);
-  // 切換分頁時 active 按鈕的寬度可能改變捲動範圍，稍後重新檢查一次
-  setTimeout(updateArrowState, 100);
-  updateArrowState();
-
-  // 點擊任一分頁按鈕後，確保該按鈕自動捲動到可視範圍內
-  wrap.addEventListener('click', function(e) {
-    var btn = e.target.closest('.tab-btn');
-    if (btn) {
-      setTimeout(function() {
-        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-        updateArrowState();
-      }, 50);
-    }
-  });
 })();
 
 // ===== 📊 實際製作記錄 & 匯出系統 v2 =====
