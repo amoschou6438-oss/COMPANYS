@@ -4814,8 +4814,10 @@ function recalcAll() {
     if (demand <= 0) return 0;
     var rawCook = (demand - available) / 13;
     if (rawCook <= 0) return 0;
-    if (rawCook <= 3) return 4;
-    return Math.floor(rawCook);
+    // 最小生產批次為 4 鍋：需求換算鍋數在 4 鍋以內，一律備 4 鍋
+    if (rawCook <= 4) return 4;
+    // 超過最小批次後，無條件進位，確保足量涵蓋需求，避免缺貨
+    return Math.ceil(rawCook);
   }
 
   var wontonFrozen = q.wontonFrozen; // 目前冷凍庫存
@@ -4836,13 +4838,13 @@ function recalcAll() {
   (function() {
     if (window._applyingSchedule) return;
     var wfEl = document.getElementById('q_wonton_fill');
-    if (wfEl && wfEl !== document.activeElement) wfEl.value = wontonPotsForCur;
-    // 同步到本週製作數量輸入的 cw_q_wonton_fill
+    if (wfEl && wfEl !== document.activeElement && !wfEl._cwManualEdit) wfEl.value = wontonPotsForCur;
+    // 同步到本週製作數量輸入的 cw_q_wonton_fill（若使用者已手動輸入過，則保留手動值，不被自動計算覆蓋）
     var cwWfEl = document.getElementById('cw_q_wonton_fill');
-    if (cwWfEl && cwWfEl !== document.activeElement) cwWfEl.value = wontonPotsForCur;
-    // 同步到下週製作數量輸入的 nw_q_wonton_fill
+    if (cwWfEl && cwWfEl !== document.activeElement && !cwWfEl._cwManualEdit) cwWfEl.value = wontonPotsForCur;
+    // 同步到下週製作數量輸入的 nw_q_wonton_fill（若使用者已手動輸入過，則保留手動值，不被自動計算覆蓋）
     var nwWfEl = document.getElementById('nw_q_wonton_fill');
-    if (nwWfEl && nwWfEl !== document.activeElement) nwWfEl.value = wontonPotsForNext;
+    if (nwWfEl && nwWfEl !== document.activeElement && !nwWfEl._nwManualEdit) nwWfEl.value = wontonPotsForNext;
   })();
 
   // 暴露本週鍋數與扣除後庫存供 applyWeekToInput 使用
@@ -8165,6 +8167,8 @@ function recalcOilySeasoning() {
     if (window.AR && typeof window.AR.syncFromSched === 'function') {
       window.AR.syncFromSched('clear', weekKeys);
     }
+    // 清除後重新計算「炒三角圓料」（本週資料被清空，可能影響本週/上週/下週的鍋數與日期）
+    autoTriangleLogic(weekKeys[0]);
 
     // ② 清除製作數量輸入欄位
     var MAP = {
@@ -12272,6 +12276,21 @@ function recalcOilySeasoning() {
     });
   }
 
+  // ── 依 weekKeys 所屬週別，取得對應的「實際剩料」欄位值 ──
+  // 修正：原本不論 weekKeys 是哪一週，一律讀取 q_tri_left（本週欄位），
+  // 導致計算「下週」或更遠週別的炒三角圓料鍋數時，誤用本週剩料而非下週實際盤點值，
+  // 使排程表上顯示的鍋數與「盤點庫存」頁算出的鍋數對不上。
+  function getTriLeftForWeek(weekKeys) {
+    var mondayKey = weekKeys && weekKeys[0];
+    var curMonday  = getCurrentWeekKeys()[0];
+    var nextMonday = getNextWeekKeys()[0];
+    if (mondayKey === nextMonday) {
+      return parseFloat((document.getElementById('nw_inv_tri_left') || {}).value) || 0;
+    }
+    // 本週，或找不到對應下週欄位時，維持原本讀 q_tri_left 的行為
+    return parseFloat((document.getElementById('q_tri_left') || {}).value) || 0;
+  }
+
   // ── 計算「炒三角圓」需炒鍋數 ──
   // 公式：ceil(週三角圓總袋數 / 2.8) - 先炒鍋數(q_tri_fry)
   // weekKeys：該週的日期鍵陣列。若有傳入，從排程讀取該週三角圓袋數；
@@ -12306,7 +12325,7 @@ function recalcOilySeasoning() {
       triQty = parseFloat((document.getElementById('q_triangle') ||{}).value) || 0;
       if (triQty <= 0) return 0;
       // 退回路徑：新公式
-      var triLeftOld = parseFloat((document.getElementById('q_tri_left') ||{}).value) || 0;
+      var triLeftOld = getTriLeftForWeek(weekKeys);
       var baseOld = Math.ceil(triQty / 2.8 - triLeftOld / 6);
       var hasTri = weekFirstDayHasTriangle(weekKeys);
       return Math.max(0, baseOld - (hasTri ? 1 : 0));
@@ -12314,7 +12333,7 @@ function recalcOilySeasoning() {
 
     // 公式：基礎鍋數 = ceil(週三角圓總袋數 / 2.8 - triLeft/6)
     // 當週第一工作日排程有三角圓 → 需炒鍋數 = 基礎鍋數 - 1，否則不減
-    var triLeft = parseFloat((document.getElementById('q_tri_left') ||{}).value) || 0;
+    var triLeft = getTriLeftForWeek(weekKeys);
     var potsBase = Math.ceil(triQty / 2.8 - triLeft / 6);
     var fryDeduct = weekFirstDayHasTriangle(weekKeys) ? 1 : 0;
     return Math.max(0, potsBase - fryDeduct);
@@ -12943,7 +12962,7 @@ function recalcOilySeasoning() {
     // 本週有三角圓
     var firstTriDk = triDays[0].dk;
     var lastTriDk  = triDays[triDays.length - 1].dk;
-    var triLeft    = parseFloat((document.getElementById('q_tri_left') || {}).value) || 0; // 盆
+    var triLeft    = getTriLeftForWeek(weekKeys); // 盆（依 weekKeys 所屬週別取對應欄位）
     var triLeftPots = triLeft / 6; // 剩料折算鍋數
 
     // 本週是否滿足「第一個排程日有三角圓」
@@ -12995,9 +13014,13 @@ function recalcOilySeasoning() {
 
     // 只在 firstTriDk 的前一個本週工作日顯示炒料
     // 若 prevOfFirstTri 為 null（找不到本週前一工作日），炒料顯示在三角圓當天
+    // 修正：不論本週三角圓分散在幾天，炒料鍋數都應以「全週三角圓總袋數」計算，
+    // 而非只取第一個三角圓日的袋數（否則多天三角圓時會漏算後續天數的袋數）
+    var weekTotalTriBags = 0;
+    triDays.forEach(function(td){ weekTotalTriBags += td.qty; });
+
     if (prevOfFirstTri === null && dateKey === firstTriDk && !thisWeekFirstHasTri) {
-      var singleBags2 = triDays[0].qty;
-      var singleRaw2 = singleBags2 / 2.8 - triLeftPots;
+      var singleRaw2 = weekTotalTriBags / 2.8 - triLeftPots;
       var singlePots2 = Math.max(0, Math.ceil(singleRaw2));
       if (singlePots2 > 0) return '🔺 炒三角圓料' + singlePots2 + '鍋';
     }
@@ -13005,8 +13028,7 @@ function recalcOilySeasoning() {
     if (prevOfFirstTri !== null && dateKey === prevOfFirstTri) {
       // 若只有一個三角圓日（非多天），才計算鍋數；最後一天不顯示的規則同舊邏輯
       if (triDays.length === 1 || firstTriDk !== lastTriDk) {
-        var singleBags = triDays[0].qty;
-        var singleRaw = singleBags / 2.8 - triLeftPots;
+        var singleRaw = weekTotalTriBags / 2.8 - triLeftPots;
         var singlePots = Math.ceil(singleRaw);
         singlePots = Math.max(0, singlePots);
         if (singlePots > 0) return '🔺 炒三角圓料' + singlePots + '鍋';
@@ -13272,6 +13294,12 @@ function recalcOilySeasoning() {
     schedData[dateKey].note = el.value;
     schSave();
   };
+
+  // 對外暴露，供其他區塊（如 Excel 匯入）在批次變更排程後觸發「炒三角圓料」重新計算
+  window.autoTriangleLogic = autoTriangleLogic;
+  // 對外暴露，供其他區塊（如 Excel 匯入）把排程總量同步帶入「製作數量輸入」欄位，
+  // 這樣「三角圓（袋）需炒 X 鍋」等畫面數字才會跟著重新計算
+  window.autoSyncInputsIfNeeded = autoSyncInputsIfNeeded;
 })();
 
 // ========================================
@@ -13810,6 +13838,23 @@ function recalcOilySeasoning() {
     });
 
     try { localStorage.setItem(SCHD_KEY, JSON.stringify(schedData)); } catch(e) {}
+
+    // ── 匯入完成後重新計算「炒三角圓料」──
+    // schedImportConfirm 是獨立於排程模組的另一個閉包，先前直接寫入 localStorage
+    // 後從未觸發 autoTriangleLogic / autoSyncInputsIfNeeded，導致 Excel 匯入後：
+    // ①排程表上的炒三角圓料鍋數/日期沒有重新計算 ②「製作數量輸入」頁的三角圓需炒鍋數
+    // （因為它讀的是 q_triangle 輸入框，而輸入框只有被「帶入」過才會更新）也沒有跟著變動。
+    // 針對本次匯入涉及到的每個日期（去重）各呼叫一次，讓其重新讀取最新資料並校正。
+    if (typeof window.autoTriangleLogic === 'function' || typeof window.autoSyncInputsIfNeeded === 'function') {
+      var _triDoneWeeks = {};
+      _importState.parsed.forEach(function(p) {
+        if (p._invalid || !p.dateKey) return;
+        if (_triDoneWeeks[p.dateKey]) return;
+        _triDoneWeeks[p.dateKey] = true;
+        if (typeof window.autoTriangleLogic === 'function') window.autoTriangleLogic(p.dateKey);
+        if (typeof window.autoSyncInputsIfNeeded === 'function') window.autoSyncInputsIfNeeded(p.dateKey);
+      });
+    }
 
     // ── 同步更新 actual_record_v2 的 planned 值 ──
     // 以 Excel 匯入的排程數據為計劃欄的依據
