@@ -12459,20 +12459,36 @@ function recalcOilySeasoning() {
 
     schSave();
 
-    // ── 步驟4：同步 q_tri_fry 和 q_tri_next ──
-    // 帶入週（下週）第一工作日有三角圓 → q_tri_fry（先炒）= 1，否則 0
-    // 帶入週的下下週第一工作日有三角圓 → q_tri_next（下禮拜先備）= 1，否則 0
+    // ── 步驟4：自動同步「先炒數量」與「下禮拜先備」欄位 ──
+    // 修正：q_tri_fry / q_tri_next 這兩個 DOM id 從未存在於頁面中（真正存在的欄位是
+    // nw_inv_tri_fry / nw_inv_tri_next），先前寫在這裡的程式碼因此完全沒有作用。
+    // 帶入週（下週）第一工作日有三角圓 → 先炒數量（鍋）= 1，否則 0。
     var nextWkFirstHasTri = weekFirstDayHasTriangle(nextWk);
-    var weekAfterNextWk = getWeekAfterKeys(nextWk);
-    var weekAfterNextHasTri = weekFirstDayHasTriangle(weekAfterNextWk);
-    var triFryEl = document.getElementById('q_tri_fry');
-    var triNextEl = document.getElementById('q_tri_next');
-    if (triFryEl && triFryEl !== document.activeElement) {
+    var triFryEl = document.getElementById('nw_inv_tri_fry');
+    if (triFryEl && !triFryEl._nwManualEdit && triFryEl !== document.activeElement) {
       triFryEl.value = nextWkFirstHasTri ? 1 : 0;
     }
-    if (triNextEl && triNextEl !== document.activeElement) {
-      triNextEl.value = weekAfterNextHasTri ? 1 : 0;
+
+    // 帶入週（下週）的最後一個工作天，若排程裡已經有「炒三角圓料1鍋」
+    // （即 fry_triangle_fill 且 qty === 1，代表下下週第一個工作天有三角圓）
+    // → 下禮拜先備（鍋）= 1，否則 = 0。
+    var triNextEl = document.getElementById('nw_inv_tri_next');
+    if (triNextEl && !triNextEl._nwManualEdit && triNextEl !== document.activeElement) {
+      var lastWorkDayOfNextWk = null;
+      for (var lwi = nextWk.length - 1; lwi >= 0; lwi--) {
+        var wd2 = new Date(nextWk[lwi] + 'T00:00:00').getDay();
+        if (wd2 !== 0 && wd2 !== 6) { lastWorkDayOfNextWk = nextWk[lwi]; break; }
+      }
+      var hasFryOneOnLastDay = false;
+      if (lastWorkDayOfNextWk) {
+        var lastRec = schedData[lastWorkDayOfNextWk];
+        hasFryOneOnLastDay = !!(lastRec && lastRec.items && lastRec.items.some(function(it) {
+          return it.prod === 'fry_triangle_fill' && parseFloat(it.qty) === 1;
+        }));
+      }
+      triNextEl.value = hasFryOneOnLastDay ? 1 : 0;
     }
+    if (typeof saveNwInputs === 'function') saveNwInputs();
     saveInputs();
   }
 
