@@ -4782,7 +4782,11 @@ function recalcAll() {
   // 直接用 q.triFry 判斷，不再重新從排程讀取（避免本週/下週混淆）
   // 三角圓袋數為 0 時，基礎鍋數直接設為 0（不讓剩料盆數倒推出負值再影響顯示）
   // nw 模式時使用下週庫存值
-  var _triLeftForCalc = q.triLeft;
+  // 修正：q.triLeft（即 getVal('q_tri_left')）讀取的是一個不存在的 DOM id，
+  // 永遠回傳 0，導致「本週」檢視模式下算出的需炒鍋數，從未真正扣除使用者
+  // 輸入的三角圓實際剩料。整份系統只維護一份剩料庫存（nw_inv_tri_left），
+  // 不分本週/下週，因此一律改用能正確讀到該值的 getTriLeftForCalc()。
+  var _triLeftForCalc = (typeof getTriLeftForCalc === 'function') ? getTriLeftForCalc() : q.triLeft;
   var _triFryForCalc  = q.triFry;
   if (window._overviewSource === 'nw') {
     // 依「實際剩料」盤點狀態取值：已盤點→使用者輸入的實際值；尚未盤點→系統試算的預計剩料值
@@ -6618,7 +6622,7 @@ function buildWeekSummaryText(weekKeys, schedDataObj, prefix) {
     {id:'oily_rice',label:'油飯',unit:'盤'},{id:'monkey_rice',label:'猴菇荷葉油飯',unit:'盤'},
     {id:'minced',label:'素肉燥',unit:'鍋'},{id:'minced_chili',label:'辣椒醬',unit:'鍋'},
     {id:'mushr_shred',label:'炒香菇頭絲',unit:'斤'},{id:'curry',label:'咖哩粉',unit:'包'},
-    {id:'pepper_salt',label:'胡椒鹽',unit:'份'},{id:'egg_crepe',label:'蛋餅皮',unit:'包'},
+    {id:'pepper_salt',label:'胡椒鹽',unit:'份'},{id:'egg_crepe',label:'蛋餅皮',unit:'份'},
     {id:'dump_powder',label:'水餃粉',unit:'份'}
   ];
   PROD_LIST.forEach(function(p) {
@@ -7572,7 +7576,7 @@ function recalcOilySeasoning() {
     { id:'fry_triangle_fill',  label:'炒三角圓料1',  unit:'鍋', hidden:true },
     { id:'fry_triangle',       label:'炒三角圓',     unit:'鍋', hidden:true },
     { id:'sesame_ginger',      label:'麻油薑',       unit:'鍋', noWeekSummary:true },
-    { id:'egg_crepe',          label:'蛋餅皮',       unit:'包' },
+    { id:'egg_crepe',          label:'蛋餅皮',       unit:'份' },
     { id:'dump_powder',        label:'水餃粉',       unit:'份' },
   ];
   window._PRODUCTS = PRODUCTS;
@@ -12277,18 +12281,14 @@ function recalcOilySeasoning() {
   }
 
   // ── 依 weekKeys 所屬週別，取得對應的「實際剩料」欄位值 ──
-  // 修正：原本不論 weekKeys 是哪一週，一律讀取 q_tri_left（本週欄位），
-  // 導致計算「下週」或更遠週別的炒三角圓料鍋數時，誤用本週剩料而非下週實際盤點值，
-  // 使排程表上顯示的鍋數與「盤點庫存」頁算出的鍋數對不上。
+  // 修正：整個頁面裡「三角圓實際剩料」實際上只有 nw_inv_tri_left 這一個真正存在的
+  // input 欄位（"盤點庫存"頁的三角圓庫存區塊）；先前寫的 q_tri_left 是一個
+  // 從未被建立過的 DOM id，document.getElementById('q_tri_left') 永遠回傳 null，
+  // 導致計算「本週」（或任何非下週）鍋數時一律誤用剩料=0，使排程表上的鍋數
+  // 比「盤點庫存」頁正確算出的鍋數還要多（未扣除實際剩料）。
+  // 因為系統本來就只維護這一份剩料庫存，不分本週/下週，故一律讀取 nw_inv_tri_left。
   function getTriLeftForWeek(weekKeys) {
-    var mondayKey = weekKeys && weekKeys[0];
-    var curMonday  = getCurrentWeekKeys()[0];
-    var nextMonday = getNextWeekKeys()[0];
-    if (mondayKey === nextMonday) {
-      return parseFloat((document.getElementById('nw_inv_tri_left') || {}).value) || 0;
-    }
-    // 本週，或找不到對應下週欄位時，維持原本讀 q_tri_left 的行為
-    return parseFloat((document.getElementById('q_tri_left') || {}).value) || 0;
+    return parseFloat((document.getElementById('nw_inv_tri_left') || {}).value) || 0;
   }
 
   // ── 計算「炒三角圓」需炒鍋數 ──
