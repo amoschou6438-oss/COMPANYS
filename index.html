@@ -14526,12 +14526,19 @@ riceSeaLoadAll();
     });
     saveDeductedDates(deductedDates);
 
+    // 冷凍庫存量已直接扣除實際用量，同步自動標記「這禮拜用量」為已扣除，
+    // 避免 recalcAll 於顯示上重複扣除一次本週用量
+    var timeStr = (now.getMonth()+1)+'/'+(now.getDate())+' '+
+      String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    try { localStorage.setItem('wonton_cur_deduct_flag', JSON.stringify({ time: timeStr, ts: now.getTime(), auto: true })); } catch(e) {}
+    if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
+
     // 儲存並重算
     saveInputs();
     recalcAll();
 
     // 顯示提示
-    console.log('[餛飩冷凍] 自動扣除 ' + totalDeduct + ' 包，剩餘 ' + newFrozen + ' 包（扣除日期：' + toDeduct.map(function(i){ return i.dateKey + '×' + i.qty; }).join('、') + '）');
+    console.log('[餛飩冷凍] 自動扣除 ' + totalDeduct + ' 包，剩餘 ' + newFrozen + ' 包（扣除日期：' + toDeduct.map(function(i){ return i.dateKey + '×' + i.qty; }).join('、') + '），並自動標記已扣除本週量');
   }
 
   // 頁面載入時執行一次
