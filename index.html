@@ -8616,6 +8616,8 @@ function recalcOilySeasoning() {
       if (glegSauceLabel) summaryParts.push(redNums(glegSauceLabel));
       var oilyPrepLabel = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
       if (oilyPrepLabel) summaryParts.push(redNums(oilyPrepLabel));
+      var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
+      if (wontonSlurryLabel) summaryParts.push(redNums(wontonSlurryLabel));
       html += summaryParts.join('、');
       html += '</span>';
     } else {
@@ -8631,6 +8633,8 @@ function recalcOilySeasoning() {
       if (glegSauceLabelNI) noItemParts.push(redNumsNI(glegSauceLabelNI));
       var oilyPrepLabelNI = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
       if (oilyPrepLabelNI) noItemParts.push(redNumsNI(oilyPrepLabelNI));
+      var wontonSlurryLabelNI = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
+      if (wontonSlurryLabelNI) noItemParts.push(redNumsNI(wontonSlurryLabelNI));
       if (noItemParts.length > 0) {
         html += '<span class="sched-summary">' + noItemParts.join('、') + '</span>';
       }
@@ -8967,7 +8971,7 @@ function recalcOilySeasoning() {
   // ── 餛飩配方斤兩面板（依當日製作數量）──
   var WONTON_RECIPE_DATA = [
     { name:'水',        base:1813, unit:'兩', per:42 },
-    { name:'鹽',        base:33,   unit:'兩', per:42 },
+    { name:'鹽',        base:100,  unit:'g',  per:12 }, // 鹽：每12包增加100g
     { name:'香油',      base:30,   unit:'兩', per:42 },
     { name:'青線',      base:241,  unit:'兩', per:42 },
     { name:'勾芡水',    base:452,  unit:'兩', per:42 },
@@ -8975,7 +8979,7 @@ function recalcOilySeasoning() {
   ];
   var WONTON_FILL_RECIPE_DATA = [
     { name:'水',   base:1813, unit:'兩', per:42 },
-    { name:'鹽',   base:33,   unit:'兩', per:42 },
+    { name:'鹽',   base:100,  unit:'g',  per:12 }, // 鹽：每12包增加100g
     { name:'青線', base:241,  unit:'兩', per:42 },
   ];
   function wontonJinStr(qty, unit) {
@@ -8991,17 +8995,28 @@ function recalcOilySeasoning() {
     if (!el) return;
     // 只顯示餛飩（包）的配方斤兩；餛飩料（鍋）不顯示任何斤兩資料
     var wontonItem = items && items.find(function(it){ return it.prod === 'wonton' && parseFloat(it.qty) > 0; });
-    if (!wontonItem) { el.innerHTML = ''; return; }
-    var wontonQty = parseFloat(wontonItem.qty) || 0;
-    var h = '<div style="margin-top:12px;background:linear-gradient(135deg,#fdf8ed,#f5ead8);border:1px solid var(--border);border-radius:8px;padding:12px">';
-    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:1px">🥟 餛飩配方斤兩（依當日製作數量）</div>';
-    h += '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:5px">餛飩 ' + wontonQty + ' 包</div>';
+    var wontonQty = 0;
+    var isPrepDay = false; // 當天本身無餛飩，但下一個工作日有 → 視為煮餛飩漿的前一天，仍顯示配方供備料
+    if (wontonItem) {
+      wontonQty = parseFloat(wontonItem.qty) || 0;
+    } else {
+      var nextQty = (typeof getWontonNextWorkdayQty === 'function') ? getWontonNextWorkdayQty(dateKey) : 0;
+      if (nextQty > 0) { wontonQty = nextQty; isPrepDay = true; }
+    }
+    if (wontonQty <= 0) { el.innerHTML = ''; return; }
+    var h = '<div style="margin-top:12px;background:linear-gradient(135deg,#fdf8ed,#f5ead8);border:1px solid var(--border);border-radius:8px;padding:12px' + (isPrepDay ? ';border-left:3px solid var(--gold)' : '') + '">';
+    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:1px">' + (isPrepDay ? '🥟 煮餛飩漿．餛飩配方斤兩（依當日製作數量）' : '🥟 餛飩配方斤兩（依當日製作數量）') + '</div>';
+    if (isPrepDay) {
+      h += '<div style="font-size:10px;color:var(--ink3);margin-bottom:4px">明日排程有餛飩製作，今日先煮餛飩漿備用</div>';
+    }
+    h += '<div style="font-size:11px;color:var(--gold);font-weight:700;margin-bottom:5px">' + (isPrepDay ? '明日餛飩 ' : '餛飩 ') + wontonQty + ' 包</div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
-    // 先算五項原料總兩（用於勾芡漿盆數計算）
+    // 先算五項原料總兩（用於勾芡漿盆數計算；鹽以 g 換算為兩：1兩=31.25g）
     var totalIngLiang = 0;
     WONTON_RECIPE_DATA.forEach(function(item) {
       if (item.isGanjiangBasin) return;
-      var liang = item.base * wontonQty / item.per;
+      var qty = item.base * wontonQty / item.per;
+      var liang = (item.unit === 'g') ? (qty / 31.25) : qty;
       totalIngLiang += Math.ceil(liang);
     });
     WONTON_RECIPE_DATA.forEach(function(item) {
@@ -9011,6 +9026,8 @@ function recalcOilySeasoning() {
         var pbLiang = bsns > 0 ? Math.ceil(totalIngLiang / bsns) : 0;
         var bsnsRound = Math.round(bsns * 10) / 10;
         display = bsnsRound + '盆（每盆約' + wontonJinStr(pbLiang, '兩') + '）';
+      } else if (item.unit === 'g') {
+        display = Math.round(item.base * wontonQty / item.per) + ' g';
       } else {
         display = wontonJinStr(item.base * wontonQty / item.per, item.unit);
       }
@@ -9023,6 +9040,7 @@ function recalcOilySeasoning() {
     h += '</div>';
     el.innerHTML = h;
   }
+
 
   // ── G腿沾粉/粉漿面板（依當日排程G腿鍋數即時計算）──
   function renderGlegPowderPanel(dateKey, items, powderLeftKg) {
@@ -12782,6 +12800,31 @@ function recalcOilySeasoning() {
       return ''; // 前一工作日有G腿 → 明天不是第一天
     }
     return '🍗 備G腿醬';
+  }
+
+  // ── 餛飩煮漿備料：取得下一個工作日（跳過週六日）的餛飩（包）數量 ──
+  function getWontonNextWorkdayQty(dateKey) {
+    schLoad();
+    var d = new Date(dateKey + 'T00:00:00');
+    for (var i = 1; i <= 7; i++) {
+      d.setDate(d.getDate() + 1);
+      var wd = d.getDay();
+      if (wd !== 0 && wd !== 6) break;
+    }
+    var nextDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+    var rec = schedData[nextDk];
+    if (!rec || !rec.items) return 0;
+    var qty = 0;
+    rec.items.forEach(function(it) { if (it.prod === 'wonton') qty += parseFloat(it.qty) || 0; });
+    return qty;
+  }
+
+  // ── 煮餛飩漿文字提示（排程摘要用）──
+  // 若下一個工作日有餛飩（包）製作 → 回傳「煮餛飩漿 X包」提示，顯示在製作前一天
+  function getWontonSlurryPrepLabel(dateKey) {
+    var wontonQty = getWontonNextWorkdayQty(dateKey);
+    if (wontonQty <= 0) return '';
+    return '🥟 煮餛飩漿（' + wontonQty + '包）';
   }
 
   // ── 油飯備料文字提示（排程摘要用）──
