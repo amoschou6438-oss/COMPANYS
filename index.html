@@ -8969,9 +8969,11 @@ function recalcOilySeasoning() {
   }
 
   // ── 餛飩配方斤兩面板（依當日製作數量）──
+  // 鹽：每包固定用鹽 37.88g（原29.48g，每包再多加8.4g）
+  var WONTON_SALT_G_PER_PACK = 37.88;
   var WONTON_RECIPE_DATA = [
     { name:'水',        base:1813, unit:'兩', per:42 },
-    { name:'鹽',        base:100,  unit:'g',  per:12 }, // 鹽：每12包增加100g
+    { name:'鹽',        base:WONTON_SALT_G_PER_PACK, unit:'g', per:1 },
     { name:'香油',      base:30,   unit:'兩', per:42 },
     { name:'青線',      base:241,  unit:'兩', per:42 },
     { name:'勾芡水',    base:452,  unit:'兩', per:42 },
@@ -8979,7 +8981,7 @@ function recalcOilySeasoning() {
   ];
   var WONTON_FILL_RECIPE_DATA = [
     { name:'水',   base:1813, unit:'兩', per:42 },
-    { name:'鹽',   base:100,  unit:'g',  per:12 }, // 鹽：每12包增加100g
+    { name:'鹽',   base:WONTON_SALT_G_PER_PACK, unit:'g', per:1 },
     { name:'青線', base:241,  unit:'兩', per:42 },
   ];
   function wontonJinStr(qty, unit) {
@@ -9005,7 +9007,7 @@ function recalcOilySeasoning() {
     }
     if (wontonQty <= 0) { el.innerHTML = ''; return; }
     var h = '<div style="margin-top:12px;background:linear-gradient(135deg,#fdf8ed,#f5ead8);border:1px solid var(--border);border-radius:8px;padding:12px' + (isPrepDay ? ';border-left:3px solid var(--gold)' : '') + '">';
-    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:1px">' + (isPrepDay ? '🥟 煮餛飩漿．餛飩配方斤兩（依當日製作數量）' : '🥟 餛飩配方斤兩（依當日製作數量）') + '</div>';
+    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:1px">🥟 餛飩配方斤兩（依當日製作數量）</div>';
     if (isPrepDay) {
       h += '<div style="font-size:10px;color:var(--ink3);margin-bottom:4px">明日排程有餛飩製作，今日先煮餛飩漿備用</div>';
     }
@@ -9027,7 +9029,7 @@ function recalcOilySeasoning() {
         var bsnsRound = Math.round(bsns * 10) / 10;
         display = bsnsRound + '盆（每盆約' + wontonJinStr(pbLiang, '兩') + '）';
       } else if (item.unit === 'g') {
-        display = Math.round(item.base * wontonQty / item.per) + ' g';
+        display = wontonJinStr((item.base * wontonQty / item.per) / 31.25, '兩');
       } else {
         display = wontonJinStr(item.base * wontonQty / item.per, item.unit);
       }
