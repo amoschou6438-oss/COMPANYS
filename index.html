@@ -1240,7 +1240,7 @@
         </div>
         <div class="irow" style="flex-wrap:wrap;row-gap:4px"><label>冷凍庫存量</label><div class="ifield"><input type="text" inputmode="decimal" id="inv_wonton_frozen" value="0" placeholder="如 74+5 或 =74+5" title="可輸入 74+5 或 =74+5 等算式，按 Enter 或離開欄位後自動計算" style="width:82px" oninput="(function(el){var v=el.value.trim();var isExpr=/[+\-*\/=]/.test(v);if(isExpr){el.style.color='var(--gold)';el.style.borderColor='var(--gold)';}else{el.style.color='';el.style.borderColor='';}saveInputs();recalcAllDebounced();invCkClear('inv_wonton_frozen');})(this)" onblur="(function(el){var v=el.value.trim();if(v===''||v==='-')return;var isExpr=/[+\-*\/=]/.test(v);if(isExpr){try{var expr=(v.startsWith('=')?v.slice(1):v).replace(/[^0-9+\-*\/().]/g,'');var result=_safeCalc(expr);if(!isNaN(result)&&isFinite(result)){el.value=Math.max(0,Math.round(result*100)/100);el.style.color='';el.style.borderColor='';saveInputs();recalcAll();}}catch(e){el.style.borderColor='var(--red)';}}  })(this)" onkeydown="if(event.key==='Enter'){this.blur();}"><span class="unit">包</span></div><button class="invck-btn" id="invck-btn-inv_wonton_frozen" onclick="invCkDone('inv_wonton_frozen')">尚未盤點</button><span class="invck-status" id="invck-status-inv_wonton_frozen"></span></div>
         <div class="irow" id="irow_wonton_actual_fry" title="本週實際炒出包數，若填入則帶入下週時以此為準（留空則用鍋數×13計算）"><label style="display:flex;flex-direction:column;gap:2px">本週實際炒出<span style="font-size:10px;color:var(--gold);font-weight:700">帶入下週時優先採用</span></label><div class="ifield"><input type="number" id="inv_wonton_actual_fry" value="" min="0" placeholder="" style="width:82px;color:var(--gold)!important" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced();" onblur="(function(fryEl){var fryVal=parseFloat(fryEl.value);if(!isNaN(fryVal)&&fryVal>0){var frozenEl=document.getElementById('inv_wonton_frozen');if(frozenEl){var prevVal=parseFloat(frozenEl.value)||0;var newVal=Math.round((prevVal+fryVal)*100)/100;invCkClear('inv_wonton_frozen');frozenEl.value=newVal;frozenEl.style.color='';frozenEl.style.borderColor='';saveInputs();recalcAllDebounced();setTimeout(function(){invCkDone('inv_wonton_frozen');},0);fryEl.value='';saveInputs();}}})(this)"><span class="unit">包</span></div></div>
-        <div class="irow" id="irow_wonton_cur"><label>這禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_cur_input" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依本週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_cur_auto_badge">自動</span><span id="wonton_cur_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div></div>
+        <div class="irow" id="irow_wonton_cur" style="flex-wrap:wrap;row-gap:4px"><label>這禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_cur_input" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依本週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_cur_auto_badge">自動</span><span id="wonton_cur_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div><button class="invck-btn" id="wonton_cur_deduct_btn" onclick="wontonCurDeductToggle()" title="若冷凍庫存量已重新盤點並反映本週用量已扣除，請按此標記，避免用量被重複扣除">尚未扣除</button><span class="invck-status" id="wonton_cur_deduct_status"></span></div>
         <div class="irow" id="irow_wonton_next"><label>下禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_next" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依下週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_next_auto_badge">自動</span><span id="wonton_next_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div></div>
         <div class="irow" id="irow_wonton_next2"><label>下下禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_next2" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依下下週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_next2_auto_badge">自動</span><span id="wonton_next2_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div></div>
         <input type="hidden" id="inv_wonton_next3" value="0">
@@ -4824,12 +4824,17 @@ function recalcAll() {
     return Math.ceil(rawCook);
   }
 
-  var wontonFrozen = q.wontonFrozen; // 目前冷凍庫存
+  var wontonFrozen = q.wontonFrozen; // 目前冷凍庫存（若已標記「本週量已扣除」，此值視為已反映本週用量扣除後的實際盤點結果）
+
+  // 若使用者已標記「這禮拜用量」已從冷凍庫存中扣除（即冷凍庫存量已重新盤點/更新，
+  // 已經反映扣除本週用量後的實際剩餘），則不再於計算式中重複扣除 wontonCurUsage，
+  // 直接以目前冷凍庫存量作為「扣除後剩」，供下禮拜用量計算使用。
+  var wontonCurDeducted = (typeof isWontonCurDeducted === 'function') && isWontonCurDeducted();
 
   // 每行「需備幾鍋」= 扣除該週用量後的剩餘，能否支撐下一週
   // calcWontonPots(下一週用量, 扣除後剩餘)
   var wontonCurUsage    = q.wontonCurW;
-  var wontonAfterCur    = wontonFrozen - wontonCurUsage;
+  var wontonAfterCur    = wontonCurDeducted ? wontonFrozen : (wontonFrozen - wontonCurUsage);
   var wontonPotsForCur  = calcWontonPots(q.wontonNextW, wontonAfterCur);
 
   var wontonAfterNext   = wontonAfterCur + wontonPotsForCur * 13 - q.wontonNextW;
@@ -4867,8 +4872,14 @@ function recalcAll() {
 
 
     // 更新各行的 inline 結果
+    // 「這禮拜用量」：若已標記本週量已扣除，改顯示「已扣除本週量」，不再顯示扣除後剩／需備鍋數
+    // （因冷凍庫存量已直接反映扣除結果，避免重複顯示造成混淆）
     var inlineCur = document.getElementById('wonton_cur_inline');
-    if (inlineCur) inlineCur.innerHTML = _buildInline(wontonAfterCur, wontonPotsForCur);
+    if (inlineCur) {
+      inlineCur.innerHTML = wontonCurDeducted
+        ? '<strong style="color:var(--green);font-size:13px">✅ 已扣除本週量</strong>'
+        : _buildInline(wontonAfterCur, wontonPotsForCur);
+    }
     var inlineNext = document.getElementById('wonton_next_inline');
     if (inlineNext) inlineNext.innerHTML = _buildInline(wontonAfterNext, wontonPotsForNext);
     var inlineNext2 = document.getElementById('wonton_next2_inline');
@@ -7929,10 +7940,20 @@ function recalcOilySeasoning() {
       var _actualFryEl = document.getElementById('inv_wonton_actual_fry');
       var _actualFryVal = _actualFryEl ? parseFloat(_actualFryEl.value) : NaN;
       var _addedPkgs = (!isNaN(_actualFryVal) && _actualFryVal > 0) ? _actualFryVal : _potsBefore * 13;
-      frozenEl2.value = Math.max(0, _curFrozenBefore - _curUsageBefore + _addedPkgs);
+      // 若「這禮拜用量」已標記為已扣除（冷凍庫存量已重新盤點，本週用量已反映在其中），
+      // 帶入下週時就不能再扣一次 _curUsageBefore，否則會被重複扣除
+      var _curDeductedBefore = (typeof isWontonCurDeducted === 'function') && isWontonCurDeducted();
+      frozenEl2.value = _curDeductedBefore
+        ? Math.max(0, _curFrozenBefore + _addedPkgs)
+        : Math.max(0, _curFrozenBefore - _curUsageBefore + _addedPkgs);
       saveInputs();
       // 帶入下週後清空「本週實際炒出」欄位（它代表的是本週，帶入後已不適用）
       if (_actualFryEl) { _actualFryEl.value = ''; saveInputs(); }
+      // 帶入下週後，重置「已扣除本週量」標記，供下一輪重新標記使用
+      if (_curDeductedBefore) {
+        try { localStorage.removeItem('wonton_cur_deduct_flag'); } catch(e) {}
+        if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
+      }
     }
 
     // ── 套用主要原料庫存 & 三角圓實際剩料（使用帶入前快照）──
@@ -14621,6 +14642,41 @@ function invCalcBlur(el) {
   }, 60000); // check every minute
 })();
 
+// ====== 餛飩料「這禮拜用量」已扣除標記 ======
+// 用於標記：使用者已重新盤點/更新「冷凍庫存量」，該數值已反映扣除本週用量後的實際結果，
+// 避免計算式中重複扣除本週用量，並讓「下禮拜用量」直接以更新後的冷凍庫存量計算。
+function isWontonCurDeducted() {
+  try { return !!localStorage.getItem('wonton_cur_deduct_flag'); } catch(e) { return false; }
+}
+function wontonCurDeductToggle() {
+  var active = isWontonCurDeducted();
+  if (active) {
+    try { localStorage.removeItem('wonton_cur_deduct_flag'); } catch(e) {}
+  } else {
+    var now = new Date();
+    var timeStr = (now.getMonth()+1)+'/'+(now.getDate())+' '+
+      String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    try { localStorage.setItem('wonton_cur_deduct_flag', JSON.stringify({ time: timeStr, ts: now.getTime() })); } catch(e) {}
+  }
+  _wontonCurDeductRender();
+  if (typeof recalcAll === 'function') recalcAll();
+}
+function _wontonCurDeductRender() {
+  var btn = document.getElementById('wonton_cur_deduct_btn');
+  var status = document.getElementById('wonton_cur_deduct_status');
+  if (!btn) return;
+  var rec = null;
+  try { var raw = localStorage.getItem('wonton_cur_deduct_flag'); if (raw) rec = JSON.parse(raw); } catch(e) {}
+  if (rec) {
+    btn.textContent = '✅ 已扣除本週量';
+    btn.classList.add('checked');
+    if (status) status.textContent = rec.time || '';
+  } else {
+    btn.textContent = '尚未扣除';
+    btn.classList.remove('checked');
+    if (status) status.textContent = '';
+  }
+}
 function invCkDone(id) {
   var el = document.getElementById(id);
   if (!el) return;
@@ -14740,6 +14796,7 @@ function invCkLoadAll() {
 (function() {
   function _doLoad() {
     invCkLoadAll(); nwInvCkSyncAll();
+    if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
     // 同步盤點庫存G腿剩餘拌粉量到製作數量輸入頁
     (function() {
       var invEl = document.getElementById('inv_gleg_powder_left_inv');
