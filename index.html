@@ -1159,6 +1159,8 @@
       <div class="input-block">
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="cw_q_gleg" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">鍋</span></div></div>
+        <div class="irow"><label>辣G腿（鍋）</label><div class="ifield"><input type="number" id="cw_q_gleg_spicy" value="0" min="0" oninput="if(typeof spicyGlegQtyChanged==='function')spicyGlegQtyChanged('cw_q_gleg_spicy','cw-spicy-gleg-days')" style="color:var(--red);font-weight:700"><span class="unit">鍋</span></div></div>
+        <div id="cw-spicy-gleg-days" style="margin:2px 0 8px 2px"></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="cw_q_gleg_times" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">次</span></div></div>
       </div>
 
@@ -1199,6 +1201,8 @@
       <div class="input-block">
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">鍋</span></div></div>
+        <div class="irow"><label>辣G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg_spicy" value="0" min="0" oninput="if(typeof spicyGlegQtyChanged==='function')spicyGlegQtyChanged('nw_q_gleg_spicy','nw-spicy-gleg-days')"><span class="unit">鍋</span></div></div>
+        <div id="nw-spicy-gleg-days" style="margin:2px 0 8px 2px"></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="nw_q_gleg_times" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">次</span></div></div>
       </div>
 
@@ -4656,6 +4660,8 @@ function recalcZongzi() {
 function recalcAll() {
   // 更新來源選擇按鈕狀態
   if (typeof _updateOverviewSourceBtns === 'function') _updateOverviewSourceBtns();
+  // 渲染辣G腿可勾選日期清單（依當週/下週排程G腿天數）
+  if (typeof window._spicyGlegRefreshPickers === 'function') window._spicyGlegRefreshPickers();
   // 自動從排程計算下禮拜/下下禮拜餛飩用量並寫入欄位
   if (typeof window._autoFillWontonNextWeeks === 'function') {
     window._autoFillWontonNextWeeks();
@@ -7566,6 +7572,7 @@ function recalcOilySeasoning() {
     { id:'dumplings_hq_fill', label:'紅麴水餃料',     unit:'鍋' },
     { id:'triangle',     label:'三角圓',         unit:'袋' },
     { id:'gleg',         label:'G腿',            unit:'鍋' },
+    { id:'gleg_spicy',   label:'辣G腿',          unit:'鍋', hidden:true },
     { id:'zongzi_d',     label:'得來素粽子',     unit:'粒' },
     { id:'zongzi_c',     label:'慈濟粽子',       unit:'粒' },
     { id:'oily_rice',    label:'油飯',           unit:'盤' },
@@ -7689,6 +7696,7 @@ function recalcOilySeasoning() {
       if (typeof syncCwDisplay === 'function') syncCwDisplay();
       if (typeof syncNwQtyFromSchedule === 'function') syncNwQtyFromSchedule();
       if (typeof updateInputTabSummaries === 'function') updateInputTabSummaries();
+      if (typeof window._spicyGlegRefreshPickers === 'function') window._spicyGlegRefreshPickers();
     }, 50);
   }
 
@@ -8565,7 +8573,8 @@ function recalcOilySeasoning() {
     // 摘要
     if (hasItems) {
       html += '<span class="sched-summary">';
-      var normalItems = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle'; });
+      var normalItems = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+      var spicyGlegItemBuild = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
       var PROD_EMOJI_BUILD = {
         wonton:             '🥟',
         wonton_fill:        '🥟',
@@ -8606,7 +8615,12 @@ function recalcOilySeasoning() {
         var aQty = (it.actualQty  != null) ? it.actualQty  : it.qty;
         var cn = (pQty != aQty) ? '(原'+pQty+'改'+aQty+')' : '';
         var emoji = PROD_EMOJI_BUILD[it.prod] ? PROD_EMOJI_BUILD[it.prod]+' ' : '';
-        return redNums(emoji+(p?p.label:it.prod) + ' ' + aQty + (p?p.unit:'') + cn);
+        var spicyStrBuild = '';
+        if (it.prod === 'gleg' && spicyGlegItemBuild) {
+          var spQtyBuild = (spicyGlegItemBuild.actualQty != null) ? spicyGlegItemBuild.actualQty : spicyGlegItemBuild.qty;
+          if (parseFloat(spQtyBuild) > 0) spicyStrBuild = '《辣G腿' + spQtyBuild + (p?p.unit:'鍋') + '》';
+        }
+        return redNums(emoji+(p?p.label:it.prod) + ' ' + aQty + (p?p.unit:'') + cn + spicyStrBuild);
       });
       var sjyLabel = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
       if (sjyLabel) summaryParts.push(redNums(sjyLabel));
@@ -9556,7 +9570,7 @@ function recalcOilySeasoning() {
     }
     var h = '<div style="margin-top:12px;background:linear-gradient(135deg,#f0fdf4,#d4edda);border:1px solid #a8d5b5;border-radius:8px;padding:12px">';
     h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:8px;letter-spacing:1px">🍄 炒香菇頭絲調味料（香菇頭絲 <span style="color:var(--red)">' + totalJin + '</span> 斤）</div>';
-    h += '<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">基準：每鍋 20 斤 ／ 換算 ' + ratio.toFixed(2) + ' 鍋</div>';
+    h += '<div style="font-size:11px;color:var(--ink3);margin-bottom:8px">基準：每鍋 20 斤 ／ 換算 ' + ratio.toFixed(2) + ' 鍋<br><span style="color:var(--red)">（用關氏大立桶裝調味料）</span></div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
     MS_ITEMS.forEach(function(item) {
       if (item.name === '油' || item.name === '香油' || item.name === '香椿') return;
@@ -12001,13 +12015,19 @@ function recalcOilySeasoning() {
         var sumEl = h.querySelector('.sched-summary');
         if (sumEl) sumEl.remove();
         var rec = schedData[dk] || { items:[] };
-        var normItems = (rec.items || []).filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle'; });
+        var normItems = (rec.items || []).filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+        var spicyGlegItemRS = (rec.items || []).find(function(it){ return it.prod === 'gleg_spicy'; });
         var parts = normItems.map(function(it){
           var p = PRODUCTS.find(function(pp){ return pp.id === it.prod; });
           var pQty = (it.plannedQty != null) ? it.plannedQty : it.qty;
           var aQty = (it.actualQty  != null) ? it.actualQty  : it.qty;
           var cn   = (pQty != aQty) ? '(原'+pQty+'改'+aQty+')' : '';
-          return (p ? p.label : it.prod) + ' ' + aQty + (p ? p.unit : '') + cn;
+          var spicyStrRS = '';
+          if (it.prod === 'gleg' && spicyGlegItemRS) {
+            var spQtyRS = (spicyGlegItemRS.actualQty != null) ? spicyGlegItemRS.actualQty : spicyGlegItemRS.qty;
+            if (parseFloat(spQtyRS) > 0) spicyStrRS = '《辣G腿' + spQtyRS + (p?p.unit:'鍋') + '》';
+          }
+          return (p ? p.label : it.prod) + ' ' + aQty + (p ? p.unit : '') + cn + spicyStrRS;
         });
         var sjyL = (typeof getSanJiaoYuanLabel  === 'function') ? getSanJiaoYuanLabel(dk)  : '';
         if (sjyL)  parts.push(sjyL);
@@ -12053,7 +12073,8 @@ function recalcOilySeasoning() {
         var sum = document.createElement('span');
         sum.className = 'sched-summary';
         sum.setAttribute('data-autoshrink', '');
-        var normItems2 = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle'; });
+        var normItems2 = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+        var spicyGlegItem2 = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
         var autoItems2 = dayRec.items.filter(function(it){ return it.prod === 'fry_triangle_fill' || it.prod === 'fry_triangle'; });
         var PROD_EMOJI = {
           wonton:             '🥟',
@@ -12091,7 +12112,12 @@ function recalcOilySeasoning() {
           var aQty2 = (it.actualQty  != null) ? it.actualQty  : it.qty;
           var cn2 = (pQty2 != aQty2) ? '(原'+pQty2+'改'+aQty2+')' : '';
           var emoji = PROD_EMOJI[it.prod] ? PROD_EMOJI[it.prod]+' ' : '';
-          return emoji+(p?p.label:it.prod)+' '+aQty2+(p?p.unit:'')+cn2;
+          var spicyStr2 = '';
+          if (it.prod === 'gleg' && spicyGlegItem2) {
+            var spQty2 = (spicyGlegItem2.actualQty != null) ? spicyGlegItem2.actualQty : spicyGlegItem2.qty;
+            if (parseFloat(spQty2) > 0) spicyStr2 = '《辣G腿' + spQty2 + (p?p.unit:'鍋') + '》';
+          }
+          return emoji+(p?p.label:it.prod)+' '+aQty2+(p?p.unit:'')+cn2+spicyStr2;
         });
         // autoItems2 由 getSanJiaoYuanLabel 統一顯示，不在此重複
         // ── 三角圓炒料計算追加 ──
@@ -13219,6 +13245,113 @@ function recalcOilySeasoning() {
     autoTriangleLogic(dateKey);
     autoSyncInputsIfNeeded(dateKey);
     refreshDayDisplay(dateKey);
+  };
+
+  // ====== 辣G腿（鍋）：依當週排程勾選日期新增 ======
+  // 找出某週（weekKeys）中，已排程G腿（鍋數>0）的日期，回傳 {key, wd, spicyQty}
+  function spicyGlegCandidateDays(weekKeys) {
+    schLoad();
+    var out = [];
+    weekKeys.forEach(function(dk) {
+      var rec = schedData[dk];
+      if (!rec || !rec.items) return;
+      var glegItem = rec.items.find(function(it){ return it.prod === 'gleg'; });
+      if (!glegItem) return;
+      var glegQty = (glegItem.actualQty != null) ? glegItem.actualQty : glegItem.qty;
+      if (!(parseFloat(glegQty) > 0)) return;
+      var spicyItem = rec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
+      var spicyQty = spicyItem ? ((spicyItem.actualQty != null) ? spicyItem.actualQty : spicyItem.qty) : 0;
+      var wd = new Date(dk + 'T00:00:00').getDay();
+      out.push({ key: dk, wd: wd, spicyQty: parseFloat(spicyQty) || 0 });
+    });
+    return out;
+  }
+
+  function spicyGlegRenderPicker(containerId, weekKeys, qtyInputId) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    var days = spicyGlegCandidateDays(weekKeys);
+    if (days.length === 0) {
+      el.innerHTML = '<span style="font-size:11px;color:var(--ink3)">（本週排程尚無G腿，暫無可勾選日期）</span>';
+      return;
+    }
+    var html = '<div style="font-size:11px;color:var(--ink3);margin-bottom:3px">勾選要加入辣G腿的日期：</div>';
+    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    days.forEach(function(d) {
+      var mdParts = d.key.split('-');
+      var md = parseInt(mdParts[1],10) + '/' + parseInt(mdParts[2],10);
+      var checked = d.spicyQty > 0 ? ' checked' : '';
+      html += '<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);cursor:pointer">'
+        + '<input type="checkbox" data-datekey="' + d.key + '" data-qtyinput="' + qtyInputId + '"' + checked + ' onchange="spicyGlegToggleDay(this)">'
+        + '（' + weekdayLabel(d.wd) + '）' + md
+        + '</label>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  window.spicyGlegRenderCw = function() { spicyGlegRenderPicker('cw-spicy-gleg-days', getCurrentWeekKeys(), 'cw_q_gleg_spicy'); };
+  window.spicyGlegRenderNw = function() { spicyGlegRenderPicker('nw-spicy-gleg-days', getNextWeekKeys(), 'nw_q_gleg_spicy'); };
+
+  // 勾選/取消勾選某天 → 於該天排程新增或移除「辣G腿」品項
+  window.spicyGlegToggleDay = function(cb) {
+    var dateKey = cb.getAttribute('data-datekey');
+    var qtyInputId = cb.getAttribute('data-qtyinput');
+    schLoad();
+    if (!schedData[dateKey]) schedData[dateKey] = { items: [], note: '' };
+    var items = schedData[dateKey].items;
+    var idx = items.findIndex(function(it){ return it.prod === 'gleg_spicy'; });
+    if (cb.checked) {
+      var qtyEl = document.getElementById(qtyInputId);
+      var qty = parseFloat(qtyEl && qtyEl.value) || 0;
+      if (qty <= 0) {
+        alert('請先輸入辣G腿鍋數（需大於0）再勾選日期。');
+        cb.checked = false;
+        return;
+      }
+      if (idx >= 0) { items[idx].plannedQty = qty; items[idx].actualQty = qty; items[idx].qty = qty; }
+      else items.push({ prod: 'gleg_spicy', plannedQty: qty, actualQty: qty, qty: qty });
+    } else {
+      if (idx >= 0) items.splice(idx, 1);
+    }
+    schSave();
+    autoSyncInputsIfNeeded(dateKey);
+    refreshDayDisplay(dateKey);
+  };
+
+  // 辣G腿鍋數輸入變更 → 同步更新目前已勾選日期的數量
+  window.spicyGlegQtyChanged = function(qtyInputId, containerId) {
+    if (typeof saveInputs === 'function') { try { saveInputs(); } catch(e){} }
+    if (typeof saveNwInputs === 'function') { try { saveNwInputs(); } catch(e){} }
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    schLoad();
+    var qty = parseFloat((document.getElementById(qtyInputId) || {}).value) || 0;
+    var boxes = container.querySelectorAll('input[type=checkbox]:checked');
+    var touchedKeys = [];
+    boxes.forEach(function(cb) {
+      var dateKey = cb.getAttribute('data-datekey');
+      touchedKeys.push(dateKey);
+      if (!schedData[dateKey]) schedData[dateKey] = { items: [], note: '' };
+      var items = schedData[dateKey].items;
+      var idx = items.findIndex(function(it){ return it.prod === 'gleg_spicy'; });
+      if (qty > 0) {
+        if (idx >= 0) { items[idx].plannedQty = qty; items[idx].actualQty = qty; items[idx].qty = qty; }
+        else items.push({ prod: 'gleg_spicy', plannedQty: qty, actualQty: qty, qty: qty });
+      } else if (idx >= 0) {
+        items.splice(idx, 1);
+      }
+    });
+    if (touchedKeys.length > 0) {
+      schSave();
+      touchedKeys.forEach(function(dk){ autoSyncInputsIfNeeded(dk); refreshDayDisplay(dk); });
+    }
+  };
+
+  // 供其他流程（例如切換分頁、排程更新後）重新渲染勾選清單
+  window._spicyGlegRefreshPickers = function() {
+    if (document.getElementById('cw-spicy-gleg-days')) window.spicyGlegRenderCw();
+    if (document.getElementById('nw-spicy-gleg-days')) window.spicyGlegRenderNw();
   };
 
   // schedUpdateActualQty：只修改實際數量，計劃數量不動
