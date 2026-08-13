@@ -1159,8 +1159,7 @@
       <div class="input-block">
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="cw_q_gleg" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">鍋</span></div></div>
-        <div class="irow"><label>辣G腿（鍋）</label><div class="ifield"><input type="number" id="cw_q_gleg_spicy" value="0" min="0" oninput="if(typeof spicyGlegQtyChanged==='function')spicyGlegQtyChanged('cw_q_gleg_spicy','cw-spicy-gleg-days')" style="color:var(--red);font-weight:700"><span class="unit">鍋</span></div></div>
-        <div id="cw-spicy-gleg-days" style="margin:2px 0 8px 2px"></div>
+        <div class="irow"><label>辣G腿（鍋）</label><div id="cw-spicy-gleg-days" style="flex:1"></div></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="cw_q_gleg_times" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">次</span></div></div>
       </div>
 
@@ -1201,8 +1200,7 @@
       <div class="input-block">
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">鍋</span></div></div>
-        <div class="irow"><label>辣G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg_spicy" value="0" min="0" oninput="if(typeof spicyGlegQtyChanged==='function')spicyGlegQtyChanged('nw_q_gleg_spicy','nw-spicy-gleg-days')"><span class="unit">鍋</span></div></div>
-        <div id="nw-spicy-gleg-days" style="margin:2px 0 8px 2px"></div>
+        <div class="irow"><label>辣G腿（鍋）</label><div id="nw-spicy-gleg-days" style="flex:1"></div></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="nw_q_gleg_times" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">次</span></div></div>
       </div>
 
@@ -13267,7 +13265,7 @@ function recalcOilySeasoning() {
     return out;
   }
 
-  function spicyGlegRenderPicker(containerId, weekKeys, qtyInputId) {
+  function spicyGlegRenderPicker(containerId, weekKeys) {
     var el = document.getElementById(containerId);
     if (!el) return;
     var days = spicyGlegCandidateDays(weekKeys);
@@ -13275,83 +13273,78 @@ function recalcOilySeasoning() {
       el.innerHTML = '<span style="font-size:11px;color:var(--ink3)">（本週排程尚無G腿，暫無可勾選日期）</span>';
       return;
     }
-    var html = '<div style="font-size:11px;color:var(--ink3);margin-bottom:3px">勾選要加入辣G腿的日期：</div>';
-    html += '<div style="display:flex;gap:12px;flex-wrap:wrap">';
+    var html = '<div style="font-size:11px;color:var(--ink3);margin-bottom:3px">先勾選日期，再輸入該天的辣G腿鍋數：</div>';
+    html += '<div style="display:flex;gap:14px;flex-wrap:wrap">';
     days.forEach(function(d) {
       var mdParts = d.key.split('-');
       var md = parseInt(mdParts[1],10) + '/' + parseInt(mdParts[2],10);
       var checked = d.spicyQty > 0 ? ' checked' : '';
-      html += '<label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink2);cursor:pointer">'
-        + '<input type="checkbox" data-datekey="' + d.key + '" data-qtyinput="' + qtyInputId + '"' + checked + ' onchange="spicyGlegToggleDay(this)">'
+      var disabled = d.spicyQty > 0 ? '' : ' disabled';
+      html += '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);cursor:pointer">'
+        + '<input type="checkbox" data-datekey="' + d.key + '"' + checked + ' onchange="spicyGlegToggleDay(this)">'
         + '（' + weekdayLabel(d.wd) + '）' + md
+        + '<input type="number" min="0" step="1" value="' + (d.spicyQty || 0) + '" data-datekey="' + d.key + '"'
+        + ' style="width:56px;color:var(--red);font-weight:700"' + disabled
+        + ' oninput="spicyGlegDayQtyChanged(this)">鍋'
         + '</label>';
     });
     html += '</div>';
     el.innerHTML = html;
   }
 
-  window.spicyGlegRenderCw = function() { spicyGlegRenderPicker('cw-spicy-gleg-days', getCurrentWeekKeys(), 'cw_q_gleg_spicy'); };
-  window.spicyGlegRenderNw = function() { spicyGlegRenderPicker('nw-spicy-gleg-days', getNextWeekKeys(), 'nw_q_gleg_spicy'); };
+  window.spicyGlegRenderCw = function() { spicyGlegRenderPicker('cw-spicy-gleg-days', getCurrentWeekKeys()); };
+  window.spicyGlegRenderNw = function() { spicyGlegRenderPicker('nw-spicy-gleg-days', getNextWeekKeys()); };
 
-  // 勾選/取消勾選某天 → 於該天排程新增或移除「辣G腿」品項
-  window.spicyGlegToggleDay = function(cb) {
-    var dateKey = cb.getAttribute('data-datekey');
-    var qtyInputId = cb.getAttribute('data-qtyinput');
+  // 寫入／移除某天的「辣G腿」品項
+  function spicyGlegWrite(dateKey, qty) {
     schLoad();
     if (!schedData[dateKey]) schedData[dateKey] = { items: [], note: '' };
     var items = schedData[dateKey].items;
     var idx = items.findIndex(function(it){ return it.prod === 'gleg_spicy'; });
-    if (cb.checked) {
-      var qtyEl = document.getElementById(qtyInputId);
-      var qty = parseFloat(qtyEl && qtyEl.value) || 0;
-      if (qty <= 0) {
-        alert('請先輸入辣G腿鍋數（需大於0）再勾選日期。');
-        cb.checked = false;
-        return;
-      }
+    if (qty > 0) {
       if (idx >= 0) { items[idx].plannedQty = qty; items[idx].actualQty = qty; items[idx].qty = qty; }
       else items.push({ prod: 'gleg_spicy', plannedQty: qty, actualQty: qty, qty: qty });
-    } else {
-      if (idx >= 0) items.splice(idx, 1);
+    } else if (idx >= 0) {
+      items.splice(idx, 1);
     }
     schSave();
     autoSyncInputsIfNeeded(dateKey);
     refreshDayDisplay(dateKey);
-  };
+  }
 
-  // 辣G腿鍋數輸入變更 → 同步更新目前已勾選日期的數量
-  window.spicyGlegQtyChanged = function(qtyInputId, containerId) {
-    if (typeof saveInputs === 'function') { try { saveInputs(); } catch(e){} }
-    if (typeof saveNwInputs === 'function') { try { saveNwInputs(); } catch(e){} }
-    var container = document.getElementById(containerId);
-    if (!container) return;
-    schLoad();
-    var qty = parseFloat((document.getElementById(qtyInputId) || {}).value) || 0;
-    var boxes = container.querySelectorAll('input[type=checkbox]:checked');
-    var touchedKeys = [];
-    boxes.forEach(function(cb) {
-      var dateKey = cb.getAttribute('data-datekey');
-      touchedKeys.push(dateKey);
-      if (!schedData[dateKey]) schedData[dateKey] = { items: [], note: '' };
-      var items = schedData[dateKey].items;
-      var idx = items.findIndex(function(it){ return it.prod === 'gleg_spicy'; });
-      if (qty > 0) {
-        if (idx >= 0) { items[idx].plannedQty = qty; items[idx].actualQty = qty; items[idx].qty = qty; }
-        else items.push({ prod: 'gleg_spicy', plannedQty: qty, actualQty: qty, qty: qty });
-      } else if (idx >= 0) {
-        items.splice(idx, 1);
-      }
-    });
-    if (touchedKeys.length > 0) {
-      schSave();
-      touchedKeys.forEach(function(dk){ autoSyncInputsIfNeeded(dk); refreshDayDisplay(dk); });
+  // 勾選/取消勾選某天 → 啟用/停用該天的鍋數輸入框，並寫入或移除排程
+  window.spicyGlegToggleDay = function(cb) {
+    var dateKey = cb.getAttribute('data-datekey');
+    var label = cb.closest('label');
+    var qtyInput = label ? label.querySelector('input[type=number]') : null;
+    if (cb.checked) {
+      if (qtyInput) { qtyInput.disabled = false; qtyInput.focus(); }
+      var qty = parseFloat(qtyInput && qtyInput.value) || 0;
+      if (qty > 0) spicyGlegWrite(dateKey, qty);
+    } else {
+      if (qtyInput) { qtyInput.disabled = true; }
+      spicyGlegWrite(dateKey, 0);
     }
   };
 
+  // 該天鍋數輸入變更 → 寫入該天排程（僅在勾選狀態下可輸入）
+  window.spicyGlegDayQtyChanged = function(input) {
+    var dateKey = input.getAttribute('data-datekey');
+    var qty = parseFloat(input.value) || 0;
+    spicyGlegWrite(dateKey, qty);
+  };
+
   // 供其他流程（例如切換分頁、排程更新後）重新渲染勾選清單
+  // 若使用者目前正在該清單內輸入/勾選（focus 在裡面），跳過這次重繪，
+  // 避免每次 recalcAll() 觸發整段 innerHTML 重建，把使用者手上正在打的鍋數欄位焦點打斷。
   window._spicyGlegRefreshPickers = function() {
-    if (document.getElementById('cw-spicy-gleg-days')) window.spicyGlegRenderCw();
-    if (document.getElementById('nw-spicy-gleg-days')) window.spicyGlegRenderNw();
+    var cwEl = document.getElementById('cw-spicy-gleg-days');
+    var nwEl = document.getElementById('nw-spicy-gleg-days');
+    var active = document.activeElement;
+    var activeInCw = cwEl && active && cwEl.contains(active);
+    var activeInNw = nwEl && active && nwEl.contains(active);
+    if (cwEl && !activeInCw) window.spicyGlegRenderCw();
+    if (nwEl && !activeInNw) window.spicyGlegRenderNw();
   };
 
   // schedUpdateActualQty：只修改實際數量，計劃數量不動
@@ -16980,13 +16973,15 @@ function buildLineMsg(dateKey) {
   });
 
   var zongziPushed = false;
+  var spicyGlegItemReport = items.find(function(it){ return it.prod === 'gleg_spicy'; });
+  var spicyGlegQtyReport = spicyGlegItemReport ? (parseFloat((spicyGlegItemReport.actualQty != null) ? spicyGlegItemReport.actualQty : spicyGlegItemReport.qty) || 0) : 0;
 
   items.forEach(function(it) {
-    // 不回報的自動項目（炒三角圓料）— 後面另外處理
+    // 不回報的自動項目（炒三角圓料）— 後面另外處理；辣G腿併入G腿行，不單獨輸出
     if (it.prod === 'wonton_fill' || it.prod === 'pepper_salt' ||
         it.prod === 'fry_triangle_fill' || it.prod === 'fry_triangle' ||
         it.prod === 'sesame_ginger' || it.prod === 'dumplings_hq_fill' ||
-        it.prod === 'dump_powder') return;
+        it.prod === 'dump_powder' || it.prod === 'gleg_spicy') return;
 
     // 以實際數量為主
     var qty = parseFloat((it.actualQty != null) ? it.actualQty : it.qty) || 0;
@@ -17017,10 +17012,12 @@ function buildLineMsg(dateKey) {
     if (rate.suffix != null) {
       // 換算值 = qty × suffix ÷ perQty，四捨五入
       var converted = Math.round(qty * rate.suffix / rate.perQty);
-      lines.push(label + qty + '  ' + converted);
+      var spicyNote = (it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
+      lines.push(label + qty + '  ' + converted + spicyNote);
     } else {
       // 無換算數量：只輸出名稱+數量
-      lines.push(label + qty);
+      var spicyNote2 = (it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
+      lines.push(label + qty + spicyNote2);
     }
   });
 
