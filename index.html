@@ -8624,6 +8624,9 @@ function recalcOilySeasoning() {
         var spicyStrBuild = '';
         if (it.prod === 'gleg' && spicyGlegItemBuild) {
           var spQtyBuild = (spicyGlegItemBuild.actualQty != null) ? spicyGlegItemBuild.actualQty : spicyGlegItemBuild.qty;
+          if (parseFloat(spQtyBuild) > 0 && parseFloat(spQtyBuild) === parseFloat(aQty)) {
+            return redNums('🌶️ 辣G腿' + spQtyBuild + (p?p.unit:'鍋') + cn);
+          }
           if (parseFloat(spQtyBuild) > 0) spicyStrBuild = '《辣G腿' + spQtyBuild + (p?p.unit:'鍋') + '》';
         }
         return redNums(emoji+(p?p.label:it.prod) + ' ' + aQty + (p?p.unit:'') + cn + spicyStrBuild);
@@ -12031,6 +12034,9 @@ function recalcOilySeasoning() {
           var spicyStrRS = '';
           if (it.prod === 'gleg' && spicyGlegItemRS) {
             var spQtyRS = (spicyGlegItemRS.actualQty != null) ? spicyGlegItemRS.actualQty : spicyGlegItemRS.qty;
+            if (parseFloat(spQtyRS) > 0 && parseFloat(spQtyRS) === parseFloat(aQty)) {
+              return '🌶️ 辣G腿' + spQtyRS + (p?p.unit:'鍋') + cn;
+            }
             if (parseFloat(spQtyRS) > 0) spicyStrRS = '《辣G腿' + spQtyRS + (p?p.unit:'鍋') + '》';
           }
           return (p ? p.label : it.prod) + ' ' + aQty + (p ? p.unit : '') + cn + spicyStrRS;
@@ -12121,6 +12127,9 @@ function recalcOilySeasoning() {
           var spicyStr2 = '';
           if (it.prod === 'gleg' && spicyGlegItem2) {
             var spQty2 = (spicyGlegItem2.actualQty != null) ? spicyGlegItem2.actualQty : spicyGlegItem2.qty;
+            if (parseFloat(spQty2) > 0 && parseFloat(spQty2) === parseFloat(aQty2)) {
+              return '🌶️ 辣G腿' + spQty2 + (p?p.unit:'鍋') + cn2;
+            }
             if (parseFloat(spQty2) > 0) spicyStr2 = '《辣G腿' + spQty2 + (p?p.unit:'鍋') + '》';
           }
           return emoji+(p?p.label:it.prod)+' '+aQty2+(p?p.unit:'')+cn2+spicyStr2;
@@ -17016,15 +17025,18 @@ function buildLineMsg(dateKey) {
     }
 
     var label = rate.label;
+    // 若當天G腿全數為辣G腿（數量相同），直接以「辣G腿」標示，不再附註
+    var isAllSpicyGleg = (it.prod === 'gleg' && spicyGlegQtyReport > 0 && spicyGlegQtyReport === qty);
+    if (isAllSpicyGleg) label = '辣' + label;
 
     if (rate.suffix != null) {
       // 換算值 = qty × suffix ÷ perQty，四捨五入
       var converted = Math.round(qty * rate.suffix / rate.perQty);
-      var spicyNote = (it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
+      var spicyNote = (!isAllSpicyGleg && it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
       lines.push(label + qty + '  ' + converted + spicyNote);
     } else {
       // 無換算數量：只輸出名稱+數量
-      var spicyNote2 = (it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
+      var spicyNote2 = (!isAllSpicyGleg && it.prod === 'gleg' && spicyGlegQtyReport > 0) ? '（其中辣G腿' + spicyGlegQtyReport + '）' : '';
       lines.push(label + qty + spicyNote2);
     }
   });
