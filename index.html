@@ -9356,14 +9356,42 @@ function recalcOilySeasoning() {
         + '</div>';
     }
 
-    // 計算每盆重（含辣椒粉重量）
-    var totalLiangAll = glegSauceDataLocal.reduce(function(sum, item) {
-      return sum + Math.ceil(item.base * pots);
-    }, 0);
-    if (chiliLiangEquivalent > 0) totalLiangAll += Math.ceil(chiliLiangEquivalent);
-    var perBasinLiang = totalLiangAll / pots;
-    var pbJ = Math.floor(perBasinLiang / 16), pbL = Math.round(perBasinLiang % 16 * 10) / 10;
-    var perBasinStr = (pbJ > 0 ? pbJ + '斤' : '') + (pbL > 0 ? pbL + '兩' : '') || '0兩';
+    // 計算每盆重：
+    // ・原味每盆重：不含辣椒粉，以「一般（非辣）鍋數」計算並平均分配
+    // ・辣G腿每盆重：含辣椒粉，以「辣G腿鍋數」計算並平均分配
+    function liangToStr(liang) {
+      var j = Math.floor(liang / 16), l = Math.round(liang % 16 * 10) / 10;
+      return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : '') || '0兩';
+    }
+    var regularPots = pots - spicyPots;
+    var perBasinRegularStr = null, perBasinSpicyStr = null, perBasinStr = null;
+
+    if (spicyPots > 0 && regularPots > 0) {
+      // 有辣有不辣：分別計算兩種每盆重
+      var totalLiangRegular = glegSauceDataLocal.reduce(function(sum, item) {
+        return sum + Math.ceil(item.base * regularPots);
+      }, 0);
+      perBasinRegularStr = liangToStr(totalLiangRegular / regularPots);
+
+      var totalLiangSpicy = glegSauceDataLocal.reduce(function(sum, item) {
+        return sum + Math.ceil(item.base * spicyPots);
+      }, 0);
+      if (chiliLiangEquivalent > 0) totalLiangSpicy += Math.ceil(chiliLiangEquivalent);
+      perBasinSpicyStr = liangToStr(totalLiangSpicy / spicyPots);
+    } else if (spicyPots > 0 && regularPots <= 0) {
+      // 全部都是辣G腿
+      var totalLiangAllSpicy = glegSauceDataLocal.reduce(function(sum, item) {
+        return sum + Math.ceil(item.base * spicyPots);
+      }, 0);
+      if (chiliLiangEquivalent > 0) totalLiangAllSpicy += Math.ceil(chiliLiangEquivalent);
+      perBasinSpicyStr = liangToStr(totalLiangAllSpicy / spicyPots);
+    } else {
+      // 完全沒有辣G腿：維持原本單一數值
+      var totalLiangAll = glegSauceDataLocal.reduce(function(sum, item) {
+        return sum + Math.ceil(item.base * pots);
+      }, 0);
+      perBasinStr = liangToStr(totalLiangAll / pots);
+    }
 
     // 計算第一個G腿日的月/日顯示
     var firstGlegDisplay = (parseInt(fParts[1])) + '/' + parseInt(fParts[2]);
@@ -9380,7 +9408,17 @@ function recalcOilySeasoning() {
     h += chipsHtml;
     h += '</div>';
     h += '<div style="font-size:11px;color:#7a6040;margin-top:4px;padding-top:8px;border-top:1px solid #e8c56a">';
-    h += '每盆重（÷鍋數）約 <strong style="color:#7b2d00">' + perBasinStr + '</strong>　｜　備料時請依此計算盆數';
+    if (perBasinRegularStr !== null && perBasinSpicyStr !== null) {
+      // 有辣有不辣：分別顯示兩種每盆重
+      h += '原味每盆重（÷' + regularPots + '鍋）約 <strong style="color:#7b2d00">' + perBasinRegularStr + '</strong>';
+      h += '　｜　🌶️ 辣G腿每盆重（含辣椒粉，÷' + spicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
+    } else if (perBasinSpicyStr !== null) {
+      // 全部都是辣G腿
+      h += '🌶️ 辣G腿每盆重（含辣椒粉，÷' + spicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
+    } else {
+      h += '每盆重（÷鍋數）約 <strong style="color:#7b2d00">' + perBasinStr + '</strong>';
+    }
+    h += '　｜　備料時請依此計算盆數';
     h += '</div>';
     h += '</div>';
     el.innerHTML = h;
