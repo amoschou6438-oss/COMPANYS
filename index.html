@@ -9236,9 +9236,10 @@ function recalcOilySeasoning() {
         + String(d2.getDate()).padStart(2,'0'));
     }
 
-    // 找出當週第一個有 G腿 的日期
+    // 找出當週第一個有 G腿 的日期，並加總（一般 G腿 ＆ 辣G腿）鍋數
     var firstGlegDay = null;
     var weekTotalGlegPots = 0;
+    var weekTotalSpicyGlegPots = 0;
     for (var j = 0; j < weekKeys.length; j++) {
       var rec = schedData[weekKeys[j]];
       if (!rec || !rec.items) continue;
@@ -9246,6 +9247,10 @@ function recalcOilySeasoning() {
       if (glegItem) {
         if (!firstGlegDay) firstGlegDay = weekKeys[j];
         weekTotalGlegPots += parseFloat(glegItem.qty) || 0;
+      }
+      var spicyItemWk = rec.items.find(function(it){ return it.prod === 'gleg_spicy' && parseFloat(it.qty) > 0; });
+      if (spicyItemWk) {
+        weekTotalSpicyGlegPots += parseFloat(spicyItemWk.qty) || 0;
       }
     }
 
@@ -9330,10 +9335,32 @@ function recalcOilySeasoning() {
         + unitHint + '</div>';
     }).join('');
 
-    // 計算每盆重
+    // ── 辣椒粉（僅當本週有辣G腿時才顯示）：1鍋加200g，1包=1000g ──
+    var CHILI_G_PER_POT = 200;
+    var CHILI_PKG_G = 1000;
+    var spicyPots = weekTotalSpicyGlegPots;
+    var chiliTotalG = 0;
+    var chiliLiangEquivalent = 0;
+    if (spicyPots > 0) {
+      chiliTotalG = spicyPots * CHILI_G_PER_POT;
+      var chiliPkgCount = Math.floor(chiliTotalG / CHILI_PKG_G);
+      var chiliRemG = chiliTotalG - chiliPkgCount * CHILI_PKG_G;
+      var chiliConvStr = chiliRemG === 0
+        ? (chiliPkgCount > 0 ? chiliPkgCount + '包' : '0g')
+        : (chiliPkgCount > 0 ? chiliPkgCount + '包+' + chiliRemG + 'g' : chiliRemG + 'g');
+      chiliLiangEquivalent = chiliTotalG / G_PER_LIANG_SAUCE;
+      chipsHtml += '<div style="background:#fff0e8;border:1px solid #e8a030;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
+        + '<div style="font-size:11px;color:#7a6040;margin-bottom:3px;letter-spacing:0.5px">🌶️ 辣椒粉</div>'
+        + '<div style="font-size:15px;font-weight:700;color:#c0392b;font-family:\'Noto Serif TC\',serif">' + chiliConvStr + '</div>'
+        + '<div style="font-size:9px;color:#b08040;margin-top:2px">辣G腿共 ' + spicyPots + ' 鍋×200g／預設1包1000g</div>'
+        + '</div>';
+    }
+
+    // 計算每盆重（含辣椒粉重量）
     var totalLiangAll = glegSauceDataLocal.reduce(function(sum, item) {
       return sum + Math.ceil(item.base * pots);
     }, 0);
+    if (chiliLiangEquivalent > 0) totalLiangAll += Math.ceil(chiliLiangEquivalent);
     var perBasinLiang = totalLiangAll / pots;
     var pbJ = Math.floor(perBasinLiang / 16), pbL = Math.round(perBasinLiang % 16 * 10) / 10;
     var perBasinStr = (pbJ > 0 ? pbJ + '斤' : '') + (pbL > 0 ? pbL + '兩' : '') || '0兩';
@@ -9345,6 +9372,9 @@ function recalcOilySeasoning() {
     h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">';
     h += '<span style="font-size:13px;font-weight:700;color:#7b2d00;letter-spacing:1px">🍶 G腿醬備料（明日' + firstGlegDisplay + ' 開始製作）</span>';
     h += '<span style="background:#7b2d00;color:#ffe0b2;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700">本週共 ' + pots + ' 鍋</span>';
+    if (spicyPots > 0) {
+      h += '<span style="background:#c0392b;color:#ffe6e0;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700">🌶️ 辣G腿共 ' + spicyPots + ' 鍋</span>';
+    }
     h += '</div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
     h += chipsHtml;
@@ -17845,13 +17875,34 @@ window.AR = (function() {
       if (isWknd) {
         html += '<span style="font-size:11px;color:#f57c00;font-weight:700;background:#fff3e0;border:1px solid #ffcc80;border-radius:4px;padding:1px 6px;flex-shrink:0">休息日出勤</span>';
       }
-      var summaryParts = dayRec.items.map(function(it) {
-        var p = prodById(it.prod);
-        var planned = it.planned || 0;
-        var actual  = it.actual  || 0;
-        var cn = (planned !== actual) ? '(原'+planned+'改'+actual+')' : '';
-        return (p?p.label:it.prod)+' '+actual+(p?p.unit:'')+cn;
-      });
+      var glegSpicyItem = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
+      var hasGlegItem   = dayRec.items.some(function(it){ return it.prod === 'gleg'; });
+      var summaryParts = dayRec.items
+        .filter(function(it){ return it.prod !== 'gleg_spicy'; })
+        .map(function(it) {
+          var p = prodById(it.prod);
+          var planned = it.planned || 0;
+          var actual  = it.actual  || 0;
+          // G腿不顯示「(原X改Y)」註記，只顯示實際鍋數（跟其他一般品項的簡單格式一致）
+          var cn = (it.prod !== 'gleg' && planned !== actual) ? '(原'+planned+'改'+actual+')' : '';
+          if (it.prod === 'gleg' && glegSpicyItem) {
+            var spActual = glegSpicyItem.actual || 0;
+            // 當天G腿全部都是辣的（辣G腿數量＝G腿實際數量）→ 只顯示「辣G腿」，跟排程表一致
+            if (spActual > 0 && spActual === actual) {
+              return '🌶️ 辣G腿'+spActual+(p?p.unit:'鍋');
+            }
+            // 部分辣、部分不辣 → 兩者都顯示
+            if (spActual > 0) {
+              return (p?p.label:it.prod)+' '+actual+(p?p.unit:'')+'《辣G腿'+spActual+(p?p.unit:'鍋')+'》';
+            }
+          }
+          return (p?p.label:it.prod)+' '+actual+(p?p.unit:'')+cn;
+        });
+      // 若當天只有辣G腿、沒有一般G腿項目，仍需單獨顯示
+      if (glegSpicyItem && !hasGlegItem) {
+        var spOnly = glegSpicyItem.actual || 0;
+        if (spOnly > 0) summaryParts.push('🌶️ 辣G腿'+spOnly+'鍋');
+      }
       html += '<span class="sched-summary" data-autoshrink>'+summaryParts.join('、')+'</span>';
     }
     html += '<span style="margin-left:auto;color:var(--ink3);font-size:12px" id="ar-toggle-'+dk+'">▼</span>';
@@ -18425,17 +18476,42 @@ window.AR = (function() {
         var wd = new Date(dk + 'T00:00:00').getDay();
         var dateLabel = m + '/' + d;
         var wdLabel = WD[wd];
+        var glegSpicyItemExp = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
+        var hasGlegItemExp   = dayRec.items.some(function(it){ return it.prod === 'gleg'; });
         dayRec.items.forEach(function(it) {
+          if (it.prod === 'gleg_spicy') return; // 併入 gleg 那一列處理，不單獨輸出一列
           var p = PRODUCTS.find(function(pp) { return pp.id === it.prod; });
           var label   = p ? p.label : it.prod;
           var unit    = p ? p.unit  : '';
           var planned = it.planned || 0;
           var actual  = it.actual  || 0;
-          var remark  = (planned !== actual) ? '原'+planned+'改'+actual : '';
+          // G腿不顯示「原X改Y」備註，只匯出實際鍋數
+          var remark  = (it.prod !== 'gleg' && planned !== actual) ? '原'+planned+'改'+actual : '';
+          if (it.prod === 'gleg' && glegSpicyItemExp) {
+            var spActualExp = glegSpicyItemExp.actual || 0;
+            // 當天G腿全部都是辣的 → 這一列直接改成「辣G腿」，跟排程表一致
+            if (spActualExp > 0 && spActualExp === actual) {
+              label  = '辣G腿';
+              actual = spActualExp;
+              remark = '';
+            } else if (spActualExp > 0) {
+              // 部分辣、部分不辣 → 備註註明辣G腿數量
+              remark = remark ? (remark + '；辣G腿'+spActualExp+unit) : ('辣G腿'+spActualExp+unit);
+            }
+          }
           rows.push([dateLabel, wdLabel, label, actual, unit, remark]);
           dateLabel = '';
           wdLabel   = '';
         });
+        // 若當天只有辣G腿、沒有一般G腿項目，仍需單獨輸出一列
+        if (glegSpicyItemExp && !hasGlegItemExp) {
+          var spOnlyExp = glegSpicyItemExp.actual || 0;
+          if (spOnlyExp > 0) {
+            rows.push([dateLabel, wdLabel, '辣G腿', spOnlyExp, '鍋', '']);
+            dateLabel = '';
+            wdLabel   = '';
+          }
+        }
       }
 
       var ws = XLSX.utils.aoa_to_sheet(rows);
