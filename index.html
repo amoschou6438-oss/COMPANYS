@@ -2650,15 +2650,15 @@
     <div id="sched-import-msg" style="font-size:12px;margin-top:6px;min-height:14px"></div>
   </div>
 
-  <!-- ===== 當月目前排程 匯出/匯入（JSON 備份，非 Excel 對照匯入） ===== -->
+  <!-- ===== 一鍵備份／還原（當月排程＋盤點庫存＋當月叫貨一覽表） ===== -->
   <div class="sched-import-bar" style="margin-top:10px">
-    <div class="sched-import-title">💾 當月目前排程 備份／還原</div>
-    <div class="sched-import-hint">將目前檢視月份的排程資料匯出成檔案備份，或從備份檔匯入（會覆蓋該月已存在日期的排程資料，匯入前請確認）。</div>
+    <div class="sched-import-title">💾 一鍵備份／還原</div>
+    <div class="sched-import-hint">將目前檢視月份的「當月排程」「盤點庫存」「當月叫貨一覽表」三項資料一次匯出成單一備份檔，或從備份檔一鍵還原（會覆蓋這些項目中已存在的對應資料，匯入前請確認）。</div>
     <div class="sched-import-row">
-      <button type="button" onclick="window.exportCurrentMonthSchedule()" style="padding:7px 16px;border:1px solid #1565c0;border-radius:6px;background:#eaf2fb;color:#1565c0;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">📤 匯出當月排程</button>
+      <button type="button" onclick="window.exportAllMonthlyBackup()" style="padding:7px 16px;border:1px solid #1565c0;border-radius:6px;background:#eaf2fb;color:#1565c0;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">📤 一鍵備份</button>
       <label for="sched-json-import-file" class="sched-import-btn">
-        <span>📥 匯入當月排程</span>
-        <input type="file" id="sched-json-import-file" accept=".json,application/json" style="display:none" onchange="window.importCurrentMonthSchedule(event)">
+        <span>📥 一鍵還原</span>
+        <input type="file" id="sched-json-import-file" accept=".json,application/json" style="display:none" onchange="window.importAllMonthlyBackup(event)">
       </label>
       <span id="sched-json-import-msg" style="font-size:12px;color:var(--ink3)"></span>
     </div>
@@ -19186,6 +19186,194 @@ function debugFixNow() {
   function _invStockContainer(){
     return document.getElementById('inv-stock-section');
   }
+
+  // ------------------------------------------------------------------
+  // ③ 一鍵備份／還原：當月排程 ＋ 盤點庫存 ＋ 當月叫貨一覽表
+  //    （合併①②與叫貨資料，單一 JSON 檔一次備份／還原三項）
+  // ------------------------------------------------------------------
+  window.exportAllMonthlyBackup = function(){
+    try {
+      var now = new Date();
+      var y = window._schedViewYear || now.getFullYear();
+      var m = window._schedViewMonth || (now.getMonth() + 1);
+      var mk = y + '-' + _pad2(m) + '-';
+
+      // 1) 當月排程
+      var SCHD_KEY = window._SCHD_KEY || 'schedule_v2';
+      var allSched = {};
+      try { allSched = JSON.parse(localStorage.getItem(SCHD_KEY) || '{}'); } catch(e){}
+      var monthSched = {};
+      Object.keys(allSched).forEach(function(dk){
+        if (dk.indexOf(mk) === 0) monthSched[dk] = allSched[dk];
+      });
+
+      // 2) 盤點庫存（目前畫面上所有欄位數值）
+      var invData = {};
+      var container = _invStockContainer();
+      if (container) {
+        var fields = container.querySelectorAll('input[id], select[id], textarea[id]');
+        fields.forEach(function(el){ invData[el.id] = el.value; });
+      }
+
+      // 3) 當月叫貨一覽表
+      var allOrderSched = {};
+      try { allOrderSched = JSON.parse(localStorage.getItem('order_sched_v1') || '{}'); } catch(e){}
+      var allArrival = {};
+      try { allArrival = JSON.parse(localStorage.getItem('order_arrival_v1') || '{}'); } catch(e){}
+      var monthOrderSched = {};
+      var monthArrival = {};
+      Object.keys(allOrderSched).forEach(function(dk){
+        if (dk.indexOf(mk) === 0) monthOrderSched[dk] = allOrderSched[dk];
+      });
+      Object.keys(allArrival).forEach(function(dk){
+        if (dk.indexOf(mk) === 0) monthArrival[dk] = allArrival[dk];
+      });
+
+      var schedCount = Object.keys(monthSched).length;
+      var invCount   = Object.keys(invData).length;
+      var orderCount = Object.keys(monthOrderSched).length;
+
+      if (schedCount === 0 && invCount === 0 && orderCount === 0) {
+        alert('目前檢視的 ' + y + '年' + m + '月 沒有可備份的排程、盤點庫存或叫貨資料。');
+        return;
+      }
+
+      var payload = {
+        type: 'der-life-full-monthly-backup',
+        version: 1,
+        year: y,
+        month: m,
+        exportedAt: new Date().toISOString(),
+        schedule: monthSched,
+        inventory: invData,
+        orderSched: monthOrderSched,
+        orderArrival: monthArrival
+      };
+      _downloadJson(payload, '一鍵備份_' + y + '年' + m + '月_' + _todayStamp() + '.json');
+    } catch(err){
+      alert('備份失敗：' + (err && err.message ? err.message : err));
+    }
+  };
+
+  window.importAllMonthlyBackup = function(ev){
+    var input = ev && ev.target;
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    var msgEl = document.getElementById('sched-json-import-msg');
+    var reader = new FileReader();
+    reader.onload = function(e){
+      try {
+        var payload = JSON.parse(e.target.result);
+        if (!payload || typeof payload !== 'object') throw new Error('檔案格式錯誤');
+
+        var isFullBackup = payload.type === 'der-life-full-monthly-backup';
+        // 相容舊版「僅排程」備份檔（payload.data 或整個 payload 本身即為排程資料）
+        var schedData = isFullBackup
+          ? payload.schedule
+          : (payload.data && typeof payload.data === 'object' ? payload.data : payload);
+        var invData          = isFullBackup ? payload.inventory   : null;
+        var orderSchedData   = isFullBackup ? payload.orderSched  : null;
+        var orderArrivalData = isFullBackup ? payload.orderArrival: null;
+
+        var schedKeys = (schedData && typeof schedData === 'object')
+          ? Object.keys(schedData).filter(function(k){ return /^\d{4}-\d{2}-\d{2}$/.test(k); })
+          : [];
+        var invKeys = (invData && typeof invData === 'object') ? Object.keys(invData) : [];
+        var orderKeys = (orderSchedData && typeof orderSchedData === 'object') ? Object.keys(orderSchedData) : [];
+
+        if (schedKeys.length === 0 && invKeys.length === 0 && orderKeys.length === 0) {
+          throw new Error('檔案中沒有可用的備份資料');
+        }
+
+        var y = payload.year, m = payload.month;
+        var labelYM = (y && m) ? (y + '年' + m + '月') : '此份';
+
+        var parts = [];
+        if (schedKeys.length) parts.push('排程 ' + schedKeys.length + ' 天');
+        if (invKeys.length)   parts.push('盤點庫存 ' + invKeys.length + ' 個欄位');
+        if (orderKeys.length) parts.push('叫貨紀錄 ' + orderKeys.length + ' 天');
+
+        var ok = confirm(
+          '確定要匯入「' + labelYM + '」一鍵備份嗎？\n' +
+          '包含：' + parts.join('、') + '。\n' +
+          '將覆蓋這些項目中已存在的對應資料（此動作無法復原，建議先備份目前資料）。'
+        );
+        if (!ok) { if (input) input.value = ''; return; }
+
+        // ── 1) 還原當月排程 ──
+        if (schedKeys.length) {
+          var SCHD_KEY = window._SCHD_KEY || 'schedule_v2';
+          var allSched = {};
+          try { allSched = JSON.parse(localStorage.getItem(SCHD_KEY) || '{}'); } catch(err){}
+          try { localStorage.setItem('schedule_v2_backup_before_json_import', JSON.stringify(allSched)); } catch(err){}
+          schedKeys.forEach(function(dk){ allSched[dk] = schedData[dk]; });
+          localStorage.setItem(SCHD_KEY, JSON.stringify(allSched));
+
+          if (y && m) {
+            window._schedViewYear = parseInt(y, 10);
+            window._schedViewMonth = parseInt(m, 10);
+            window._schedViewMode = 'month';
+          }
+          if (typeof buildMonthlySchedule === 'function') {
+            try { buildMonthlySchedule(window._schedViewYear, window._schedViewMonth); } catch(err){}
+          }
+        }
+
+        // ── 2) 還原盤點庫存 ──
+        if (invKeys.length) {
+          var container = _invStockContainer();
+          if (container) {
+            invKeys.forEach(function(id){
+              var el = document.getElementById(id);
+              if (!el || !container.contains(el)) return; // 只還原盤點庫存區塊內的欄位
+              el.value = invData[id];
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            if (typeof saveInputs === 'function') { try { saveInputs(); } catch(err){} }
+            if (typeof saveNwInputs === 'function') { try { saveNwInputs(); } catch(err){} }
+          }
+        }
+
+        // ── 3) 還原當月叫貨一覽表 ──
+        if (orderKeys.length) {
+          var allOrderSched = {};
+          try { allOrderSched = JSON.parse(localStorage.getItem('order_sched_v1') || '{}'); } catch(err){}
+          orderKeys.forEach(function(dk){ allOrderSched[dk] = orderSchedData[dk]; });
+          localStorage.setItem('order_sched_v1', JSON.stringify(allOrderSched));
+
+          if (orderArrivalData && typeof orderArrivalData === 'object') {
+            var allArrival = {};
+            try { allArrival = JSON.parse(localStorage.getItem('order_arrival_v1') || '{}'); } catch(err){}
+            Object.keys(orderArrivalData).forEach(function(dk){ allArrival[dk] = orderArrivalData[dk]; });
+            localStorage.setItem('order_arrival_v1', JSON.stringify(allArrival));
+          }
+
+          if (y && m) {
+            window._orderMonthYear = parseInt(y, 10);
+            window._orderMonthMonth = parseInt(m, 10);
+          }
+          if (typeof buildOrderMonthlyView === 'function') { try { buildOrderMonthlyView(); } catch(err){} }
+        }
+
+        if (typeof recalcAll === 'function') { try { recalcAll(); } catch(err){} }
+
+        var doneMsg = '✅ 已還原：' + parts.join('、');
+        if (msgEl) { msgEl.style.color = 'var(--green)'; msgEl.textContent = doneMsg; }
+        alert(doneMsg + (labelYM !== '此份' ? '（' + labelYM + '）' : '') + '，畫面已切換到該月。');
+      } catch(err){
+        if (msgEl) { msgEl.style.color = 'var(--red)'; msgEl.textContent = '❌ 還原失敗：' + (err && err.message ? err.message : err); }
+        alert('還原失敗：' + (err && err.message ? err.message : err));
+      } finally {
+        if (input) input.value = '';
+      }
+    };
+    reader.onerror = function(){
+      alert('讀取檔案失敗');
+      if (input) input.value = '';
+    };
+    reader.readAsText(file, 'UTF-8');
+  };
 
   window.exportInventorySnapshot = function(){
     try {
