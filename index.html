@@ -2890,7 +2890,7 @@ function autoShrinkSummaries(root) {
     // 插入 hub 到 main 開頭
     main.insertBefore(hub, main.firstChild);
     // 頁面載入後初始化排程（等所有 JS 就緒）
-    setTimeout(function(){ if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(); }, 100);
+    setTimeout(function(){ if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(undefined, undefined, true); }, 100);
   }
 
   window.hubShowSub = function(subId, btn) {
@@ -2903,7 +2903,7 @@ function autoShrinkSummaries(root) {
     });
     if (btn) btn.classList.add('active');
     // 觸發各子頁初始化
-    if (subId === 'hub-sub-schedule') { if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(); }
+    if (subId === 'hub-sub-schedule') { if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(undefined, undefined, true); }
     if (subId === 'hub-sub-actual')   { setTimeout(function(){ if (window.AR) window.AR.init(); }, 50); }
   };
 
@@ -2974,7 +2974,7 @@ function showTab(name) {
     if (name === 'monthly-schedule') { if (typeof hubShowSub==='function') hubShowSub('hub-sub-schedule', document.querySelector('#tab-sched-hub [data-target="hub-sub-schedule"]')); }
     if (name === 'actual-record')    { if (typeof hubShowSub==='function') hubShowSub('hub-sub-actual',   document.querySelector('#tab-sched-hub [data-target="hub-sub-actual"]')); }
     if (name === 'order')            { if (typeof hubShowSub==='function') hubShowSub('hub-sub-order',    document.querySelector('#tab-sched-hub [data-target="hub-sub-order"]')); }
-    if (name === 'sched-hub')        { if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(); }
+    if (name === 'sched-hub')        { if (typeof buildMonthlySchedule==='function') buildMonthlySchedule(undefined, undefined, true); }
   }
   if (event && event.target && event.target.classList) event.target.classList.add('active');
   // 程式化呼叫時找對應按鈕（如帶入下週）
@@ -2996,7 +2996,7 @@ function showTab(name) {
     recalcMushrShredApp();
   }
   if (name === 'zongzi') { zCalcAll(); }
-  if (name === 'monthly-schedule') { buildMonthlySchedule(); }
+  if (name === 'monthly-schedule') { buildMonthlySchedule(undefined, undefined, true); }
   if (name === 'actual-record') {
     if (window.AR) window.AR.init();
   }
@@ -8436,7 +8436,7 @@ function recalcOilySeasoning() {
     window._schedViewYear = now.getFullYear();
     window._schedViewMonth = now.getMonth() + 1;
     window._schedViewMode = 'month';
-    buildMonthlySchedule(window._schedViewYear, window._schedViewMonth);
+    buildMonthlySchedule(window._schedViewYear, window._schedViewMonth, true);
   };
 
   // 週視圖切換
@@ -8810,7 +8810,7 @@ function recalcOilySeasoning() {
     });
   }
 
-  window.buildMonthlySchedule = function(viewYear, viewMonth) {
+  window.buildMonthlySchedule = function(viewYear, viewMonth, scrollToday) {
     var now = new Date();
     var year = viewYear || window._schedViewYear || now.getFullYear();
     var month = viewMonth || window._schedViewMonth || (now.getMonth() + 1);
@@ -8954,6 +8954,15 @@ function recalcOilySeasoning() {
       renderAllDayPanels(fullDateList);
       // 摘要文字自動縮小
       requestAnimationFrame(function(){ autoShrinkSummaries(cont); });
+      // 開啟排程頁時，自動捲動到「今天」的排程列
+      if (scrollToday && isCurrentMonth) {
+        requestAnimationFrame(function(){
+          setTimeout(function(){
+            var todayEl = document.getElementById('sched-day-' + todayKey);
+            if (todayEl) todayEl.scrollIntoView({ block: 'center' });
+          }, 80);
+        });
+      }
     }
   };
 
@@ -16749,7 +16758,7 @@ initPowder();
 recalcDaily();
 recalcOilyTop();
 // 預設頁是排程表，初始化時建立
-buildMonthlySchedule();
+buildMonthlySchedule(undefined, undefined, true);
 
 
 
