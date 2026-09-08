@@ -4708,7 +4708,14 @@ function recalcAll() {
     zongziC: getVal('q_zongzi_c'),
     oilyRice: getVal('q_oily_rice'),
     mushrShred: getVal('q_mushr_shred'),
-    curry: getVal('q_curry'),
+    curry: (function() {
+      // 與水餃粉(dump_powder)採用同一套「即時抓排程」邏輯，避免與 nw_q_curry 手動快照欄位不同步
+      if (typeof window._getWeekTotals !== 'function' || typeof window._getCurrentWeekKeys !== 'function') return getVal('q_curry');
+      var applyWeek = window._lastAppliedWeek;
+      var weekKeys = (applyWeek === 'next' && typeof window._getNextWeekKeys === 'function')
+        ? window._getNextWeekKeys() : window._getCurrentWeekKeys();
+      return window._getWeekTotals(weekKeys)['curry'] || 0;
+    })(),
     pepperSalt: getVal('q_pepper_salt'),
     monkeyRice: getVal('q_monkey_rice'),
     glegTimes: getVal('q_gleg_times'),
@@ -4756,7 +4763,7 @@ function recalcAll() {
       q.minced      = gcw('cw_q_minced',       'q_minced');
       q.mincedChili = gcw('cw_q_minced_chili', 'q_minced_chili');
       q.mushrShred  = gcw('cw_q_mushr_shred',  'q_mushr_shred');
-      q.curry       = gcw('cw_q_curry',        'q_curry');
+      // 咖哩粉改為即時抓排程（同水餃粉邏輯），不再用 cw_q_curry 快照覆蓋
       q.pepperSalt  = gcw('cw_q_pepper_salt',  'q_pepper_salt');
     }
   })();
@@ -4768,8 +4775,9 @@ function recalcAll() {
     var nw = getNwQValues();
     if (!nw) return;
     // Override production quantities with nw values (manual overrides take priority)
+    // 咖哩粉(curry) 移除，改為即時抓排程（同水餃粉 dump_powder 邏輯），不再被 nw_q_curry 手動快照覆蓋
     var nwKeys = ['wonton','wontonFill','dumpXC','dumpHQ','dumpHQFill','triangle','gleg','glegTimes',
-                  'zongziD','zongziC','oilyRice','monkeyRice','minced','mincedChili','mushrShred','curry','pepperSalt',
+                  'zongziD','zongziC','oilyRice','monkeyRice','minced','mincedChili','mushrShred','pepperSalt',
                   'triNext'];
     nwKeys.forEach(function(k) { if (nw[k] !== undefined) q[k] = nw[k]; });
   })();
