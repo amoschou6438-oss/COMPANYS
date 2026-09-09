@@ -17114,7 +17114,9 @@ function buildLineMsg(dateKey) {
   lines.push(m + '/' + d);
 
   if (items.length === 0) {
-    lines.push('（無排程）');
+    var wd = dayOfWeek(parseInt(parts[0],10), m, d);
+    var isWeekday = (wd >= 1 && wd <= 5);
+    lines.push(isWeekday ? '今日公司休息' : '（無排程）');
     return lines.join('\n');
   }
 
