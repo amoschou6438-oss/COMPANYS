@@ -8295,6 +8295,40 @@ function recalcOilySeasoning() {
     return ['日','一','二','三','四','五','六'][wd];
   }
 
+  // ── 台灣國定假日／紀念日判斷 ──
+  // 每年日期固定的節日（月-日）
+  var TW_FIXED_HOLIDAYS = {
+    '01-01': '元旦',
+    '02-28': '和平紀念日',
+    '04-04': '兒童節',
+    '05-01': '勞動節',
+    '09-28': '教師節',
+    '10-10': '國慶日',
+    '10-25': '光復節',
+    '12-25': '行憲紀念日'
+  };
+  // 農曆為準的節日（除夕、春節、清明、端午、中秋），每年國曆日期不同，
+  // 需逐年更新此表；下方為目前已知／推估的年度，若當年份不在表中則不會顯示。
+  // ※建議每年年初依「人事行政總處」公告的行事曆核對、補上下一年度日期。
+  var TW_LUNAR_HOLIDAYS = {
+    2024: { '02-08':'除夕', '02-09':'春節', '02-10':'春節', '02-12':'春節', '04-04':'清明節', '06-10':'端午節', '09-17':'中秋節' },
+    2025: { '01-28':'除夕', '01-29':'春節', '01-30':'春節', '01-31':'春節', '04-04':'清明節', '05-31':'端午節', '10-06':'中秋節' },
+    2026: { '02-15':'除夕', '02-16':'春節', '02-17':'春節', '02-18':'春節', '04-05':'清明節', '06-19':'端午節', '09-25':'中秋節' }
+    // 2027 年以後請自行補充（可上網查詢當年公告的農曆節日日期）
+  };
+  // 傳入 dateKey（格式 YYYY-MM-DD），回傳當天節日名稱字串，無則回傳空字串
+  function getTaiwanHolidayLabel(dateKey) {
+    if (!dateKey) return '';
+    var parts = dateKey.split('-');
+    if (parts.length !== 3) return '';
+    var y = parseInt(parts[0], 10);
+    var md = parts[1] + '-' + parts[2];
+    if (TW_FIXED_HOLIDAYS[md]) return TW_FIXED_HOLIDAYS[md];
+    var lunarYear = TW_LUNAR_HOLIDAYS[y];
+    if (lunarYear && lunarYear[md]) return lunarYear[md];
+    return '';
+  }
+
   // Calculate ingredient totals from items list
   function calcIngredients(items) {
     var totals = {}; // name+unit -> { name, unit, total }
@@ -8596,6 +8630,12 @@ function recalcOilySeasoning() {
     // 今日標記
     if (isToday) {
       html += '<span style="font-size:11px;background:var(--red);color:#fff;padding:1px 8px;border-radius:8px;font-weight:700;letter-spacing:0.5px">今日</span>';
+    }
+
+    // 台灣節日標記
+    var holidayLabel = getTaiwanHolidayLabel(dateKey);
+    if (holidayLabel) {
+      html += '<span style="font-size:11px;background:#fff3e0;color:#e65100;border:1px solid #ffb74d;padding:1px 8px;border-radius:8px;font-weight:700;letter-spacing:0.5px">🎌 ' + holidayLabel + '</span>';
     }
 
     // 摘要
@@ -10002,6 +10042,7 @@ function recalcOilySeasoning() {
     });
     h += '</div>';
     h += '<div style="margin-top:8px;font-size:11px;color:#6a1b9a">拌好每包裝 <strong>4斤</strong></div>';
+    h += '<div style="margin-top:4px;font-size:11px;color:#6a1b9a">備註：<strong>1份</strong>約可包 <strong>21包（4斤）+2斤</strong></div>';
     h += '</div>';
     el.innerHTML = h;
   }
