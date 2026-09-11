@@ -70,6 +70,11 @@
 
   html { font-size: 13px; }
 
+  html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
   body {
     font-family: 'Noto Sans TC', sans-serif;
     background: var(--bg);
@@ -77,26 +82,11 @@
     min-height: 100vh;
   }
 
-  /* ===== 手機全局縮小：用 zoom 讓所有元素（含內聯 style px）同比例縮放 ===== */
+  /* 手機友善：不再使用不穩定的 zoom 縮放（許多瀏覽器/App 內建瀏覽器不支援 zoom，
+     會造成畫面實際寬度超出螢幕）。改用各元件自身的 rem/clamp() 與媒體查詢，
+     確保任何狀況下版面都不會超出視窗寬度。 */
   @media (max-width: 600px) {
-    /* zoom 是最可靠的整體縮放方案，涵蓋所有 inline style 的 px 值 */
-    body {
-      zoom: 0.72;
-      /* 讓縮放後寬度仍填滿視窗 */
-      width: calc(100% / 0.72);
-      max-width: calc(100% / 0.72);
-      overflow-x: hidden;
-    }
-    /* 修正 fixed/sticky 彈窗因 zoom 偏移的問題 */
-    [style*="position:fixed"],
-    [style*="position: fixed"] {
-      zoom: 1;
-    }
-    #clear-confirm-modal,
-    #clear-applied-modal,
-    #sched-import-modal {
-      zoom: 1;
-    }
+    html { font-size: 12px; }
     /* 輸入框觸控區域略微加大 */
     input, button, select { touch-action: manipulation; }
   }
@@ -104,24 +94,31 @@
   /* HEADER */
   .header {
     background: var(--ink);
-    padding: 18px 24px 14px;
+    padding: 14px 16px 12px;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: 16px;
+    gap: 10px 16px;
     border-bottom: 3px solid var(--gold);
   }
   .header-logo {
     font-family: 'Noto Serif TC', serif;
-    font-size: 26px;
+    font-size: clamp(17px, 5vw, 26px);
     font-weight: 700;
     color: var(--gold2);
-    letter-spacing: 4px;
+    letter-spacing: clamp(1px, 0.6vw, 4px);
+    word-break: break-word;
   }
   .header-sub {
-    font-size: 12px;
+    font-size: clamp(9px, 2.6vw, 12px);
     color: var(--gold);
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     margin-top: 2px;
+    word-break: break-word;
+  }
+  @media (max-width: 600px) {
+    .header { padding: 10px 12px 10px; gap: 6px 10px; }
+    .header-sub { letter-spacing: 0.5px; }
   }
 
   /* TABS */
@@ -17876,45 +17873,17 @@ function showLineAlertModal(dateKey, msg) {
   }
 })();
 
-// ===== 手機整體縮放 =====
+// ===== 手機版面 =====
+// 註：先前使用 CSS/JS 的 zoom 縮放技巧，因 zoom 在許多行動瀏覽器／App 內建
+// 瀏覽器（例如部分 LINE、Facebook 內建瀏覽器）不受支援或行為不一致，
+// 反而造成畫面實際寬度超出螢幕、文字過大等問題。已改為純 CSS
+// rem／clamp()／media query 的響應式設計（見 <style> 區塊），故此處不再
+// 對 body 套用 zoom，僅保留空函式以維持相容性（避免其他程式呼叫時出錯）。
 (function() {
-  var ZOOM = 0.72;
-  var BREAKPOINT = 600;
-
   function applyMobileZoom() {
-    var isMobile = window.innerWidth <= BREAKPOINT;
-    if (isMobile) {
-      document.body.style.zoom = ZOOM;
-      document.body.style.width = (100 / ZOOM) + '%';
-      document.body.style.maxWidth = (100 / ZOOM) + '%';
-      document.body.style.overflowX = 'hidden';
-      // 修正 fixed 彈窗（zoom 會讓 fixed 定位相對於縮放後的容器偏移）
-      var modals = document.querySelectorAll('#clear-confirm-modal, #clear-applied-modal, #sched-import-modal');
-      modals.forEach(function(m) {
-        m.style.zoom = String(1 / ZOOM);
-        m.style.width = (100 * ZOOM) + 'vw';
-        m.style.height = (100 * ZOOM) + 'vh';
-        m.style.top = '0';
-        m.style.left = '0';
-      });
-    } else {
-      document.body.style.zoom = '';
-      document.body.style.width = '';
-      document.body.style.maxWidth = '';
-      document.body.style.overflowX = '';
-      var modals2 = document.querySelectorAll('#clear-confirm-modal, #clear-applied-modal, #sched-import-modal');
-      modals2.forEach(function(m) {
-        m.style.zoom = '';
-        m.style.width = '';
-        m.style.height = '';
-      });
-    }
+    // 不做任何縮放；版面已由 CSS 負責響應式呈現。
   }
-
-  // 頁面載入時套用
-  applyMobileZoom();
-  // 視窗大小改變時重新套用
-  window.addEventListener('resize', applyMobileZoom);
+  window.applyMobileZoom = applyMobileZoom;
 })();
 
 // ===== 📊 實際製作記錄 & 匯出系統 v2 =====
