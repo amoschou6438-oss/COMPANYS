@@ -1259,6 +1259,10 @@
       <span class="home-btn-icon">📋</span>
       <span class="home-btn-label">回報排程至 LINE</span>
     </button>
+    <button type="button" class="home-btn" onclick="window.openHomePrepCalcModal()">
+      <span class="home-btn-icon">💻</span>
+      <span class="home-btn-label">計算備料斤兩</span>
+    </button>
     <button type="button" class="home-btn" onclick="window.openHomeStockModal()">
       <span class="home-btn-icon">⌨️</span>
       <span class="home-btn-label">輸入庫存剩料</span>
@@ -1266,6 +1270,10 @@
     <button type="button" class="home-btn" onclick="window.showAppShell('order')">
       <span class="home-btn-icon">🛒</span>
       <span class="home-btn-label">叫貨輸入</span>
+    </button>
+    <button type="button" class="home-btn" onclick="window.openHomeMonthEndExportModal()">
+      <span class="home-btn-icon">📨</span>
+      <span class="home-btn-label">月底報表匯出</span>
     </button>
     <button type="button" class="home-btn" onclick="window.dlOpenModal('modal-excel-import')">
       <span class="home-btn-icon">📥</span>
@@ -1362,6 +1370,52 @@
       <div class="irow"><label>選擇日期</label><div class="ifield"><input type="date" id="home-line-report-date"></div></div>
       <div style="text-align:right;margin-top:14px">
         <button type="button" class="btn btn-primary" onclick="window.homeSendLineReport()">產生回報內容</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 彈出視窗：計算備料斤兩 ===== -->
+  <div id="modal-prep-calc" class="dl-modal-overlay">
+    <div class="dl-modal-box" style="max-width:760px">
+      <button type="button" class="dl-modal-close" onclick="window.dlCloseModal('modal-prep-calc')">✕</button>
+      <div class="dl-modal-title">💻 計算備料斤兩</div>
+      <div class="notice" style="margin-bottom:14px">依「製作數量輸入」頁的本週／下週製作數量，自動換算<strong>香菇頭、碎肉、菜脯、G腿乾肉片、粽子菜脯</strong>的需求換算值及庫存狀態；若本週或下週有製作<strong>粽子</strong>或<strong>油飯</strong>，也會一併列出所需的乾料及食材備量。</div>
+
+      <div class="card" style="margin-bottom:14px">
+        <div class="card-title">📋 本週</div>
+        <div id="prepcalc-cur-convert" style="display:flex;flex-wrap:wrap;gap:8px;align-items:stretch"></div>
+        <div id="prepcalc-cur-zongzi-oily-wrap" style="display:none;margin-top:12px">
+          <div style="font-weight:700;color:var(--ink2);font-size:13px;margin-bottom:6px">🎋🍚 粽子及油飯配料需備量</div>
+          <div id="prepcalc-cur-zongzi-oily" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+        <div id="prepcalc-cur-empty" style="font-size:13px;color:var(--ink3);padding:6px 0">本週目前無需備料項目。</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📅 下週</div>
+        <div id="prepcalc-nw-convert" style="display:flex;flex-wrap:wrap;gap:8px;align-items:stretch"></div>
+        <div id="prepcalc-nw-zongzi-oily-wrap" style="display:none;margin-top:12px">
+          <div style="font-weight:700;color:var(--ink2);font-size:13px;margin-bottom:6px">🎋🍚 粽子及油飯配料需備量</div>
+          <div id="prepcalc-nw-zongzi-oily" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+        <div id="prepcalc-nw-empty" style="font-size:13px;color:var(--ink3);padding:6px 0">下週目前無需備料項目。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 彈出視窗：月底報表匯出 ===== -->
+  <div id="modal-month-end-export" class="dl-modal-overlay">
+    <div class="dl-modal-box">
+      <button type="button" class="dl-modal-close" onclick="window.dlCloseModal('modal-month-end-export')">✕</button>
+      <div class="dl-modal-title">📨 月底報表匯出</div>
+      <div class="sched-import-bar" style="border:none;padding:0;margin:0;background:transparent">
+        <div class="sched-import-hint">分別匯出「實際製作記錄／班表」及「當月叫貨一覽表」的 Excel 檔，匯出後可直接開啟 LINE 傳送報表給相關人員。</div>
+        <div class="sched-import-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <button type="button" onclick="window.homeExportActualExcel()" style="padding:8px 16px;border:1px solid var(--gold);border-radius:6px;background:var(--gold);color:var(--ink);font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">📊 匯出實際製作記錄／班表 Excel</button>
+          <button type="button" onclick="window.homeExportOrderExcel()" style="padding:8px 16px;border:1px solid #1565c0;border-radius:6px;background:#eaf2fb;color:#1565c0;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">📋 匯出當月叫貨一覽表記錄 Excel</button>
+          <button type="button" onclick="window.homeOpenLineForReport()" style="padding:8px 16px;border:none;border-radius:6px;background:#06C755;color:#fff;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">💬 開啟 LINE 傳送報表</button>
+        </div>
+        <div id="home-month-end-export-msg" style="font-size:12px;margin-top:8px;min-height:14px;color:var(--ink3)"></div>
       </div>
     </div>
   </div>
@@ -19761,6 +19815,112 @@ function debugFixNow() {
     if (!dateKey) { alert('請選擇日期'); return; }
     window.dlCloseModal('modal-line-report');
     if (typeof window.sendLineReport === 'function') window.sendLineReport(dateKey);
+  };
+
+  // ── 計算備料斤兩：分別以「本週」「下週」為計算來源，擷取乾貨頁已算好的
+  //    「香菇頭/碎肉/菜脯/G腿乾肉片/粽子菜脯換算值及狀態」與「粽子及油飯配料需備量」兩區塊內容，
+  //    顯示於主畫面彈出視窗，並在結束後還原原本畫面的計算來源設定，不影響其他分頁顯示 ──
+  function _prepCalcSnapshot() {
+    var convertBlock   = document.getElementById('mushr-convert-block');
+    var convertContent = document.getElementById('mushr-convert-content');
+    var zoBlock   = document.getElementById('mushr-zongzi-oily-block');
+    var zoContent = document.getElementById('mushr-zongzi-oily-content');
+    var convertHtml = convertContent ? convertContent.innerHTML : '';
+    var zoHtml = zoContent ? zoContent.innerHTML : '';
+    return {
+      convertShow: !!(convertBlock && convertBlock.style.display !== 'none' && convertHtml.trim() !== ''),
+      convertHtml: convertHtml,
+      zoShow: !!(zoBlock && zoBlock.style.display !== 'none' && zoHtml.trim() !== ''),
+      zoHtml: zoHtml
+    };
+  }
+
+  function _prepCalcFill(prefix, snap) {
+    var convertEl = document.getElementById('prepcalc-' + prefix + '-convert');
+    var zoWrap    = document.getElementById('prepcalc-' + prefix + '-zongzi-oily-wrap');
+    var zoEl      = document.getElementById('prepcalc-' + prefix + '-zongzi-oily');
+    var emptyEl   = document.getElementById('prepcalc-' + prefix + '-empty');
+    if (convertEl) convertEl.innerHTML = snap.convertShow ? snap.convertHtml : '';
+    if (zoWrap) zoWrap.style.display = snap.zoShow ? '' : 'none';
+    if (zoEl) zoEl.innerHTML = snap.zoShow ? snap.zoHtml : '';
+    if (emptyEl) emptyEl.style.display = (snap.convertShow || snap.zoShow) ? 'none' : '';
+  }
+
+  window.openHomePrepCalcModal = function() {
+    var originalSrc = window._overviewSource || 'cur';
+
+    if (typeof window.setOverviewSource === 'function') {
+      window.setOverviewSource('cur');
+    } else if (typeof recalcAll === 'function') {
+      recalcAll();
+    }
+    var curSnap = _prepCalcSnapshot();
+
+    if (typeof window.setOverviewSource === 'function') {
+      window.setOverviewSource('nw');
+    }
+    var nwSnap = _prepCalcSnapshot();
+
+    // 還原使用者原本的計算來源設定，避免影響其他分頁（製作數量輸入／各商品製作數量一覽表等）的顯示
+    if (typeof window.setOverviewSource === 'function') {
+      window.setOverviewSource(originalSrc);
+    }
+
+    _prepCalcFill('cur', curSnap);
+    _prepCalcFill('nw', nwSnap);
+
+    window.dlOpenModal('modal-prep-calc');
+  };
+
+  // ── 月底報表匯出：實際製作記錄／班表 Excel、當月叫貨一覽表 Excel，並可一鍵開啟 LINE ──
+  function _homeExportMsg(msg, color) {
+    var el = document.getElementById('home-month-end-export-msg');
+    if (el) { el.textContent = msg; el.style.color = color || 'var(--ink3)'; }
+  }
+
+  window.openHomeMonthEndExportModal = function() {
+    _homeExportMsg('');
+    window.dlOpenModal('modal-month-end-export');
+  };
+
+  window.homeExportActualExcel = function() {
+    try {
+      if (window.AR && typeof window.AR.init === 'function') window.AR.init();
+      if (window.AR && typeof window.AR.exportExcel === 'function') {
+        window.AR.exportExcel();
+        _homeExportMsg('✅ 已匯出實際製作記錄／班表 Excel', '#2d6a4f');
+      } else {
+        _homeExportMsg('⚠️ 找不到班表匯出功能，請至「排程 ＆ 叫貨」分頁的實際製作記錄使用匯出功能', 'var(--red)');
+      }
+    } catch (e) {
+      _homeExportMsg('⚠️ 匯出班表時發生錯誤：' + e.message, 'var(--red)');
+    }
+  };
+
+  window.homeExportOrderExcel = function() {
+    try {
+      if (typeof window.exportOrderMonthlyExcel === 'function') {
+        window.exportOrderMonthlyExcel();
+        _homeExportMsg('✅ 已匯出當月叫貨一覽表 Excel', '#2d6a4f');
+      } else {
+        _homeExportMsg('⚠️ 找不到當月叫貨記錄匯出功能，請至「叫貨輸入」分頁使用匯出功能', 'var(--red)');
+      }
+    } catch (e) {
+      _homeExportMsg('⚠️ 匯出叫貨記錄時發生錯誤：' + e.message, 'var(--red)');
+    }
+  };
+
+  // 開啟 LINE（手機優先開啟 LINE App，未安裝則自動改開網頁版；桌機直接開啟網頁版）
+  window.homeOpenLineForReport = function() {
+    var ua = navigator.userAgent || '';
+    var isMobile = /Android|iPhone|iPad/i.test(ua);
+    var lineWebUrl = 'https://line.me/';
+    if (isMobile) {
+      location.href = 'line://nv/chat';
+      setTimeout(function() { window.open(lineWebUrl, '_blank'); }, 1200);
+    } else {
+      window.open(lineWebUrl, '_blank');
+    }
   };
 
 })();
