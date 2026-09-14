@@ -1365,8 +1365,27 @@
         <div class="irow"><label>剩餘拌粉量</label><div class="ifield"><input type="number" id="home_inv_gleg_powder_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_powder_left','inv_gleg_powder_left_inv')"><span class="unit">公斤</span></div></div>
       </div>
 
+      <div class="input-block" id="home-stock-block-oily-rice" style="--label-w:9.5em;display:none">
+        <div class="input-block-title">🍚 油飯料庫存</div>
+        <div class="irow"><label>飯上料</label><div class="ifield"><input type="number" id="home_inv_riceTop" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceTop','nw_inv_riceTop')"><span class="unit">兩</span></div></div>
+        <div class="irow"><label>紅糟肉絲</label><div class="ifield"><input type="number" id="home_inv_redShred" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_redShred','nw_inv_redShred')"><span class="unit">兩</span></div></div>
+        <div class="irow"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="home_inv_riceMushr" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceMushr','nw_inv_riceMushr')"><span class="unit">兩</span></div></div>
+        <div class="irow"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="home_inv_riceSource" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSource','nw_inv_riceSource')"><span class="unit">斤</span></div></div>
+        <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="home_inv_riceSourceExtra" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSourceExtra','nw_inv_riceSourceExtra')"><span class="unit">斤</span></div></div>
+      </div>
+
+      <div class="input-block" id="home-stock-block-zongzi" style="--label-w:9.5em;display:none">
+        <div class="input-block-title">🎋 粽子料庫存</div>
+        <div class="irow"><label>菜脯料</label><div class="ifield"><input type="number" id="home_inv_gLegFill" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gLegFill','nw_inv_gLegFill')"><span class="unit">斤</span></div></div>
+        <div class="irow"><label>乾香菇</label><div class="ifield"><input type="number" id="home_inv_mushroom" min="0" oninput="window.homeSyncStock('home_inv_mushroom','nw_inv_mushroom')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>紅糟肉片</label><div class="ifield"><input type="number" id="home_inv_redMeat" min="0" oninput="window.homeSyncStock('home_inv_redMeat','nw_inv_redMeat')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>乾肉片</label><div class="ifield"><input type="number" id="home_inv_whiteMeat" min="0" oninput="window.homeSyncStock('home_inv_whiteMeat','nw_inv_whiteMeat')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>乾肉角</label><div class="ifield"><input type="number" id="home_inv_corner" min="0" oninput="window.homeSyncStock('home_inv_corner','nw_inv_corner')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>栗子</label><div class="ifield"><input type="number" id="home_inv_chestnut" min="0" oninput="window.homeSyncStock('home_inv_chestnut','nw_inv_chestnut')"><span class="unit">g</span></div></div>
+      </div>
+
       <div style="text-align:right;margin-top:6px">
-        <button type="button" class="btn btn-primary" onclick="window.dlCloseModal('modal-stock-input')">完成</button>
+        <button type="button" class="btn btn-primary" onclick="window.homeFinishStockInput()">完成</button>
       </div>
     </div>
   </div>
@@ -19821,7 +19840,29 @@ function debugFixNow() {
     window.scrollTo(0, 0);
   };
 
-  // ── 輸入庫存剩料：開啟前先將目前數值帶入主畫面欄位 ──
+  // ── 油飯料庫存 / 粽子料庫存：主畫面鏡射欄位 ↔ 下週頁原始欄位 ──
+  var HOME_OILY_RICE_PAIRS = [
+    ['home_inv_riceTop', 'nw_inv_riceTop'],
+    ['home_inv_redShred', 'nw_inv_redShred'],
+    ['home_inv_riceMushr', 'nw_inv_riceMushr'],
+    ['home_inv_riceSource', 'nw_inv_riceSource'],
+    ['home_inv_riceSourceExtra', 'nw_inv_riceSourceExtra']
+  ];
+  var HOME_OILY_RICE_SRC_IDS = ['inv_riceTop', 'inv_redShred', 'inv_riceMushr', 'inv_riceSource', 'inv_riceSourceExtra'];
+  var HOME_OILY_RICE_NW_IDS = ['nw_inv_riceTop', 'nw_inv_redShred', 'nw_inv_riceMushr', 'nw_inv_riceSource', 'nw_inv_riceSourceExtra'];
+
+  var HOME_ZONGZI_PAIRS = [
+    ['home_inv_gLegFill', 'nw_inv_gLegFill'],
+    ['home_inv_mushroom', 'nw_inv_mushroom'],
+    ['home_inv_redMeat', 'nw_inv_redMeat'],
+    ['home_inv_whiteMeat', 'nw_inv_whiteMeat'],
+    ['home_inv_corner', 'nw_inv_corner'],
+    ['home_inv_chestnut', 'nw_inv_chestnut']
+  ];
+  var HOME_ZONGZI_SRC_IDS = ['inv_gLegFill', 'inv_mushroom', 'inv_redMeat', 'inv_whiteMeat', 'inv_corner', 'inv_chestnut'];
+  var HOME_ZONGZI_NW_IDS = ['nw_inv_gLegFill', 'nw_inv_mushroom', 'nw_inv_redMeat', 'nw_inv_whiteMeat', 'nw_inv_corner', 'nw_inv_chestnut'];
+
+  // ── 輸入庫存剩料：開啟前先將目前數值帶入主畫面欄位；並依「今日排程」決定是否顯示油飯／粽子料庫存 ──
   window.openHomeStockModal = function() {
     var pairs = [
       ['home_inv_mushrHead', 'nw_inv_mushrHead'],
@@ -19836,7 +19877,52 @@ function debugFixNow() {
       var orig = document.getElementById(p[1]);
       if (mirror && orig) mirror.value = orig.value;
     });
+
+    // 判斷今日排程是否有油飯／粽子
+    var now = new Date();
+    var todayKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    var sd = window._schedData || {};
+    var todayItems = (sd[todayKey] && sd[todayKey].items) || [];
+    function hasProd(ids) {
+      return todayItems.some(function(it) { return ids.indexOf(it.prod) !== -1 && parseFloat(it.qty) > 0; });
+    }
+    var showOilyRice = hasProd(['oily_rice', 'monkey_rice']);
+    var showZongzi = hasProd(['zongzi_d', 'zongzi_c']);
+
+    var oilyBlock = document.getElementById('home-stock-block-oily-rice');
+    if (oilyBlock) oilyBlock.style.display = showOilyRice ? '' : 'none';
+    var zongziBlock = document.getElementById('home-stock-block-zongzi');
+    if (zongziBlock) zongziBlock.style.display = showZongzi ? '' : 'none';
+
+    if (showOilyRice) {
+      HOME_OILY_RICE_PAIRS.forEach(function(p) {
+        var mirror = document.getElementById(p[0]);
+        var orig = document.getElementById(p[1]);
+        if (mirror && orig) mirror.value = orig.value;
+      });
+    }
+    if (showZongzi) {
+      HOME_ZONGZI_PAIRS.forEach(function(p) {
+        var mirror = document.getElementById(p[0]);
+        var orig = document.getElementById(p[1]);
+        if (mirror && orig) mirror.value = orig.value;
+      });
+    }
+
     window.dlOpenModal('modal-stock-input');
+  };
+
+  // ── 輸入庫存剩料「完成」：若當日有顯示油飯／粽子料庫存區塊，直接將其設定為已盤點 ──
+  window.homeFinishStockInput = function() {
+    var oilyBlock = document.getElementById('home-stock-block-oily-rice');
+    if (oilyBlock && oilyBlock.style.display !== 'none' && typeof nwInvCkDoneGroup === 'function') {
+      nwInvCkDoneGroup('oilyRiceInv', HOME_OILY_RICE_SRC_IDS, HOME_OILY_RICE_NW_IDS);
+    }
+    var zongziBlock = document.getElementById('home-stock-block-zongzi');
+    if (zongziBlock && zongziBlock.style.display !== 'none' && typeof nwInvCkDoneGroup === 'function') {
+      nwInvCkDoneGroup('zongzi', HOME_ZONGZI_SRC_IDS, HOME_ZONGZI_NW_IDS);
+    }
+    window.dlCloseModal('modal-stock-input');
   };
 
   // ── 將主畫面輸入的數值同步回原本的欄位，並觸發原本的計算/儲存邏輯 ──
