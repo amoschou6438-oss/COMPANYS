@@ -1385,6 +1385,7 @@
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🧊 餛飩料庫存</div>
         <div class="irow"><label>冷凍庫存量</label><div class="ifield"><input type="text" inputmode="decimal" id="home_inv_wonton_frozen" placeholder="如 74+5 或 =74+5" title="可輸入 74+5 或 =74+5 等算式" oninput="window.homeSyncStock('home_inv_wonton_frozen','inv_wonton_frozen')" onblur="window.homeSyncStockBlur('home_inv_wonton_frozen','inv_wonton_frozen')"><span class="unit">包</span></div></div>
+        <div class="irow" title="本週實際炒出包數，若填入則帶入下週時以此為準（留空則用鍋數×13計算）"><label style="display:flex;flex-direction:column;gap:2px">本週實際炒出<span style="font-size:10px;color:var(--gold);font-weight:700">帶入下週時優先採用</span></label><div class="ifield"><input type="number" id="home_inv_wonton_actual_fry" min="0" style="color:var(--gold)!important" oninput="window.homeSyncStock('home_inv_wonton_actual_fry','inv_wonton_actual_fry')" onblur="window.homeSyncStockBlur('home_inv_wonton_actual_fry','inv_wonton_actual_fry')"><span class="unit">包</span></div></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
@@ -19900,6 +19901,7 @@ function debugFixNow() {
       ['home_inv_radish', 'nw_inv_radish'],
       ['home_inv_tri_left', 'nw_inv_tri_left'],
       ['home_inv_wonton_frozen', 'inv_wonton_frozen'],
+      ['home_inv_wonton_actual_fry', 'inv_wonton_actual_fry'],
       ['home_inv_gleg_powder_left', 'inv_gleg_powder_left_inv']
     ];
     pairs.forEach(function(p) {
@@ -19942,8 +19944,22 @@ function debugFixNow() {
     window.dlOpenModal('modal-stock-input');
   };
 
-  // ── 輸入庫存剩料「完成」：若當日有顯示油飯／粽子料庫存區塊，直接將其設定為已盤點 ──
+  // ── 輸入庫存剩料「完成」：主要原料／三角圓庫存／餛飩料庫存一律標記為已盤點；
+  //    若當日有顯示油飯／粽子料庫存區塊，也一併設定為已盤點 ──
   window.homeFinishStockInput = function() {
+    // 主要原料：香菇頭／碎肉／菜脯
+    if (typeof nwInvCkDone === 'function') {
+      nwInvCkDone('inv_mushrHead', 'nw_inv_mushrHead');
+      nwInvCkDone('inv_mince', 'nw_inv_mince');
+      nwInvCkDone('inv_radish', 'nw_inv_radish');
+      // 三角圓庫存：實際剩料
+      nwInvCkDone('q_tri_left', 'nw_inv_tri_left');
+    }
+    // 餛飩料庫存：冷凍庫存量（本週欄位，無需下週鏡射）
+    if (typeof invCkDone === 'function') {
+      invCkDone('inv_wonton_frozen');
+    }
+
     var oilyBlock = document.getElementById('home-stock-block-oily-rice');
     if (oilyBlock && oilyBlock.style.display !== 'none' && typeof nwInvCkDoneGroup === 'function') {
       nwInvCkDoneGroup('oilyRiceInv', HOME_OILY_RICE_SRC_IDS, HOME_OILY_RICE_NW_IDS);
