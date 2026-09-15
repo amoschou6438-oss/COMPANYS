@@ -9406,8 +9406,8 @@ function recalcOilySeasoning() {
     var j = Math.floor(liang / 16), l = liang % 16;
     return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : '') || '0兩';
   }
-  function renderWontonRecipePanel(dateKey, items) {
-    var el = document.getElementById('sched-wonton-recipe-' + dateKey);
+  function renderWontonRecipePanel(dateKey, items, targetId) {
+    var el = document.getElementById(targetId || ('sched-wonton-recipe-' + dateKey));
     if (!el) return;
     // 只顯示餛飩（包）的配方斤兩；餛飩料（鍋）不顯示任何斤兩資料
     var wontonItem = items && items.find(function(it){ return it.prod === 'wonton' && parseFloat(it.qty) > 0; });
@@ -9583,8 +9583,8 @@ function recalcOilySeasoning() {
   // ── G腿醬備料面板（顯示在G腿第一天的前一天）──
   // 邏輯：找出與 dateKey 同週的所有日期中，第一個有 G腿 排程的日期，
   //       若 dateKey 恰好是其前一天，則顯示以「當週G腿總鍋數」計算的醬調味料斤兩。
-  function renderGlegSaucePrepPanel(dateKey, schedData, year, month, daysInMonth) {
-    var el = document.getElementById('sched-gleg-sauce-prep-' + dateKey);
+  function renderGlegSaucePrepPanel(dateKey, schedData, year, month, daysInMonth, targetId) {
+    var el = document.getElementById(targetId || ('sched-gleg-sauce-prep-' + dateKey));
     if (!el) return;
 
     // 計算 dateKey 對應的星期幾（0=Sun）
@@ -10367,8 +10367,8 @@ function recalcOilySeasoning() {
     el.innerHTML = h;
   }
 
-  function renderCurryPanel(dateKey, items) {
-    var el = document.getElementById('sched-curry-' + dateKey);
+  function renderCurryPanel(dateKey, items, targetId) {
+    var el = document.getElementById(targetId || ('sched-curry-' + dateKey));
     if (!el) return;
     var cItem = items && items.find(function(it){ return it.prod === 'curry' && parseFloat(it.qty) > 0; });
     if (!cItem) { el.innerHTML = ''; return; }
@@ -10534,8 +10534,8 @@ function recalcOilySeasoning() {
   // ══════════════════════════════════════════════════
 
   // ── 三角圓炒料斤兩面板（1鍋量）──
-  function renderTriangleFillPanel(dateKey, items) {
-    var el = document.getElementById('sched-triangle-fill-' + dateKey);
+  function renderTriangleFillPanel(dateKey, items, targetId) {
+    var el = document.getElementById(targetId || ('sched-triangle-fill-' + dateKey));
     if (!el) return;
     // ── 只在排程顯示「炒三角圓料」字樣時才顯示斤兩面板 ──
     var sjyLabel = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
@@ -10752,8 +10752,8 @@ function recalcOilySeasoning() {
   }
 
   // ── 餛飩料調味斤兩面板（1鍋量）──
-  function renderWontonFillRecipePanel(dateKey, items) {
-    var el = document.getElementById('sched-wonton-fill-recipe-' + dateKey);
+  function renderWontonFillRecipePanel(dateKey, items, targetId) {
+    var el = document.getElementById(targetId || ('sched-wonton-fill-recipe-' + dateKey));
     if (!el) return;
     var it = items && items.find(function(x){ return x.prod === 'wonton_fill' && parseFloat(x.qty) > 0; });
     if (!it) { el.innerHTML = ''; return; }
@@ -14007,17 +14007,29 @@ function recalcOilySeasoning() {
     var emptyEl = document.getElementById('home-daily-weight-empty');
     if (!body) return;
 
-    // 建立與排程頁相同 id 的暫存容器，讓既有的斤兩計算函式直接寫入內容
-    body.innerHTML =
-      '<div id="sched-curry-' + todayKey + '"></div>' +
-      '<div id="sched-wonton-fill-recipe-' + todayKey + '"></div>' +
-      '<div id="sched-triangle-fill-' + todayKey + '"></div>' +
-      '<div id="sched-wonton-recipe-' + todayKey + '"></div>';
+    // 注意：容器 id 特別加上「home-dw-」前綴，與排程頁面本身使用的
+    // 'sched-xxx-<日期>' id 區隔開來。過去這裡直接重用排程頁的 id，
+    // 一旦本彈窗開啟過一次，畫面上就會同時存在兩個相同 id 的元素，
+    // 之後排程頁面自己重新渲染時 document.getElementById 會抓到「本彈窗裡」
+    // 的元素（因為它在文件順序中排在前面），導致排程頁面上的餛飩、咖哩粉
+    // 斤兩區塊變成空白。改用專屬 id 並透過各 render 函式新增的
+    // targetId 參數指定，即可避免互相搶奪、兩邊各自正常顯示。
+    var y = now.getFullYear(), mo = now.getMonth() + 1;
+    var daysInMonth = new Date(y, mo, 0).getDate();
 
-    if (typeof renderCurryPanel === 'function') renderCurryPanel(todayKey, items);
-    if (typeof renderWontonFillRecipePanel === 'function') renderWontonFillRecipePanel(todayKey, items);
-    if (typeof renderTriangleFillPanel === 'function') renderTriangleFillPanel(todayKey, items);
-    if (typeof renderWontonRecipePanel === 'function') renderWontonRecipePanel(todayKey, items);
+    body.innerHTML =
+      '<div id="home-dw-curry-' + todayKey + '"></div>' +
+      '<div id="home-dw-wonton-fill-recipe-' + todayKey + '"></div>' +
+      '<div id="home-dw-triangle-fill-' + todayKey + '"></div>' +
+      '<div id="home-dw-wonton-recipe-' + todayKey + '"></div>' +
+      '<div id="home-dw-gleg-sauce-prep-' + todayKey + '"></div>';
+
+    if (typeof renderCurryPanel === 'function') renderCurryPanel(todayKey, items, 'home-dw-curry-' + todayKey);
+    if (typeof renderWontonFillRecipePanel === 'function') renderWontonFillRecipePanel(todayKey, items, 'home-dw-wonton-fill-recipe-' + todayKey);
+    if (typeof renderTriangleFillPanel === 'function') renderTriangleFillPanel(todayKey, items, 'home-dw-triangle-fill-' + todayKey);
+    if (typeof renderWontonRecipePanel === 'function') renderWontonRecipePanel(todayKey, items, 'home-dw-wonton-recipe-' + todayKey);
+    // 新增：G腿醬備料斤兩（若今天恰為本週第一個G腿製作日的前一天，才會顯示）
+    if (typeof renderGlegSaucePrepPanel === 'function') renderGlegSaucePrepPanel(todayKey, schedData, y, mo, daysInMonth, 'home-dw-gleg-sauce-prep-' + todayKey);
 
     var hasContent = body.textContent.replace(/\s+/g, '') !== '';
     if (emptyEl) emptyEl.style.display = hasContent ? 'none' : '';
