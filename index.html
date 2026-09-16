@@ -13988,48 +13988,109 @@ function recalcOilySeasoning() {
   window.autoSyncInputsIfNeeded = autoSyncInputsIfNeeded;
 
   // ── 主畫面：「當日排程製作斤兩」──
-  // 只顯示當日排程中「需要換算斤兩」的品項（咖哩粉、餛飩料、炒三角圓料、餛飩/煮餛飩漿），
-  // 其餘只以「袋」計算、不需秤重的品項（例如三角圓本身）不顯示。
+  // 目標：內容需與「當月每日工作排程表」中當天展開後看到的斤兩面板完全一致，
+  // 因此這裡直接重用排程頁面本身的所有 render*Panel 函式（與 renderAllDayPanels
+  // 使用的是同一套函式、同一套資料），而不是自己另外挑幾樣重算一次。
+  //
+  // 作法：先在一個「暫時、畫面外」的容器裡，用跟排程頁面一模一樣的 id
+  // （'sched-xxx-<日期>'）建立好空的面板容器，讓既有的 render 函式直接寫入內容，
+  // 寫完後把 HTML 取出、拿掉所有 id（避免殘留重複 id 與排程頁面互搶），
+  // 再放進彈窗本體，並把暫時容器整個移除。
   window.openHomeDailyWeightModal = function() {
     schLoad();
 
     var now = new Date();
-    var todayKey = fmtDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    var y = now.getFullYear(), mo = now.getMonth() + 1, dd = now.getDate();
+    var todayKey = fmtDate(y, mo, dd);
+    var daysInMonth = new Date(y, mo, 0).getDate();
+    var yestKey = (function(){
+      var d = new Date(y, mo - 1, dd); d.setDate(d.getDate() - 1);
+      return fmtDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    })();
+
     var rec = schedData[todayKey] || { items: [] };
     var items = rec.items || [];
+    var recY = schedData[yestKey] || { items: [] };
 
     var dateEl = document.getElementById('home-daily-weight-date');
     if (dateEl) {
-      dateEl.textContent = (now.getMonth() + 1) + '/' + now.getDate() + '（' + weekdayLabel(dayOfWeek(now.getFullYear(), now.getMonth() + 1, now.getDate())) + '）';
+      dateEl.textContent = mo + '/' + dd + '（' + weekdayLabel(dayOfWeek(y, mo, dd)) + '）';
     }
 
     var body = document.getElementById('home-daily-weight-body');
     var emptyEl = document.getElementById('home-daily-weight-empty');
     if (!body) return;
 
-    // 注意：容器 id 特別加上「home-dw-」前綴，與排程頁面本身使用的
-    // 'sched-xxx-<日期>' id 區隔開來。過去這裡直接重用排程頁的 id，
-    // 一旦本彈窗開啟過一次，畫面上就會同時存在兩個相同 id 的元素，
-    // 之後排程頁面自己重新渲染時 document.getElementById 會抓到「本彈窗裡」
-    // 的元素（因為它在文件順序中排在前面），導致排程頁面上的餛飩、咖哩粉
-    // 斤兩區塊變成空白。改用專屬 id 並透過各 render 函式新增的
-    // targetId 參數指定，即可避免互相搶奪、兩邊各自正常顯示。
-    var y = now.getFullYear(), mo = now.getMonth() + 1;
-    var daysInMonth = new Date(y, mo, 0).getDate();
+    // 排程頁面單一天會用到的所有面板 id 前綴（對照 buildDayHtml 裡的佔位 div）
+    var PANEL_PREFIXES = [
+      'sched-zongzi-seasoning-today-', 'sched-wonton-recipe-', 'sched-gleg-powder-',
+      'sched-gleg-sauce-prep-', 'sched-dumpling-recipe-', 'sched-mushr-shred-',
+      'sched-fried-mushr-', 'sched-white-sauce-', 'sched-green-sauce-',
+      'sched-soup-refill-', 'sched-rice-sauce-', 'sched-sesame-ginger-',
+      'sched-curry-', 'sched-pepper-', 'sched-zongzi-drysea-',
+      'sched-oily-redshred-', 'sched-oily-prep-', 'sched-zongzi-seasoning-',
+      'sched-zongzi-drysea-manual-', 'sched-sesame-monkey-', 'sched-dump-powder-',
+      'sched-triangle-fill-', 'sched-mushroom-sauce-', 'sched-black-pepper-sauce-',
+      'sched-red-sauce-recipe-', 'sched-wonton-fill-recipe-', 'sched-dumpling-hq-',
+      'sched-dumpling-hq-fill-', 'sched-minced-recipe-', 'sched-chili-sauce-',
+      'sched-lotus-monkey-'
+    ];
 
-    body.innerHTML =
-      '<div id="home-dw-curry-' + todayKey + '"></div>' +
-      '<div id="home-dw-wonton-fill-recipe-' + todayKey + '"></div>' +
-      '<div id="home-dw-triangle-fill-' + todayKey + '"></div>' +
-      '<div id="home-dw-wonton-recipe-' + todayKey + '"></div>' +
-      '<div id="home-dw-gleg-sauce-prep-' + todayKey + '"></div>';
+    var tempHost = document.createElement('div');
+    tempHost.style.cssText = 'position:absolute;left:-99999px;top:-99999px;width:1px;height:1px;overflow:hidden';
+    // 插在 <body> 最前面，確保文件順序排在畫面上其他任何同 id 元素之前，
+    // 這樣底下呼叫 render 函式時，document.getElementById 一定會抓到這裡的暫時容器，
+    // 而不會誤寫進真正的排程頁面裡（也不會被排程頁面搶走）。
+    document.body.insertBefore(tempHost, document.body.firstChild);
+    // 順便也建立「昨天」的補湯面板容器：補湯有可能被前一天推到隔天顯示，
+    // 需要昨天也一起渲染才能正確反映今天面板上是否有「前日補湯備料」。
+    tempHost.innerHTML =
+      PANEL_PREFIXES.map(function(p){ return '<div id="' + p + todayKey + '"></div>'; }).join('') +
+      '<div id="sched-soup-refill-' + yestKey + '"></div>';
 
-    if (typeof renderCurryPanel === 'function') renderCurryPanel(todayKey, items, 'home-dw-curry-' + todayKey);
-    if (typeof renderWontonFillRecipePanel === 'function') renderWontonFillRecipePanel(todayKey, items, 'home-dw-wonton-fill-recipe-' + todayKey);
-    if (typeof renderTriangleFillPanel === 'function') renderTriangleFillPanel(todayKey, items, 'home-dw-triangle-fill-' + todayKey);
-    if (typeof renderWontonRecipePanel === 'function') renderWontonRecipePanel(todayKey, items, 'home-dw-wonton-recipe-' + todayKey);
-    // 新增：G腿醬備料斤兩（若今天恰為本週第一個G腿製作日的前一天，才會顯示）
-    if (typeof renderGlegSaucePrepPanel === 'function') renderGlegSaucePrepPanel(todayKey, schedData, y, mo, daysInMonth, 'home-dw-gleg-sauce-prep-' + todayKey);
+    function safeCall(fn) { if (typeof fn === 'function') { try { fn(); } catch (e) {} } }
+
+    // 與 renderAllDayPanels 對單一天的呼叫順序一致
+    safeCall(function(){ renderWontonRecipePanel(todayKey, items); });
+    safeCall(function(){ renderGlegPowderPanel(todayKey, items, rec.glegPowderLeft); });
+    safeCall(function(){ renderGlegSaucePrepPanel(todayKey, schedData, y, mo, daysInMonth); });
+    safeCall(function(){ renderDumplingRecipePanel(todayKey, items); });
+    safeCall(function(){ renderMushrShredPanel(todayKey, items); });
+    safeCall(function(){ renderFriedMushrPanel(todayKey, items); });
+    safeCall(function(){ renderWhiteSaucePanel(todayKey, items); });
+    safeCall(function(){ renderGreenSaucePanel(todayKey, items); });
+    safeCall(function(){ renderRiceSaucePanel(todayKey, items); });
+    safeCall(function(){ renderSesameGingerPanel(todayKey, items); });
+    safeCall(function(){ renderCurryPanel(todayKey, items); });
+    safeCall(function(){ renderPepperPanel(todayKey, items); });
+    safeCall(function(){ renderSesameMonkeyPanel(todayKey, items); });
+    safeCall(function(){ renderDumpPowderPanel(todayKey, items); });
+    safeCall(function(){ renderTriangleFillPanel(todayKey, items); });
+    safeCall(function(){ renderMushroomSaucePanel(todayKey, items); });
+    safeCall(function(){ renderBlackPepperSaucePanel(todayKey, items); });
+    safeCall(function(){ renderRedSaucePanel(todayKey, items); });
+    safeCall(function(){ renderWontonFillRecipePanel(todayKey, items); });
+    safeCall(function(){ renderDumplingHqPanel(todayKey, items); });
+    safeCall(function(){ renderDumplingHqFillPanel(todayKey, items); });
+    safeCall(function(){ renderMincedRecipePanel(todayKey, items); });
+    safeCall(function(){ renderChiliSaucePanel(todayKey, items); });
+    safeCall(function(){ renderLotusMonkeyPanel(todayKey, items); });
+    safeCall(function(){ renderZongziDrySeaManualPanel(todayKey, items); });
+    // 補湯：先今天、再昨天（昨天若有補湯可能會覆蓋、推到今天面板顯示「前日補湯備料」）
+    safeCall(function(){ renderSoupRefillPanel(todayKey, items); });
+    safeCall(function(){ renderSoupRefillPanel(yestKey, recY.items || []); });
+    // 跨月彙總面板（內部本來就是逐日掃描 schedData，找不到對應 div 的日期會自動略過）
+    safeCall(function(){ renderZongziDrySeaForMonth(y, mo, daysInMonth); });
+    safeCall(function(){ renderOilyRiceRedShredForMonth(y, mo, daysInMonth); });
+    safeCall(function(){ renderZongziSeasoningForMonth(y, mo, daysInMonth); });
+    safeCall(function(){ renderZongziSeasoningTodayForMonth(y, mo, daysInMonth); });
+    safeCall(function(){ renderOilyRicePrepForMonth(y, mo, daysInMonth); });
+
+    // 取出渲染結果、拿掉所有 id（避免搬進彈窗後殘留重複 id），再清掉暫時容器
+    var innerHtml = tempHost.innerHTML.replace(/\sid="sched-[^"]*"/g, '');
+    document.body.removeChild(tempHost);
+
+    body.innerHTML = innerHtml;
 
     var hasContent = body.textContent.replace(/\s+/g, '') !== '';
     if (emptyEl) emptyEl.style.display = hasContent ? 'none' : '';
