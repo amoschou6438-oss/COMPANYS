@@ -1389,8 +1389,12 @@
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
-        <div class="input-block-title">🍗 G腿拌粉庫存</div>
+        <div class="input-block-title">🍗 G腿拌料庫存</div>
         <div class="irow"><label>剩餘拌粉量</label><div class="ifield"><input type="number" id="home_inv_gleg_powder_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_powder_left','inv_gleg_powder_left_inv')"><span class="unit">公斤</span></div></div>
+        <div class="irow"><label>G腿肉片</label><div class="ifield"><input type="number" id="home_inv_gleg_meat_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_meat_left','inv_gleg_meat_left_inv')"><span class="unit">鍋</span></div></div>
+        <div class="irow"><label>G腿黏膠</label><div class="ifield"><input type="number" id="home_inv_gleg_glue_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_glue_left','inv_gleg_glue_left_inv')"><span class="unit">鍋</span></div></div>
+        <div class="irow"><label>G腿醬料（原味）</label><div class="ifield"><input type="number" id="home_inv_gleg_sauce_orig_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_sauce_orig_left','inv_gleg_sauce_orig_left_inv')"><span class="unit">鍋</span></div></div>
+        <div class="irow"><label>G腿醬料（辣味）</label><div class="ifield"><input type="number" id="home_inv_gleg_sauce_spicy_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_sauce_spicy_left','inv_gleg_sauce_spicy_left_inv')"><span class="unit">鍋</span></div></div>
       </div>
 
       <div class="input-block" id="home-stock-block-oily-rice" style="--label-w:9.5em;display:none">
@@ -1659,13 +1663,41 @@
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
-        <div class="input-block-title">🍗 G腿拌粉庫存</div>
+        <div class="input-block-title">🍗 G腿拌料庫存</div>
         <div class="irow">
           <label>剩餘拌粉量</label>
           <div class="ifield">
             <input type="number" id="inv_gleg_powder_left_inv" value="0" min="0" step="0.1"
               oninput="(function(v){var e=document.getElementById('q_gleg_powder_left');if(e&&e!==document.activeElement)e.value=v;saveInputs();recalcAllDebounced();if(typeof recalcPowder==='function')recalcPowder();})(this.value)">
             <span class="unit">公斤</span>
+          </div>
+        </div>
+        <div class="irow">
+          <label>G腿肉片</label>
+          <div class="ifield">
+            <input type="number" id="inv_gleg_meat_left_inv" value="0" min="0" step="0.1" oninput="saveInputs()">
+            <span class="unit">鍋</span>
+          </div>
+        </div>
+        <div class="irow">
+          <label>G腿黏膠</label>
+          <div class="ifield">
+            <input type="number" id="inv_gleg_glue_left_inv" value="0" min="0" step="0.1" oninput="saveInputs()">
+            <span class="unit">鍋</span>
+          </div>
+        </div>
+        <div class="irow">
+          <label>G腿醬料（原味）</label>
+          <div class="ifield">
+            <input type="number" id="inv_gleg_sauce_orig_left_inv" value="0" min="0" step="0.1" oninput="saveInputs()">
+            <span class="unit">鍋</span>
+          </div>
+        </div>
+        <div class="irow">
+          <label>G腿醬料（辣味）</label>
+          <div class="ifield">
+            <input type="number" id="inv_gleg_sauce_spicy_left_inv" value="0" min="0" step="0.1" oninput="saveInputs()">
+            <span class="unit">鍋</span>
           </div>
         </div>
       </div>
@@ -6650,7 +6682,7 @@ function recalcDaily() {
   if (schedHasGleg)   recalcGlegSauce();
 }
 
-var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_powder_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
+var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
 function saveInputs() {
   INPUT_IDS.forEach(function(id) {
     try { var el = document.getElementById(id); if (el) localStorage.setItem('inp_'+id, el.value); } catch(e){}
@@ -9638,6 +9670,16 @@ function recalcOilySeasoning() {
     var pots = weekTotalGlegPots;
     if (pots <= 0) { el.innerHTML = ''; return; }
 
+    // 讀取G腿拌料庫存（肉片／黏膠／醬料原味／醬料辣味，單位：鍋）
+    function readGlegStockPots(id) {
+      var e = document.getElementById(id);
+      return e ? (parseFloat(e.value) || 0) : 0;
+    }
+    var meatLeftPots        = readGlegStockPots('inv_gleg_meat_left_inv');
+    var glueLeftPots        = readGlegStockPots('inv_gleg_glue_left_inv');
+    var sauceOrigLeftPots   = readGlegStockPots('inv_gleg_sauce_orig_left_inv');
+    var sauceSpicyLeftPots  = readGlegStockPots('inv_gleg_sauce_spicy_left_inv');
+
     var SAUCE_GLEG_OFFSET = 4; // glegLoad index offset for sauce items
 
     // 計算每種調味料的總量並組成 HTML
@@ -9675,8 +9717,16 @@ function recalcOilySeasoning() {
       return count + pkgUnitLabel + '+' + sauceLiangDisplay(remLiang);
     }
 
+    // 辣G腿鍋數（提前計算，供扣庫存後的有效鍋數換算使用）
+    var spicyPots = weekTotalSpicyGlegPots;
+    var regularPots = pots - spicyPots;
+    // 扣除庫存中已備妥的G腿醬料（原味／辣味），剩餘才是這次還需要備料的鍋數
+    var effRegularPots = Math.max(0, regularPots - sauceOrigLeftPots);
+    var effSpicyPots = Math.max(0, spicyPots - sauceSpicyLeftPots);
+    var effPots = effRegularPots + effSpicyPots;
+
     var chipsHtml = glegSauceDataLocal.map(function(item, i) {
-      var totalLiang = Math.ceil(item.base * pots);
+      var totalLiang = Math.ceil(item.base * effPots);
       var saved = glegLoad(SAUCE_GLEG_OFFSET + i);
       var w = parseFloat(saved.w);
       // 使用者設定的包裝重量優先；否則使用 condimentDisplay 標準換算
@@ -9707,11 +9757,10 @@ function recalcOilySeasoning() {
     // ── 辣椒粉（僅當本週有辣G腿時才顯示）：1鍋加200g，1包=1000g ──
     var CHILI_G_PER_POT = 200;
     var CHILI_PKG_G = 1000;
-    var spicyPots = weekTotalSpicyGlegPots;
     var chiliTotalG = 0;
     var chiliLiangEquivalent = 0;
-    if (spicyPots > 0) {
-      chiliTotalG = spicyPots * CHILI_G_PER_POT;
+    if (effSpicyPots > 0) {
+      chiliTotalG = effSpicyPots * CHILI_G_PER_POT;
       var chiliPkgCount = Math.floor(chiliTotalG / CHILI_PKG_G);
       var chiliRemG = chiliTotalG - chiliPkgCount * CHILI_PKG_G;
       var chiliConvStr = chiliRemG === 0
@@ -9721,9 +9770,27 @@ function recalcOilySeasoning() {
       chipsHtml += '<div style="background:#fff0e8;border:1px solid #e8a030;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
         + '<div style="font-size:11px;color:#7a6040;margin-bottom:3px;letter-spacing:0.5px">🌶️ 辣椒粉</div>'
         + '<div style="font-size:15px;font-weight:700;color:#c0392b;font-family:\'Noto Serif TC\',serif">' + chiliConvStr + '</div>'
-        + '<div style="font-size:9px;color:#b08040;margin-top:2px">辣G腿共 ' + spicyPots + ' 鍋×200g／預設1包1000g</div>'
+        + '<div style="font-size:9px;color:#b08040;margin-top:2px">辣G腿尚需 ' + effSpicyPots + ' 鍋×200g／預設1包1000g</div>'
         + '</div>';
     }
+
+    // ── G腿肉片／黏膠庫存扣除：分別換算G腿乾肉片、黏皮粉尚需準備的量 ──
+    var effMeatPots = Math.max(0, pots - meatLeftPots);
+    var dryMeatLiang = Math.ceil(80 * effMeatPots);
+    var dryMeatStr = sauceLiangDisplay(dryMeatLiang);
+    var meatChipHtml = '<div style="background:#eef7f0;border:1px solid #8fc9a0;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
+      + '<div style="font-size:11px;color:#2e6b45;margin-bottom:3px;letter-spacing:0.5px">🥩 G腿乾肉片</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#1e5631;font-family:\'Noto Serif TC\',serif">' + dryMeatStr + '</div>'
+      + (meatLeftPots > 0 ? '<div style="font-size:9px;color:#4a8a5f;margin-top:2px">已扣庫存肉片 ' + meatLeftPots + ' 鍋</div>' : '<div style="font-size:9px;color:#b08040;margin-top:2px">1鍋80兩</div>')
+      + '</div>';
+
+    var effGluePots = Math.max(0, pots - glueLeftPots);
+    var stickyJinStr = (Math.round(effGluePots * 1.5 * 10) / 10) + '斤';
+    var glueChipHtml = '<div style="background:#eef7f0;border:1px solid #8fc9a0;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
+      + '<div style="font-size:11px;color:#2e6b45;margin-bottom:3px;letter-spacing:0.5px">🧪 黏皮粉（黏膠）</div>'
+      + '<div style="font-size:15px;font-weight:700;color:#1e5631;font-family:\'Noto Serif TC\',serif">' + stickyJinStr + '</div>'
+      + (glueLeftPots > 0 ? '<div style="font-size:9px;color:#4a8a5f;margin-top:2px">已扣庫存黏膠 ' + glueLeftPots + ' 鍋</div>' : '<div style="font-size:9px;color:#b08040;margin-top:2px">1鍋1.5斤</div>')
+      + '</div>';
 
     // 計算每盆重：
     // ・原味每盆重：不含辣椒粉，以「一般（非辣）鍋數」計算並平均分配
@@ -9732,34 +9799,33 @@ function recalcOilySeasoning() {
       var j = Math.floor(liang / 16), l = Math.round(liang % 16 * 10) / 10;
       return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : '') || '0兩';
     }
-    var regularPots = pots - spicyPots;
     var perBasinRegularStr = null, perBasinSpicyStr = null, perBasinStr = null;
 
-    if (spicyPots > 0 && regularPots > 0) {
+    if (effSpicyPots > 0 && effRegularPots > 0) {
       // 有辣有不辣：分別計算兩種每盆重
       var totalLiangRegular = glegSauceDataLocal.reduce(function(sum, item) {
-        return sum + Math.ceil(item.base * regularPots);
+        return sum + Math.ceil(item.base * effRegularPots);
       }, 0);
-      perBasinRegularStr = liangToStr(totalLiangRegular / regularPots);
+      perBasinRegularStr = liangToStr(totalLiangRegular / effRegularPots);
 
       var totalLiangSpicy = glegSauceDataLocal.reduce(function(sum, item) {
-        return sum + Math.ceil(item.base * spicyPots);
+        return sum + Math.ceil(item.base * effSpicyPots);
       }, 0);
       if (chiliLiangEquivalent > 0) totalLiangSpicy += Math.ceil(chiliLiangEquivalent);
-      perBasinSpicyStr = liangToStr(totalLiangSpicy / spicyPots);
-    } else if (spicyPots > 0 && regularPots <= 0) {
+      perBasinSpicyStr = liangToStr(totalLiangSpicy / effSpicyPots);
+    } else if (effSpicyPots > 0 && effRegularPots <= 0) {
       // 全部都是辣G腿
       var totalLiangAllSpicy = glegSauceDataLocal.reduce(function(sum, item) {
-        return sum + Math.ceil(item.base * spicyPots);
+        return sum + Math.ceil(item.base * effSpicyPots);
       }, 0);
       if (chiliLiangEquivalent > 0) totalLiangAllSpicy += Math.ceil(chiliLiangEquivalent);
-      perBasinSpicyStr = liangToStr(totalLiangAllSpicy / spicyPots);
-    } else {
-      // 完全沒有辣G腿：維持原本單一數值
+      perBasinSpicyStr = liangToStr(totalLiangAllSpicy / effSpicyPots);
+    } else if (effPots > 0) {
+      // 完全沒有辣G腿（或辣味已扣庫存扣完）：維持原本單一數值
       var totalLiangAll = glegSauceDataLocal.reduce(function(sum, item) {
-        return sum + Math.ceil(item.base * pots);
+        return sum + Math.ceil(item.base * effPots);
       }, 0);
-      perBasinStr = liangToStr(totalLiangAll / pots);
+      perBasinStr = liangToStr(totalLiangAll / effPots);
     }
 
     // 計算第一個G腿日的月/日顯示
@@ -9772,20 +9838,25 @@ function recalcOilySeasoning() {
     if (spicyPots > 0) {
       h += '<span style="background:#c0392b;color:#ffe6e0;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700">🌶️ 辣G腿共 ' + spicyPots + ' 鍋</span>';
     }
+    if (sauceOrigLeftPots > 0 || sauceSpicyLeftPots > 0) {
+      h += '<span style="background:#2e6b45;color:#eaf7ee;padding:2px 10px;border-radius:10px;font-size:11px;font-weight:700">已扣庫存醬料後尚需 ' + effPots + ' 鍋</span>';
+    }
     h += '</div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
-    h += chipsHtml;
+    h += meatChipHtml + glueChipHtml + chipsHtml;
     h += '</div>';
     h += '<div style="font-size:11px;color:#7a6040;margin-top:4px;padding-top:8px;border-top:1px solid #e8c56a">';
     if (perBasinRegularStr !== null && perBasinSpicyStr !== null) {
       // 有辣有不辣：分別顯示兩種每盆重
-      h += '原味每盆重（÷' + regularPots + '鍋）約 <strong style="color:#7b2d00">' + perBasinRegularStr + '</strong>';
-      h += '　｜　🌶️ 辣G腿每盆重（含辣椒粉，÷' + spicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
+      h += '原味每盆重（÷' + effRegularPots + '鍋）約 <strong style="color:#7b2d00">' + perBasinRegularStr + '</strong>';
+      h += '　｜　🌶️ 辣G腿每盆重（含辣椒粉，÷' + effSpicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
     } else if (perBasinSpicyStr !== null) {
       // 全部都是辣G腿
-      h += '🌶️ 辣G腿每盆重（含辣椒粉，÷' + spicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
-    } else {
+      h += '🌶️ 辣G腿每盆重（含辣椒粉，÷' + effSpicyPots + '鍋）約 <strong style="color:#c0392b">' + perBasinSpicyStr + '</strong>';
+    } else if (perBasinStr !== null) {
       h += '每盆重（÷鍋數）約 <strong style="color:#7b2d00">' + perBasinStr + '</strong>';
+    } else {
+      h += '<strong style="color:#2e6b45">✅ 庫存醬料已足夠，本次醬料免備料</strong>';
     }
     h += '　｜　備料時請依此計算盆數';
     h += '</div>';
@@ -19975,7 +20046,11 @@ function debugFixNow() {
       ['home_inv_tri_left', 'nw_inv_tri_left'],
       ['home_inv_wonton_frozen', 'inv_wonton_frozen'],
       ['home_inv_wonton_actual_fry', 'inv_wonton_actual_fry'],
-      ['home_inv_gleg_powder_left', 'inv_gleg_powder_left_inv']
+      ['home_inv_gleg_powder_left', 'inv_gleg_powder_left_inv'],
+      ['home_inv_gleg_meat_left', 'inv_gleg_meat_left_inv'],
+      ['home_inv_gleg_glue_left', 'inv_gleg_glue_left_inv'],
+      ['home_inv_gleg_sauce_orig_left', 'inv_gleg_sauce_orig_left_inv'],
+      ['home_inv_gleg_sauce_spicy_left', 'inv_gleg_sauce_spicy_left_inv']
     ];
     pairs.forEach(function(p) {
       var mirror = document.getElementById(p[0]);
