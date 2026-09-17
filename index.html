@@ -1391,7 +1391,7 @@
 
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🍗 G腿拌料庫存</div>
-        <div class="irow"><label>剩餘拌粉量</label><div class="ifield"><input type="number" id="home_inv_gleg_powder_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_powder_left','inv_gleg_powder_left_inv')"><span class="unit">公斤</span></div></div>
+        <div class="irow"><label>G腿拌粉</label><div class="ifield"><input type="number" id="home_inv_gleg_powder_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_powder_left','inv_gleg_powder_left_inv')"><span class="unit">公斤</span></div></div>
         <div class="irow"><label>G腿肉片</label><div class="ifield"><input type="number" id="home_inv_gleg_meat_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_meat_left','inv_gleg_meat_left_inv')"><span class="unit">鍋</span></div></div>
         <div class="irow"><label>G腿黏膠</label><div class="ifield"><input type="number" id="home_inv_gleg_glue_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_glue_left','inv_gleg_glue_left_inv')"><span class="unit">鍋</span></div></div>
         <div class="irow"><label>G腿醬料（原味）</label><div class="ifield"><input type="number" id="home_inv_gleg_sauce_orig_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_sauce_orig_left','inv_gleg_sauce_orig_left_inv')"><span class="unit">鍋</span></div></div>
@@ -1667,7 +1667,7 @@
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🍗 G腿拌料庫存</div>
         <div class="irow">
-          <label>剩餘拌粉量</label>
+          <label>G腿拌粉</label>
           <div class="ifield">
             <input type="number" id="inv_gleg_powder_left_inv" value="0" min="0" step="0.1"
               oninput="(function(v){var e=document.getElementById('q_gleg_powder_left');if(e&&e!==document.activeElement)e.value=v;saveInputs();recalcAllDebounced();if(typeof recalcPowder==='function')recalcPowder();})(this.value)">
@@ -1827,7 +1827,7 @@
             <div id="daily-powder-chips" class="daily-chips daily-chips-powder"></div>
             <div class="notice" style="margin-top:8px;margin-bottom:0;font-size:11px">
               沾粉 = 製作鍋數 ÷ 製作次數 × 1鍋沾粉　／　粉漿 = 製作鍋數 ÷ 製作次數 × 1鍋粉漿 − 剩餘粉斤兩<br>
-              <strong>打漿水（kg）</strong> = （粉漿總重(g) ÷ 1000 + 剩餘拌粉量(kg)）× 1.6　／　<strong>黏皮粉（斤）</strong> = 當天G腿鍋數 × 1.5
+              <strong>打漿水（kg）</strong> = （粉漿總重(g) ÷ 1000 + G腿拌粉(kg)）× 1.6　／　<strong>黏皮粉（斤）</strong> = 當天G腿鍋數 × 1.5
             </div>
           </div>
         </div>
@@ -1941,7 +1941,7 @@
           </div>
           <div class="notice" style="margin-top:8px;margin-bottom:0;font-size:11px">
             沾粉 = 製作鍋數 ÷ 製作次數 × 1鍋沾粉　／　粉漿 = 製作鍋數 ÷ 製作次數 × 1鍋粉漿 − 剩餘粉斤兩<br>
-            <strong>打漿水（kg）</strong> = （粉漿總重(g) ÷ 1000 + 剩餘拌粉量(kg)）× 1.6　／　<strong>黏皮粉（斤）</strong> = 當天G腿鍋數 × 1.5
+            <strong>打漿水（kg）</strong> = （粉漿總重(g) ÷ 1000 + G腿拌粉(kg)）× 1.6　／　<strong>黏皮粉（斤）</strong> = 當天G腿鍋數 × 1.5
           </div>
         </div>
 
@@ -6334,7 +6334,7 @@ function recalcThisBatch() {
     var el = document.getElementById("this_batt_" + key);
     if (el) el.textContent = fmt(val, key);
   });
-  // 打漿水 = (粉漿總重(g)/1000 + 剩餘拌粉量(kg)) × 1.6
+  // 打漿水 = (粉漿總重(g)/1000 + G腿拌粉(kg)) × 1.6
   var battTotalG = Math.max(0, ratio * numFrom("r_batt_total") - numFrom("remain_total"));
   var leftKgSW = parseFloat((document.getElementById('q_gleg_powder_left')||{}).value) || 0;
   var slurryWater = round2((battTotalG / 1000 + leftKgSW) * 1.6);
@@ -9566,7 +9566,7 @@ function recalcOilySeasoning() {
     var battCrisp2G  = Math.max(0, Math.round(pots * r_batt_crisp2 - remCrisp2)).toLocaleString();
     var battTotalG   = Math.max(0, Math.round(pots * r_batt_total  - leftG)).toLocaleString();
 
-    // 打漿水 = (粉漿總重(g)/1000 + 剩餘拌粉量(kg)) × 1.6
+    // 打漿水 = (粉漿總重(g)/1000 + G腿拌粉(kg)) × 1.6
     var slurryWater  = ((Math.max(0, pots * r_batt_total - leftG) / 1000 + leftKg) * 1.6).toFixed(1);
     var stickyPowder = (pots * 1.5).toFixed(1);
 
@@ -9589,7 +9589,7 @@ function recalcOilySeasoning() {
 
     // 剩餘拌粉量輸入
     h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px dashed #a8d5b5">';
-    h += '<label style="font-size:12px;color:var(--ink2);font-weight:700;white-space:nowrap">剩餘拌粉量：</label>';
+    h += '<label style="font-size:12px;color:var(--ink2);font-weight:700;white-space:nowrap">G腿拌粉：</label>';
     h += '<input type="number" id="sched-gleg-powder-left-'+dateKey+'" value="'+(leftKg||0)+'" step="0.1" min="0"'
       + ' onchange="schedSaveGlegPowderLeft(\''+dateKey+'\',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur();}"'
       + ' style="width:80px;padding:4px 8px;border:1px solid #a8d5b5;border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:\'Noto Sans TC\',sans-serif">';
@@ -19185,7 +19185,7 @@ if (document.readyState !== 'loading') {
         </li>
         <li style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);background:linear-gradient(135deg,#fdf8ed,#f5ead8);border:1px solid var(--border-light);border-radius:6px;padding:8px 12px">
           <span style="color:var(--gold);font-weight:700;flex-shrink:0">③</span>
-          <span><strong>G腿</strong><br><span style="color:var(--ink3);font-size:12px">製作鍋數、製作次數、剩餘拌粉量</span></span>
+          <span><strong>G腿</strong><br><span style="color:var(--ink3);font-size:12px">製作鍋數、製作次數、G腿拌粉</span></span>
         </li>
         <li style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--ink2);background:linear-gradient(135deg,#fdf8ed,#f5ead8);border:1px solid var(--border-light);border-radius:6px;padding:8px 12px">
           <span style="color:var(--gold);font-weight:700;flex-shrink:0">④</span>
