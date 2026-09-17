@@ -6102,7 +6102,9 @@ function recalcAll() {
     }
 
     if (q.gleg > 0) {
-      var wheatLiang = Math.ceil(80 * q.gleg);
+      var glegMeatLeftPots2 = (function(){ var e = document.getElementById('inv_gleg_meat_left_inv'); return e ? (parseFloat(e.value) || 0) : 0; })();
+      var effGlegPotsForMeat2 = Math.max(0, q.gleg - glegMeatLeftPots2);
+      var wheatLiang = Math.ceil(80 * effGlegPotsForMeat2);
       // 乾肉片是 glegData index=2，讀取 localStorage 的每袋重量
       var wheatSaved = glegLoad(2);
       var wheatPkgW  = parseFloat(wheatSaved.w);
@@ -6114,17 +6116,21 @@ function recalcAll() {
         var wr2 = wheatLiang % 16;
         wheatDisp = (wj > 0 ? wj + '斤' : '') + (wr2 > 0 ? wr2 + '兩' : '') || wheatLiang + '兩';
       }
+      var wheatRows = [
+        { label: '仍需', val: wheatDisp },
+        { label: '換算5KG包', val: (function(){
+            // 仍需(兩) / 5kg換算: 5kg = 5000g; 1斤=16兩, 1兩=37.5g → 5000g ÷ 37.5 = 133.33兩/包
+            // wheatLiang 單位是兩
+            var pkgs = Math.ceil(wheatLiang / 133.333);
+            return pkgs + ' 包';
+          })(), red: false }
+      ];
+      if (glegMeatLeftPots2 > 0) {
+        wheatRows.push({ label: '已扣庫存肉片', val: glegMeatLeftPots2 + ' 鍋', red: false });
+      }
       items.push({
         name: '🍗 G腿乾肉片',
-        rows: [
-          { label: '仍需', val: wheatDisp },
-          { label: '換算5KG包', val: (function(){
-              // 仍需(兩) / 5kg換算: 5kg = 5000g; 1斤=16兩, 1兩=37.5g → 5000g ÷ 37.5 = 133.33兩/包
-              // wheatLiang 單位是兩
-              var pkgs = Math.ceil(wheatLiang / 133.333);
-              return pkgs + ' 包';
-            })(), red: false }
-        ],
+        rows: wheatRows,
         ok: true
       });
     }
@@ -9670,13 +9676,11 @@ function recalcOilySeasoning() {
     var pots = weekTotalGlegPots;
     if (pots <= 0) { el.innerHTML = ''; return; }
 
-    // 讀取G腿拌料庫存（肉片／黏膠／醬料原味／醬料辣味，單位：鍋）
+    // 讀取G腿拌料庫存中的醬料庫存（原味／辣味，單位：鍋）
     function readGlegStockPots(id) {
       var e = document.getElementById(id);
       return e ? (parseFloat(e.value) || 0) : 0;
     }
-    var meatLeftPots        = readGlegStockPots('inv_gleg_meat_left_inv');
-    var glueLeftPots        = readGlegStockPots('inv_gleg_glue_left_inv');
     var sauceOrigLeftPots   = readGlegStockPots('inv_gleg_sauce_orig_left_inv');
     var sauceSpicyLeftPots  = readGlegStockPots('inv_gleg_sauce_spicy_left_inv');
 
@@ -9774,24 +9778,6 @@ function recalcOilySeasoning() {
         + '</div>';
     }
 
-    // ── G腿肉片／黏膠庫存扣除：分別換算G腿乾肉片、黏皮粉尚需準備的量 ──
-    var effMeatPots = Math.max(0, pots - meatLeftPots);
-    var dryMeatLiang = Math.ceil(80 * effMeatPots);
-    var dryMeatStr = sauceLiangDisplay(dryMeatLiang);
-    var meatChipHtml = '<div style="background:#eef7f0;border:1px solid #8fc9a0;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
-      + '<div style="font-size:11px;color:#2e6b45;margin-bottom:3px;letter-spacing:0.5px">🥩 G腿乾肉片</div>'
-      + '<div style="font-size:15px;font-weight:700;color:#1e5631;font-family:\'Noto Serif TC\',serif">' + dryMeatStr + '</div>'
-      + (meatLeftPots > 0 ? '<div style="font-size:9px;color:#4a8a5f;margin-top:2px">已扣庫存肉片 ' + meatLeftPots + ' 鍋</div>' : '<div style="font-size:9px;color:#b08040;margin-top:2px">1鍋80兩</div>')
-      + '</div>';
-
-    var effGluePots = Math.max(0, pots - glueLeftPots);
-    var stickyJinStr = (Math.round(effGluePots * 1.5 * 10) / 10) + '斤';
-    var glueChipHtml = '<div style="background:#eef7f0;border:1px solid #8fc9a0;border-radius:8px;padding:8px 14px;text-align:center;min-width:86px">'
-      + '<div style="font-size:11px;color:#2e6b45;margin-bottom:3px;letter-spacing:0.5px">🧪 黏皮粉（黏膠）</div>'
-      + '<div style="font-size:15px;font-weight:700;color:#1e5631;font-family:\'Noto Serif TC\',serif">' + stickyJinStr + '</div>'
-      + (glueLeftPots > 0 ? '<div style="font-size:9px;color:#4a8a5f;margin-top:2px">已扣庫存黏膠 ' + glueLeftPots + ' 鍋</div>' : '<div style="font-size:9px;color:#b08040;margin-top:2px">1鍋1.5斤</div>')
-      + '</div>';
-
     // 計算每盆重：
     // ・原味每盆重：不含辣椒粉，以「一般（非辣）鍋數」計算並平均分配
     // ・辣G腿每盆重：含辣椒粉，以「辣G腿鍋數」計算並平均分配
@@ -9843,7 +9829,7 @@ function recalcOilySeasoning() {
     }
     h += '</div>';
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
-    h += meatChipHtml + glueChipHtml + chipsHtml;
+    h += chipsHtml;
     h += '</div>';
     h += '<div style="font-size:11px;color:#7a6040;margin-top:4px;padding-top:8px;border-top:1px solid #e8c56a">';
     if (perBasinRegularStr !== null && perBasinSpicyStr !== null) {
