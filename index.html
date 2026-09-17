@@ -1386,6 +1386,7 @@
         <div class="input-block-title">🧊 餛飩料庫存</div>
         <div class="irow"><label>冷凍庫存量</label><div class="ifield"><input type="text" inputmode="decimal" id="home_inv_wonton_frozen" placeholder="如 74+5 或 =74+5" title="可輸入 74+5 或 =74+5 等算式" oninput="window.homeSyncStock('home_inv_wonton_frozen','inv_wonton_frozen')" onblur="window.homeSyncStockBlur('home_inv_wonton_frozen','inv_wonton_frozen')"><span class="unit">包</span></div></div>
         <div class="irow" title="本週實際炒出包數，若填入則帶入下週時以此為準（留空則用鍋數×13計算）"><label style="display:flex;flex-direction:column;gap:2px">本週實際炒出<span style="font-size:10px;color:var(--gold);font-weight:700">帶入下週時優先採用</span></label><div class="ifield"><input type="number" id="home_inv_wonton_actual_fry" min="0" style="color:var(--gold)!important" oninput="window.homeSyncStock('home_inv_wonton_actual_fry','inv_wonton_actual_fry')" onblur="window.homeSyncStockBlur('home_inv_wonton_actual_fry','inv_wonton_actual_fry')"><span class="unit">包</span></div></div>
+        <div class="irow"><label>餛飩黏膠</label><div class="ifield"><input type="number" id="home_inv_wonton_glue" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_wonton_glue','inv_wonton_glue')"><span class="unit">盆</span></div></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
@@ -1644,6 +1645,7 @@
         <div class="irow" id="irow_wonton_next"><label>下禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_next" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依下週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_next_auto_badge">自動</span><span id="wonton_next_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div></div>
         <div class="irow" id="irow_wonton_next2"><label>下下禮拜用量</label><div class="ifield" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;overflow:hidden"><input type="number" id="inv_wonton_next2" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" title="依下下週排程自動計算，可手動覆蓋"><span class="unit">包</span><span style="font-size:10px;color:var(--green);margin-left:2px" id="wonton_next2_auto_badge">自動</span><span id="wonton_next2_inline" style="font-size:10px;color:var(--ink3);margin-left:4px;white-space:nowrap;flex-shrink:1;min-width:0;overflow:hidden;text-overflow:ellipsis"></span></div></div>
         <input type="hidden" id="inv_wonton_next3" value="0">
+        <div class="irow"><label>餛飩黏膠</label><div class="ifield"><input type="number" id="inv_wonton_glue" value="0" min="0" step="0.1" oninput="saveInputs()"><span class="unit">盆</span></div></div>
         <div id="wonton-stock-result" style="margin-top:8px"></div>
       </div>
 
@@ -6688,7 +6690,7 @@ function recalcDaily() {
   if (schedHasGleg)   recalcGlegSauce();
 }
 
-var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
+var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','inv_wonton_glue','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
 function saveInputs() {
   INPUT_IDS.forEach(function(id) {
     try { var el = document.getElementById(id); if (el) localStorage.setItem('inp_'+id, el.value); } catch(e){}
@@ -20032,6 +20034,7 @@ function debugFixNow() {
       ['home_inv_tri_left', 'nw_inv_tri_left'],
       ['home_inv_wonton_frozen', 'inv_wonton_frozen'],
       ['home_inv_wonton_actual_fry', 'inv_wonton_actual_fry'],
+      ['home_inv_wonton_glue', 'inv_wonton_glue'],
       ['home_inv_gleg_powder_left', 'inv_gleg_powder_left_inv'],
       ['home_inv_gleg_meat_left', 'inv_gleg_meat_left_inv'],
       ['home_inv_gleg_glue_left', 'inv_gleg_glue_left_inv'],
