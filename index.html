@@ -2605,7 +2605,7 @@
     <div class="card-title">需求計算結果</div>
     <div id="mushroom-calc"></div>
     <div class="sep"></div>
-    <div class="notice">香菇頭1包25kg泡後約93斤 ／ 碎肉1袋20kg泡後約66斤 ／ 菜脯1箱12kg洗後約15斤</div>
+    <div class="notice">香菇頭1包25kg泡後約93斤 ／ 碎肉1袋20kg泡後約75斤 ／ 菜脯1箱12kg洗後約15斤</div>
   </div>
 
   <div class="card" style="margin-top:16px">
@@ -5621,11 +5621,11 @@ function recalcAll() {
       ? `<div style="font-size:10px;color:var(--ink3);font-weight:400">${minceParts.join(' + ')}</div>` : '';
 
     // 使用後預估剩餘量 = 換算量(包/袋/箱) * 單位斤數 - 仍需(斤)
-    // 香菇頭: 1包=93斤, 碎肉: 1袋=66斤, 菜脯: 1箱=15斤
+    // 香菇頭: 1包=93斤, 碎肉: 1袋=75斤, 菜脯: 1箱=15斤
     const convertH = Math.ceil(needH/93); // 需補包數
     const estRemH = convertH > 0 ? (convertH * 93 - needH) : (invH - mHeadTotal >= 0 ? invH - mHeadTotal : 0);
-    const convertM = Math.ceil(needM/66);
-    const estRemM = convertM > 0 ? (convertM * 66 - needM) : (invM - mMinceTotal >= 0 ? invM - mMinceTotal : 0);
+    const convertM = Math.ceil(needM/75);
+    const estRemM = convertM > 0 ? (convertM * 75 - needM) : (invM - mMinceTotal >= 0 ? invM - mMinceTotal : 0);
     const convertR = Math.ceil(needR/15);
     const estRemR = convertR > 0 ? (convertR * 15 - needR) : (invR - mRadish >= 0 ? invR - mRadish : 0);
 
@@ -6069,7 +6069,7 @@ function recalcAll() {
     var items = [];
 
     // 各項目只在需求>0或庫存>0時顯示；全為0則隱藏
-    // 仍需換算：香菇頭→包(93斤/包)、碎肉→袋(66斤/袋)、菜脯→箱(15斤/箱)
+    // 仍需換算：香菇頭→包(93斤/包)、碎肉→袋(75斤/袋)、菜脯→箱(15斤/箱)
     if (needH2 > 0) {
       items.push({
         name: '🍄 香菇頭',
@@ -6086,7 +6086,7 @@ function recalcAll() {
         name: '🥩 碎肉',
         rows: [
           { label:'庫存', val: invM2+'斤' },
-          { label:'仍需', val: Math.ceil(needM2/66)+'袋', red: true }
+          { label:'仍需', val: Math.ceil(needM2/75)+'袋', red: true }
         ],
         ok: false
       });
@@ -7168,7 +7168,7 @@ function buildDryGoodsSummaryText(totals, prefix) {
     _dryCheckedParts.push('香菇頭足夠');
   }
   if (needM > 0) {
-    var _mStr = '碎肉' + Math.ceil(needM/66) + '袋';
+    var _mStr = '碎肉' + Math.ceil(needM/75) + '袋';
     dryParts.push(_p === 'nw' && _invMChecked ? _mStr + '（已盤點）' : _mStr);
   } else if (_p === 'nw' && _invMChecked) {
     _dryCheckedParts.push('碎肉足夠');
@@ -9500,9 +9500,14 @@ function recalcOilySeasoning() {
 
 
   // ── G腿沾粉/粉漿面板（依當日排程G腿鍋數即時計算）──
-  function renderGlegPowderPanel(dateKey, items, powderLeftKg) {
-    var el = document.getElementById('sched-gleg-powder-' + dateKey);
+  function renderGlegPowderPanel(dateKey, items, powderLeftKg, target) {
+    var el = (target && typeof target !== 'string') ? target
+      : document.getElementById(target || ('sched-gleg-powder-' + dateKey));
     if (!el) return;
+    // 標記此容器，讓「G腿拌粉」輸入框即使身處外部複製出來的畫面（例如首頁「當日排程製作斤兩」彈窗，
+    // 該彈窗會把所有 id="sched-..." 拿掉以避免與排程頁面本身重複），也能透過 closest() 找回此容器並即時更新，
+    // 不必依賴當初的 id。
+    el.setAttribute('data-gleg-powder-panel', dateKey);
     var glegItem = items && items.find(function(it){ return it.prod === 'gleg' && parseFloat(it.qty) > 0; });
     if (!glegItem) { el.innerHTML = ''; return; }
 
@@ -9591,7 +9596,7 @@ function recalcOilySeasoning() {
     h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px dashed #a8d5b5">';
     h += '<label style="font-size:12px;color:var(--ink2);font-weight:700;white-space:nowrap">G腿拌粉：</label>';
     h += '<input type="number" id="sched-gleg-powder-left-'+dateKey+'" value="'+(leftKg||0)+'" step="0.1" min="0"'
-      + ' onchange="schedSaveGlegPowderLeft(\''+dateKey+'\',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur();}"'
+      + ' onchange="schedSaveGlegPowderLeft(\''+dateKey+'\',this.value,this)" onkeydown="if(event.key===\'Enter\'){this.blur();}"'
       + ' style="width:80px;padding:4px 8px;border:1px solid #a8d5b5;border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:\'Noto Sans TC\',sans-serif">';
     h += '<span style="font-size:12px;color:var(--ink3)">kg（粉漿將扣除此量）</span>';
     h += '</div>';
@@ -12376,7 +12381,7 @@ function recalcOilySeasoning() {
   }
 
   // 儲存排程日的剩餘拌粉量，並同步到製作數量輸入的 q_gleg_powder_left
-  window.schedSaveGlegPowderLeft = function(dateKey, val) {
+  window.schedSaveGlegPowderLeft = function(dateKey, val, srcEl) {
     var kg = parseFloat(val) || 0;
     if (!schedData[dateKey]) schedData[dateKey] = { items:[], note:'' };
     schedData[dateKey].glegPowderLeft = kg;
@@ -12391,8 +12396,12 @@ function recalcOilySeasoning() {
     // 重算粉量
     if (typeof recalcPowder === 'function') recalcPowder();
     // 重繪當日面板（更新粉漿扣除數字）
+    // 優先透過來源輸入框往上找出實際所在的面板容器（用 data 屬性，不依賴 id），
+    // 這樣即使是在首頁「當日排程製作斤兩」彈窗中（該處會把 id="sched-..." 全部拿掉），
+    // 也能正確找到面板並即時更新粉漿數值；找不到時才退回用 dateKey 組出的預設 id 查找。
     var dayRec = schedData[dateKey] || { items:[], note:'' };
-    renderGlegPowderPanel(dateKey, dayRec.items, kg);
+    var panelEl = (srcEl && srcEl.closest) ? srcEl.closest('[data-gleg-powder-panel]') : null;
+    renderGlegPowderPanel(dateKey, dayRec.items, kg, panelEl || undefined);
   };
 
   // Refresh a single day's items display
