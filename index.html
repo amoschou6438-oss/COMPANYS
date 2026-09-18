@@ -1670,7 +1670,7 @@
           <label>G腿拌粉</label>
           <div class="ifield">
             <input type="number" id="inv_gleg_powder_left_inv" value="0" min="0" step="0.1"
-              oninput="(function(v){var e=document.getElementById('q_gleg_powder_left');if(e&&e!==document.activeElement)e.value=v;saveInputs();recalcAllDebounced();if(typeof recalcPowder==='function')recalcPowder();})(this.value)">
+              oninput="(function(v){var e=document.getElementById('q_gleg_powder_left');if(e&&e!==document.activeElement)e.value=v;saveInputs();recalcAllDebounced();if(typeof recalcPowder==='function')recalcPowder();if(typeof window.syncGlegPowderInvToScheduleToday==='function')window.syncGlegPowderInvToScheduleToday(v);})(this.value)">
             <span class="unit">公斤</span>
           </div>
         </div>
@@ -12404,6 +12404,29 @@ function recalcOilySeasoning() {
     renderGlegPowderPanel(dateKey, dayRec.items, kg, panelEl || undefined);
   };
 
+  // 「G腿拌料庫存」頁的G腿拌粉一改動，也要同步反映到今天的排程（schedData 及畫面上看得到的G腿沾粉/粉漿面板），
+  // 讓「庫存」與「排程」兩邊的G腿拌粉數值隨時保持一致（方向與 schedSaveGlegPowderLeft 相反：庫存 → 排程）。
+  window.syncGlegPowderInvToScheduleToday = function(val) {
+    if (typeof window.schedSaveGlegPowderLeft !== 'function') return;
+    // 確保 schedData 是從儲存空間讀入的最新版本，避免在本次工作階段還沒開過「排程」頁面時，
+    // 用記憶體中尚未載入資料的空物件覆蓋掉 localStorage 裡真正的排程內容。
+    if (typeof window._schLoad === 'function') window._schLoad();
+    var kg = parseFloat(val) || 0;
+    var now = new Date();
+    var todayKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    // 若排程頁面上剛好正在顯示今天的G腿拌粉輸入框，先把數值帶入（避免使用者正在該欄位輸入時被打斷）
+    var schedInputEl = document.getElementById('sched-gleg-powder-left-' + todayKey);
+    if (schedInputEl && schedInputEl !== document.activeElement) schedInputEl.value = kg;
+    window.schedSaveGlegPowderLeft(todayKey, kg, schedInputEl || null);
+    // 若畫面上還有其他地方也顯示著今天的面板（例如首頁「當日排程製作斤兩」彈窗同時開著），一併重繪
+    try {
+      document.querySelectorAll('[data-gleg-powder-panel="' + todayKey + '"]').forEach(function(panelEl) {
+        if (panelEl === schedInputEl) return;
+        window.schedSaveGlegPowderLeft(todayKey, kg, panelEl);
+      });
+    } catch (e) {}
+  };
+
   // Refresh a single day's items display
   function refreshDayDisplay(dateKey) {
     var dayRec = schedData[dateKey] || { items:[], note:'' };
@@ -20117,6 +20140,17 @@ function debugFixNow() {
     window.dlCloseModal('modal-stock-input');
   };
 
+  // 主要原料（香菇頭/碎肉/菜脯）在「盤點庫存」頁其實是兩個欄位：使用者看到、輸入的 nw_inv_* 欄位，
+  // 和後續計算真正讀取的 inv_* 隱藏欄位（後者只有在按下「尚未盤點／已盤點」按鈕時才會被寫入）。
+  // 為了讓主畫面一改動，「相對應的盤點庫存品項數值」（也就是實際用於計算的那個數值）也一起變更，
+  // 這裡額外把最新數字同步進隱藏欄位——但刻意不去動「已盤點/尚未盤點」的狀態與欄位鎖定，
+  // 盤點確認仍要靠使用者自己按按鈕，避免誤把「還沒盤點」的估計值當成已confirmed的盤點結果。
+  var HOME_SYNC_COMMITTED_MAP = {
+    'nw_inv_mushrHead': 'inv_mushrHead',
+    'nw_inv_mince': 'inv_mince',
+    'nw_inv_radish': 'inv_radish'
+  };
+
   // ── 將主畫面輸入的數值同步回原本的欄位，並觸發原本的計算/儲存邏輯 ──
   window.homeSyncStock = function(mirrorId, origId) {
     var mirror = document.getElementById(mirrorId);
@@ -20124,6 +20158,16 @@ function debugFixNow() {
     if (!mirror || !orig) return;
     orig.value = mirror.value;
     orig.dispatchEvent(new Event('input', { bubbles: true }));
+    var committedId = HOME_SYNC_COMMITTED_MAP[origId];
+    if (committedId) {
+      var committedEl = document.getElementById(committedId);
+      if (committedEl) {
+        committedEl.value = mirror.value;
+        if (typeof saveInputs === 'function') saveInputs();
+        if (typeof recalcAllDebounced === 'function') recalcAllDebounced();
+        else if (typeof recalcAll === 'function') recalcAll();
+      }
+    }
   };
 
   // ── 冷凍庫存量支援算式（如 74+5），離開欄位時觸發原本的換算並回填顯示 ──
