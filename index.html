@@ -9876,7 +9876,7 @@ function recalcOilySeasoning() {
       { name:'青線',  base:10, unit:'斤' },
       { name:'勾芡水',base:12, unit:'斤' },
       { name:'冬粉',  base:7,  unit:'包', perPot: true, xcOnly: true },
-      { name:'乾碎肉',base:35, unit:'斤', showBag:true, bagJin:40, bagLabel:'袋', xcOnly:true },
+      { name:'乾碎肉',base:17.5, unit:'kg', showBag:true, bagJin:20, bagLabel:'袋', xcOnly:true },
       { name:'水餃碎肉調味粉',base:7,  unit:'斤', showBag:true, bagJin:4,  bagLabel:'袋', xcOnly:true },
     ];
     function dumpJinStr(qty, unit) {
@@ -9888,7 +9888,18 @@ function recalcOilySeasoning() {
       var j = Math.floor(liang / 16), l = liang % 16;
       return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : '') || '0兩';
     }
-    function dumpBagStr(totalJin, bagJin, bagLabel) {
+    function dumpBagStr(totalJin, bagJin, bagLabel, unit) {
+      if (unit === 'kg') {
+        var totalG = Math.round(totalJin * 1000);
+        var bagG = Math.round(bagJin * 1000);
+        var bagCount = Math.floor(totalG / bagG);
+        var remG = totalG - bagCount * bagG;
+        var remKg = Math.round(remG / 10) / 100; // 2 decimals
+        var remStr = remKg > 0 ? (remKg + 'kg') : '';
+        if (bagCount > 0 && remStr) return bagCount + bagLabel + '+' + remStr;
+        if (bagCount > 0) return bagCount + bagLabel;
+        return remStr || '0kg';
+      }
       var totalLiang = Math.ceil(totalJin * 16);
       var bagLiang = bagJin * 16;
       var bagCount = Math.floor(totalLiang / bagLiang);
@@ -9917,7 +9928,7 @@ function recalcOilySeasoning() {
         var potsForCalc = item.xcOnly ? xcQty : totalPots;
         display = Math.ceil(potsForCalc / 5 * item.base) + '包';
       } else if (item.showBag) {
-        display = dumpBagStr(item.base * (item.xcOnly ? xcMult : mult), item.bagJin, item.bagLabel);
+        display = dumpBagStr(item.base * (item.xcOnly ? xcMult : mult), item.bagJin, item.bagLabel, item.unit);
       } else {
         var amt = item.base * mult;
         var liangAmt = (item.unit === '兩') ? amt : null;
