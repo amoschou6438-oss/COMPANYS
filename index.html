@@ -1351,7 +1351,7 @@
       <button type="button" class="dl-modal-close" onclick="window.dlCloseModal('modal-backup-restore')">✕</button>
       <div class="dl-modal-title">💾 一鍵備份／還原</div>
       <div class="sched-import-bar" style="border:none;padding:0;margin:0;background:transparent">
-        <div class="sched-import-hint">將目前檢視月份的「當月排程」「盤點庫存」「當月叫貨一覽表」三項資料一次匯出成單一備份檔，或從備份檔一鍵還原（會覆蓋這些項目中已存在的對應資料，匯入前請確認）。</div>
+        <div class="sched-import-hint">將目前檢視月份「及下個月」的「排程」「盤點庫存」「叫貨一覽表」三項資料一次匯出成單一備份檔（涵蓋兩個月），或從備份檔一鍵還原（會覆蓋這些項目中已存在的對應資料，匯入前請確認）。</div>
         <div class="sched-import-row">
           <button type="button" onclick="window.exportAllMonthlyBackup()" style="padding:7px 16px;border:1px solid #1565c0;border-radius:6px;background:#eaf2fb;color:#1565c0;font-size:13px;cursor:pointer;font-family:'Noto Sans TC',sans-serif;font-weight:700">📤 一鍵備份</button>
           <label for="sched-json-import-file" class="sched-import-btn">
@@ -19781,13 +19781,18 @@ function debugFixNow() {
       var m = window._schedViewMonth || (now.getMonth() + 1);
       var mk = y + '-' + _pad2(m) + '-';
 
-      // 1) 當月排程
+      // 下個月（連同當月一起備份）
+      var y2 = m === 12 ? (y + 1) : y;
+      var m2 = m === 12 ? 1 : (m + 1);
+      var mk2 = y2 + '-' + _pad2(m2) + '-';
+
+      // 1) 當月＋下個月排程
       var SCHD_KEY = window._SCHD_KEY || 'schedule_v2';
       var allSched = {};
       try { allSched = JSON.parse(localStorage.getItem(SCHD_KEY) || '{}'); } catch(e){}
       var monthSched = {};
       Object.keys(allSched).forEach(function(dk){
-        if (dk.indexOf(mk) === 0) monthSched[dk] = allSched[dk];
+        if (dk.indexOf(mk) === 0 || dk.indexOf(mk2) === 0) monthSched[dk] = allSched[dk];
       });
 
       // 2) 盤點庫存（目前畫面上所有欄位數值）
@@ -19798,7 +19803,7 @@ function debugFixNow() {
         fields.forEach(function(el){ invData[el.id] = el.value; });
       }
 
-      // 3) 當月叫貨一覽表
+      // 3) 當月＋下個月叫貨一覽表
       var allOrderSched = {};
       try { allOrderSched = JSON.parse(localStorage.getItem('order_sched_v1') || '{}'); } catch(e){}
       var allArrival = {};
@@ -19806,10 +19811,10 @@ function debugFixNow() {
       var monthOrderSched = {};
       var monthArrival = {};
       Object.keys(allOrderSched).forEach(function(dk){
-        if (dk.indexOf(mk) === 0) monthOrderSched[dk] = allOrderSched[dk];
+        if (dk.indexOf(mk) === 0 || dk.indexOf(mk2) === 0) monthOrderSched[dk] = allOrderSched[dk];
       });
       Object.keys(allArrival).forEach(function(dk){
-        if (dk.indexOf(mk) === 0) monthArrival[dk] = allArrival[dk];
+        if (dk.indexOf(mk) === 0 || dk.indexOf(mk2) === 0) monthArrival[dk] = allArrival[dk];
       });
 
       var schedCount = Object.keys(monthSched).length;
@@ -19817,7 +19822,7 @@ function debugFixNow() {
       var orderCount = Object.keys(monthOrderSched).length;
 
       if (schedCount === 0 && invCount === 0 && orderCount === 0) {
-        alert('目前檢視的 ' + y + '年' + m + '月 沒有可備份的排程、盤點庫存或叫貨資料。');
+        alert('目前檢視的 ' + y + '年' + m + '月 及 ' + y2 + '年' + m2 + '月 都沒有可備份的排程、盤點庫存或叫貨資料。');
         return;
       }
 
@@ -19826,13 +19831,15 @@ function debugFixNow() {
         version: 1,
         year: y,
         month: m,
+        nextYear: y2,
+        nextMonth: m2,
         exportedAt: new Date().toISOString(),
         schedule: monthSched,
         inventory: invData,
         orderSched: monthOrderSched,
         orderArrival: monthArrival
       };
-      _downloadJson(payload, '得來素資料一鍵備份_' + y + '年' + m + '月_' + _todayStamp() + '.json');
+      _downloadJson(payload, '得來素資料一鍵備份_' + y + '年' + m + '月至' + y2 + '年' + m2 + '月_' + _todayStamp() + '.json');
     } catch(err){
       alert('備份失敗：' + (err && err.message ? err.message : err));
     }
@@ -19869,7 +19876,8 @@ function debugFixNow() {
         }
 
         var y = payload.year, m = payload.month;
-        var labelYM = (y && m) ? (y + '年' + m + '月') : '此份';
+        var y2 = payload.nextYear, m2 = payload.nextMonth;
+        var labelYM = (y && m) ? (y + '年' + m + '月' + ((y2 && m2) ? ('～' + y2 + '年' + m2 + '月') : '')) : '此份';
 
         var parts = [];
         if (schedKeys.length) parts.push('排程 ' + schedKeys.length + ' 天');
@@ -20365,7 +20373,7 @@ function debugFixNow() {
         setTimeout(function(){
           try {
             window.exportAllMonthlyBackup();
-            showTip('已自動完成備份下載（當月排程／盤點庫存／叫貨一覽表），這個分頁會自動關閉');
+            showTip('已自動完成備份下載（當月＋下月排程／盤點庫存／叫貨一覽表），這個分頁會自動關閉');
             setTimeout(function(){ try { window.close(); } catch(e) {} }, 2600);
           } catch(err) {
             alert('自動備份失敗，請手動點擊頁面上的「一鍵備份」按鈕。\n' + (err && err.message ? err.message : err));
