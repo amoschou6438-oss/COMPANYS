@@ -15313,8 +15313,11 @@ riceSeaLoadAll();
 
 // ====== 餛飩冷凍庫存自動扣除機制 ======
 // 每天 07:00 將當天排程的餛飩/餛飩料數量真正寫入冷凍庫存（永久扣除，不重複）
+// 同時：「這禮拜用量」已扣除標記僅在「排程當天」才自動變更為已扣除；
+// 到了下一週，若當週排程仍有餛飩，則自動回復為「尚未扣除」，供新一週重新標記。
 (function() {
   var DEDUCTED_KEY = 'wonton_frozen_deducted_v1'; // 已扣日期清單
+  var DEDUCT_FLAG_KEY = 'wonton_cur_deduct_flag';
 
   function getDeductedDates() {
     try { return JSON.parse(localStorage.getItem(DEDUCTED_KEY) || '[]'); } catch(e) { return []; }
@@ -15325,6 +15328,26 @@ riceSeaLoadAll();
   function fmtDate(d) {
     var y = d.getFullYear(), m = d.getMonth()+1, dd = d.getDate();
     return y + '-' + (m<10?'0':'') + m + '-' + (dd<10?'0':'') + dd;
+  }
+  // 取得某日期所在週（週一～週日）的週一 dateKey，作為該週的識別碼
+  function getWeekMondayKey(d) {
+    var wd = d.getDay(); // 0=Sun
+    var offset = (wd === 0) ? 6 : wd - 1;
+    var monday = new Date(d);
+    monday.setDate(d.getDate() - offset);
+    return fmtDate(monday);
+  }
+  // 計算某一組日期（週一～週日 dateKey 陣列）排程中餛飩（包）的總數
+  function getWeekWontonTotal(weekKeys, schedData) {
+    var total = 0;
+    weekKeys.forEach(function(dk) {
+      var rec = schedData[dk];
+      if (!rec || !rec.items) return;
+      rec.items.forEach(function(it) {
+        if (it.prod === 'wonton' && parseFloat(it.qty) > 0) total += parseFloat(it.qty);
+      });
+    });
+    return total;
   }
 
   function runDeduct() {
@@ -15378,9 +15401,10 @@ riceSeaLoadAll();
 
     // 冷凍庫存量已直接扣除實際用量，同步自動標記「這禮拜用量」為已扣除，
     // 避免 recalcAll 於顯示上重複扣除一次本週用量
+    // 同時記錄目前所在週的週一日期，供下週自動回復判斷用
     var timeStr = (now.getMonth()+1)+'/'+(now.getDate())+' '+
       String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    try { localStorage.setItem('wonton_cur_deduct_flag', JSON.stringify({ time: timeStr, ts: now.getTime(), auto: true })); } catch(e) {}
+    try { localStorage.setItem(DEDUCT_FLAG_KEY, JSON.stringify({ time: timeStr, ts: now.getTime(), auto: true, weekKey: getWeekMondayKey(now) })); } catch(e) {}
     if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
 
     // 儲存並重算
@@ -15391,14 +15415,61 @@ riceSeaLoadAll();
     console.log('[餛飩冷凍] 自動扣除 ' + totalDeduct + ' 包，剩餘 ' + newFrozen + ' 包（扣除日期：' + toDeduct.map(function(i){ return i.dateKey + '×' + i.qty; }).join('、') + '），並自動標記已扣除本週量');
   }
 
-  // 頁面載入時執行一次
-  runDeduct();
+  // ── 每週自動回復「尚未扣除」──
+  // 若已扣除標記是「上一週（或更早）」留下的，且新的一週排程仍有餛飩，
+  // 代表這是全新一週的用量，尚未扣除，需自動回復狀態供重新標記。
+  function checkWeeklyReset() {
+    var raw = null;
+    try { raw = localStorage.getItem(DEDUCT_FLAG_KEY); } catch(e) {}
+    if (!raw) return; // 本來就是「尚未扣除」，不需處理
 
-  // 每分鐘檢查一次（確保 07:00 後一開啟即觸發）
-  setInterval(runDeduct, 60 * 1000);
+    var rec = null;
+    try { rec = JSON.parse(raw); } catch(e) {}
+    if (!rec) return;
+
+    var now = new Date();
+    var curWeekKey = getWeekMondayKey(now);
+
+    // 標記本身就屬於本週 → 不需回復
+    if (rec.weekKey === curWeekKey) return;
+
+    // 標記是舊週留下的：檢查本週排程是否仍有餛飩
+    var schedData = {};
+    try { schedData = JSON.parse(localStorage.getItem('schedule_v2') || '{}'); } catch(e) {}
+    var weekKeys = [];
+    var mondayDate = new Date(now);
+    var wd = now.getDay();
+    var offset = (wd === 0) ? 6 : wd - 1;
+    mondayDate.setDate(now.getDate() - offset);
+    for (var i = 0; i < 7; i++) {
+      var d = new Date(mondayDate);
+      d.setDate(mondayDate.getDate() + i);
+      weekKeys.push(fmtDate(d));
+    }
+    var curTotal = getWeekWontonTotal(weekKeys, schedData);
+    if (curTotal <= 0) return; // 本週沒有餛飩排程，維持原狀不動
+
+    // 回復為「尚未扣除」
+    try { localStorage.removeItem(DEDUCT_FLAG_KEY); } catch(e) {}
+    if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
+    if (typeof recalcAll === 'function') { try { recalcAll(); } catch(e) {} }
+    console.log('[餛飩冷凍] 已進入新的一週（' + curWeekKey + '），本週排程有餛飩，自動回復「這禮拜用量」為尚未扣除');
+  }
+
+  function tick() {
+    checkWeeklyReset();
+    runDeduct();
+  }
+
+  // 頁面載入時執行一次
+  tick();
+
+  // 每分鐘檢查一次（確保 07:00 後一開啟即觸發，且跨週時能即時回復）
+  setInterval(tick, 60 * 1000);
 
   // 暴露給外部（例如手動測試）
   window._wontonDeductRun = runDeduct;
+  window._wontonWeeklyResetCheck = checkWeeklyReset;
   window._wontonDeductedDates = getDeductedDates;
   window._wontonClearDeducted = function() {
     localStorage.removeItem(DEDUCTED_KEY);
@@ -15559,7 +15630,12 @@ function wontonCurDeductToggle() {
     var now = new Date();
     var timeStr = (now.getMonth()+1)+'/'+(now.getDate())+' '+
       String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-    try { localStorage.setItem('wonton_cur_deduct_flag', JSON.stringify({ time: timeStr, ts: now.getTime() })); } catch(e) {}
+    var wd = now.getDay();
+    var offset = (wd === 0) ? 6 : wd - 1;
+    var monday = new Date(now);
+    monday.setDate(now.getDate() - offset);
+    var wk = monday.getFullYear() + '-' + String(monday.getMonth()+1).padStart(2,'0') + '-' + String(monday.getDate()).padStart(2,'0');
+    try { localStorage.setItem('wonton_cur_deduct_flag', JSON.stringify({ time: timeStr, ts: now.getTime(), weekKey: wk })); } catch(e) {}
   }
   _wontonCurDeductRender();
   if (typeof recalcAll === 'function') recalcAll();
