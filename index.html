@@ -1177,6 +1177,9 @@
 .fab-ico { width: 48px; height: 48px; border-radius: 50%; background: #fffef9; border: 1.5px solid var(--gold, #c49a2e); box-shadow: 0 2px 8px rgba(0,0,0,0.3); font-size: 22px; line-height: 45px; text-align: center; display: block; }
 .fab-label { background: rgba(40,30,20,0.88); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 14px; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.25); }
 .fab-item:active .fab-ico { transform: scale(0.92); }
+.fab-ico-img { padding: 0; overflow: hidden; background: #fffef9; line-height: 0; }
+.fab-ico-img img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; pointer-events: none; -webkit-user-drag: none; }
+.fab-item.is-disabled { opacity: .45; }
 
 /* 四方格 (square tile) grid — mobile-first */
 .home-grid {
@@ -1497,6 +1500,7 @@
     <button type="button" class="fab-item" id="fab-item-today" data-ctx="sched"><span class="fab-label">回到今天</span><span class="fab-ico">🗓️</span></button>
     <button type="button" class="fab-item" id="fab-item-jump" data-ctx="input"><span class="fab-label">跳格（G腿 → 盤點庫存）</span><span class="fab-ico">⏭️</span></button>
     <button type="button" class="fab-item" id="fab-item-top" data-ctx="order"><span class="fab-label">到頂端</span><span class="fab-ico">🔝</span></button>
+    <button type="button" class="fab-item" id="fab-item-line" data-ctx="order"><span class="fab-label">LINE 叫貨</span><span class="fab-ico fab-ico-img"><img src="data:image/png;base64,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" alt="LINE 叫貨"></span></button>
     <button type="button" class="fab-item" id="fab-item-home"><span class="fab-label">回到主畫面</span><span class="fab-ico">🏠</span></button>
   </div>
   <button type="button" class="fab-main" id="fab-main" title="回到主畫面（可拖曳移動）">
@@ -20543,6 +20547,13 @@ function debugFixNow() {
     Array.prototype.forEach.call(fab.querySelectorAll('.fab-item[data-ctx]'), function (b) {
       b.hidden = (b.getAttribute('data-ctx') !== c);
     });
+    // LINE 叫貨：僅在「叫貨輸入」子頁顯示（當月叫貨一覽表不顯示），並同步原按鈕的停用狀態
+    var lineItem = document.getElementById('fab-item-line');
+    var lineBtn = document.getElementById('line-order-btn');
+    if (lineItem) {
+      lineItem.hidden = !(c === 'order' && isVisible(lineBtn));
+      lineItem.classList.toggle('is-disabled', !!(lineBtn && lineBtn.disabled));
+    }
     if (c !== lastCtx) { fab.classList.remove('open'); jumpIdx = 0; lastCtx = c; }
     syncIcon();
   }
@@ -20583,6 +20594,14 @@ function debugFixNow() {
   document.getElementById('fab-item-top').addEventListener('click', function () {
     closeMenu();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // LINE 叫貨：與頁面上「💬 LINE 叫貨」按鈕功能完全相同
+  document.getElementById('fab-item-line').addEventListener('click', function () {
+    var btn = document.getElementById('line-order-btn');
+    if (!btn || btn.disabled) return;   // 沒有叫貨數量時與原按鈕一樣不可按
+    closeMenu();
+    btn.click();
   });
 
   document.getElementById('fab-item-today').addEventListener('click', function () {
