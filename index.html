@@ -1496,6 +1496,7 @@
   <div class="fab-menu" id="fab-menu">
     <button type="button" class="fab-item" id="fab-item-today" data-ctx="sched"><span class="fab-label">回到今天</span><span class="fab-ico">🗓️</span></button>
     <button type="button" class="fab-item" id="fab-item-jump" data-ctx="input"><span class="fab-label">跳格（G腿 → 盤點庫存）</span><span class="fab-ico">⏭️</span></button>
+    <button type="button" class="fab-item" id="fab-item-top" data-ctx="order"><span class="fab-label">到頂端</span><span class="fab-ico">🔝</span></button>
     <button type="button" class="fab-item" id="fab-item-home"><span class="fab-label">回到主畫面</span><span class="fab-ico">🏠</span></button>
   </div>
   <button type="button" class="fab-main" id="fab-main" title="回到主畫面（可拖曳移動）">
@@ -2949,7 +2950,7 @@
 <tr><td class="order-item">愛之味沙茶醬</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">箱</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
 <tr class="order-subheader"><td colspan="4">裕軒</td></tr>
 <tr><td class="order-item">番茄糊</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">箱</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
-<tr><td class="order-item">紅辣椒粉</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">包</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
+<tr><td class="order-item">小磨坊紅辣椒粉T</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">箱</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
 <tr><td class="order-item">紅麴粉</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">包</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
 <tr><td class="order-item">小茴香粉</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">包</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
 <tr><td class="order-item">義大利香料</td><td class="order-qty"><input type="number" min="0" class="order-input" oninput="orderAutoSave()"></td><td class="order-unit">包</td><td class="order-note"><input type="text" class="order-note-input" oninput="orderAutoSave()"></td></tr>
@@ -16709,7 +16710,7 @@ var ALL_ORDER_ITEMS = [
   {item:'荳蔻粉',unit:'罐'},{item:'花生仁片',unit:'斤'},{item:'松子',unit:'斤'},{item:'白冰糖',unit:'包'},
   {item:'烏醋',unit:'罐'},{item:'肉角v600',unit:'袋'},{item:'肉片v600',unit:'箱'},{item:'小麥肉片v-g790',unit:'箱'},
   {item:'爌肉精',unit:'箱'},{item:'鮮味多',unit:'箱'},{item:'紅麴醬',unit:'箱'},{item:'牛頭牌沙茶醬',unit:'箱'},
-  {item:'愛之味沙茶醬',unit:'箱'},{item:'番茄糊',unit:'箱'},{item:'紅辣椒粉',unit:'包'},{item:'紅麴粉',unit:'包'},
+  {item:'愛之味沙茶醬',unit:'箱'},{item:'番茄糊',unit:'箱'},{item:'小磨坊紅辣椒粉T',unit:'箱'},{item:'紅麴粉',unit:'包'},
   {item:'小茴香粉',unit:'包'},{item:'義大利香料',unit:'包'},{item:'洋菇片',unit:'箱'},{item:'迷迭香',unit:'包'},
   {item:'月桂葉',unit:'包'},{item:'俄力岡葉',unit:'包'},{item:'味醂',unit:'箱'},{item:'鹽',unit:'袋'},
   {item:'三花太白粉',unit:'袋'},{item:'青線太白粉',unit:'袋'},{item:'中筋麵粉(泰和)',unit:'袋'},{item:'高筋麵粉(綠國花)',unit:'袋'},
@@ -20489,6 +20490,13 @@ function debugFixNow() {
   if (!fab || !main) return;
   var SIZE = 56, KEY = 'derlife_fab_pos_v1';
   var jumpIdx = 0, lastCtx = '';
+  var folder = fab.querySelector('.fab-main-folder');
+  // 選單展開時 📂 換成 📁，收起時換回 📂
+  function syncIcon() {
+    if (!folder) return;
+    var t = fab.classList.contains('open') ? '\uD83D\uDCC1' : '\uD83D\uDCC2';
+    if (folder.textContent !== t) folder.textContent = t;
+  }
 
   function vw() { return window.innerWidth; }
   function vh() { return window.innerHeight; }
@@ -20523,6 +20531,9 @@ function debugFixNow() {
     if (hub && hub.classList.contains('active')) {
       var sub = document.getElementById('hub-sub-schedule');
       if (!sub || sub.style.display !== 'none') return 'sched';
+      // 🛒 叫貨（含「叫貨輸入」「當月叫貨一覽表」兩個子頁）
+      var ord = document.getElementById('hub-sub-order');
+      if (ord && ord.style.display !== 'none') return 'order';
     }
     return '';
   }
@@ -20533,10 +20544,11 @@ function debugFixNow() {
       b.hidden = (b.getAttribute('data-ctx') !== c);
     });
     if (c !== lastCtx) { fab.classList.remove('open'); jumpIdx = 0; lastCtx = c; }
+    syncIcon();
   }
   setInterval(refresh, 300); refresh();
 
-  function closeMenu() { fab.classList.remove('open'); }
+  function closeMenu() { fab.classList.remove('open'); syncIcon(); }
   function goHome() { closeMenu(); if (window.showHomeScreen) window.showHomeScreen(); }
 
   // ── 拖曳 / 點擊 ──
@@ -20559,7 +20571,7 @@ function debugFixNow() {
     try { main.releasePointerCapture(pid); } catch (er) {}
     if (moved) { savePos(); return; }
     // 視為點擊
-    if (fab.classList.contains('has-menu')) fab.classList.toggle('open');
+    if (fab.classList.contains('has-menu')) { fab.classList.toggle('open'); syncIcon(); }
     else goHome();
   }
   main.addEventListener('pointerup', endDrag);
@@ -20568,6 +20580,10 @@ function debugFixNow() {
 
   // ── 選單項目 ──
   document.getElementById('fab-item-home').addEventListener('click', goHome);
+  document.getElementById('fab-item-top').addEventListener('click', function () {
+    closeMenu();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
 
   document.getElementById('fab-item-today').addEventListener('click', function () {
     closeMenu();
