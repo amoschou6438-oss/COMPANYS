@@ -10400,8 +10400,10 @@ function recalcOilySeasoning() {
     MS_ITEMS.forEach(function(item) {
       if (item.name === '油' || item.name === '香油' || item.name === '香椿') return;
       var amt = item.base * ratio;
-      var liangAmt = (item.unit === '兩') ? amt : null;
-      var jinAmt = (item.unit === '斤') ? amt : null;
+      // 所有調味料的「兩」一律無條件進位到整數兩
+      var totalLiangCeil = Math.ceil(Math.round((item.unit === '兩' ? amt : amt * 16) * 1000) / 1000);
+      var liangAmt = (item.unit === '兩') ? totalLiangCeil : null;
+      var jinAmt = (item.unit === '斤') ? totalLiangCeil / 16 : null;
       var d = condimentDisplayDual(item.name, liangAmt, jinAmt);
       h += '<div style="background:var(--paper);border:1px solid #a8d5b5;border-radius:5px;padding:5px 10px;text-align:center;min-width:70px">'
         + '<div style="font-size:10px;color:var(--ink3)">' + item.name + '</div>'
@@ -10410,7 +10412,32 @@ function recalcOilySeasoning() {
         + '</div>';
     });
     h += '</div>';
-    h += '<div style="margin-top:8px;padding:6px 10px;background:#fffde7;border:1px solid #ffe082;border-radius:5px;font-size:11px;color:var(--ink2)">※ 油和香油都 <strong>4 斤</strong>（鍋）、香椿 <strong>3.2 斤</strong>（鍋）、每鍋20斤香菇絲調味料平均重量 <strong>14 斤</strong></div>';
+    h += '<div style="margin-top:8px;padding:6px 10px;background:#fffde7;border:1px solid #ffe082;border-radius:5px;font-size:11px;color:var(--ink2)">*每鍋20斤香菇絲：油和香油都 <strong>4 斤</strong>（鍋）、香椿 <strong>3.2 斤</strong>（鍋）、調味料平均重量 <strong>14 斤</strong></div>';
+    // 每 20 斤為一份，最後一份不足 20 斤的餘數：另外顯示該份所需的油、香油、香椿
+    // 斤兩格式（兩無條件進位到整數）：輸入斤數，輸出「X斤Y兩」
+    function jinCeilStr(jin) {
+      var totalLiang = Math.ceil(Math.round(jin * 16 * 1000) / 1000);
+      var j = Math.floor(totalLiang / 16);
+      var l = totalLiang - j * 16;
+      return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : (j === 0 ? '0兩' : ''));
+    }
+    var extraJin = Math.round((totalJin % BASE) * 100) / 100;   // 每 20 斤一份，最後一份的餘數
+    if (extraJin > 0) {
+      var extraRatio = extraJin / BASE;
+      h += '<div style="margin-top:10px;padding:8px 10px;background:#fff7ed;border:1px solid #fdba74;border-radius:6px">';
+      h += '<div style="font-size:12px;font-weight:700;color:#9a3412;margin-bottom:6px">➕ 最後一份（每 20 斤一份，餘 <span style="color:var(--red)">' + extraJin + '</span> 斤）所需油、香油、香椿</div>';
+      h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+      ['油','香油','香椿'].forEach(function(nm) {
+        var it = MS_ITEMS.find(function(x){ return x.name === nm; });
+        var amt = Math.round(it.base * extraRatio * 100) / 100;
+        h += '<div style="background:var(--paper);border:1px solid #fdba74;border-radius:5px;padding:5px 10px;text-align:center;min-width:70px">'
+          + '<div style="font-size:10px;color:var(--ink3)">' + nm + '</div>'
+          + '<div style="font-size:13px;font-weight:700;color:#155724">' + amt + ' 斤</div>'
+          + '<div style="font-size:10px;color:#b45309;font-weight:700">' + jinCeilStr(amt) + '</div>'
+          + '</div>';
+      });
+      h += '</div></div>';
+    }
     h += '</div>';
     el.innerHTML = h;
   }
