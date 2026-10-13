@@ -10412,7 +10412,14 @@ function recalcOilySeasoning() {
         + '</div>';
     });
     h += '</div>';
-    h += '<div style="margin-top:8px;padding:6px 10px;background:#fffde7;border:1px solid #ffe082;border-radius:5px;font-size:11px;color:var(--ink2)">*每鍋20斤香菇絲：油和香油都 <strong>4 斤</strong>（鍋）、香椿 <strong>3.2 斤</strong>（鍋）、調味料平均重量 <strong>14 斤</strong></div>';
+    // 調味料平均重量：依 MS_ITEMS 計算（不含油、香油、香椿；含水），斤兩調整時會自動更新
+    var msAvgTotal = 0;
+    MS_ITEMS.forEach(function(it) {
+      if (it.name === '油' || it.name === '香油' || it.name === '香椿') return;
+      msAvgTotal += (it.unit === '兩') ? it.base / 16 : it.base;
+    });
+    var msAvgJin = Math.round(Math.round(msAvgTotal * 100) / 10) / 10;
+    h += '<div style="margin-top:8px;padding:6px 10px;background:#fffde7;border:1px solid #ffe082;border-radius:5px;font-size:11px;color:var(--ink2)">*每鍋20斤香菇絲：油和香油都 <strong>4 斤</strong>（鍋）、香椿 <strong>3.2 斤</strong>（鍋）、調味料平均重量 <strong>' + msAvgJin + ' 斤</strong></div>';
     // 每 20 斤為一份，最後一份不足 20 斤的餘數：另外顯示該份所需的油、香油、香椿
     // 斤兩格式（兩無條件進位到整數）：輸入斤數，輸出「X斤Y兩」
     function jinCeilStr(jin) {
