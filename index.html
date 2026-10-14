@@ -2125,7 +2125,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
           <span style="font-size:12px;color:var(--ink3)">← 自動帶入製作數量輸入頁的G腿數值；也可手動修改</span>
         </div>
         <div id="gleg-sauce-recipe" class="daily-chips"></div>
-        <div class="notice" style="margin-top:8px;margin-bottom:4px;background:#fff8e1;border-color:var(--gold)">🆕 新增調味料：<strong>鹽 3兩/鍋</strong>（已加入G腿醬調味料計算）</div>
+        <div class="notice" style="margin-top:8px;margin-bottom:4px;background:#fff8e1;border-color:var(--gold)">🆕 新增調味料：<strong>鹽 1.5兩/鍋</strong>（已加入G腿醬調味料計算）</div>
         <div class="notice" style="margin-top:12px;margin-bottom:4px">
           ※ G腿醬每盆重 <strong id="gleg-sauce-per-basin">—</strong>，備料時請依此計算盆數
         </div>
@@ -2303,7 +2303,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
           </div>
         </div>
         <div id="manual-gleg-sauce-recipe" class="daily-chips"></div>
-        <div class="notice" style="margin-top:8px;margin-bottom:4px;background:#fff8e1;border-color:var(--gold)">🆕 新增調味料：<strong>鹽 3兩/鍋</strong>（已加入G腿醬調味料計算）</div>
+        <div class="notice" style="margin-top:8px;margin-bottom:4px;background:#fff8e1;border-color:var(--gold)">🆕 新增調味料：<strong>鹽 1.5兩/鍋</strong>（已加入G腿醬調味料計算）</div>
         <div class="notice" style="margin-top:12px;margin-bottom:4px">
           ※ G腿醬每盆重 <strong id="manual-gleg-sauce-per-basin">—</strong>，備料時請依此計算盆數
         </div>
@@ -6734,7 +6734,7 @@ var glegSauceData = [
   { name: '胡椒粉',  base: 2.5, unit: '兩' },
   { name: '五香粉',  base: 0.2, unit: '兩' },
   { name: '水',      base: 3,   unit: '兩' },
-  { name: '鹽',      base: 3,   unit: '兩', saveIdx: 100, isNew: true },
+  { name: '鹽',      base: 1.5, unit: '兩', saveIdx: 100, isNew: true },
 ];
 
 function recalcGlegSauce() {
@@ -6818,9 +6818,9 @@ function recalcGlegSauce() {
   // G腿醬每盆重 = 所有調味料總斤兩 / 製作鍋數
   var perBasinEl = document.getElementById('gleg-sauce-per-basin');
   if (perBasinEl && pots > 0) {
-    var perBasinLiang = totalLiangAll / pots;
+    var perBasinLiang = Math.ceil(Math.round(totalLiangAll / pots * 1000) / 1000);   // 兩無條件進位
     var perBasinJin = Math.floor(perBasinLiang / 16);
-    var perBasinLiangRem = Math.round(perBasinLiang % 16 * 10) / 10;
+    var perBasinLiangRem = perBasinLiang % 16;
     var perBasinStr = perBasinJin > 0
       ? perBasinJin + '斤' + (perBasinLiangRem > 0 ? perBasinLiangRem + '兩' : '')
       : perBasinLiangRem + '兩';
@@ -6862,9 +6862,9 @@ function recalcManualSauce() {
   }).join('');
   var perBasinEl = document.getElementById('manual-gleg-sauce-per-basin');
   if (perBasinEl && pots > 0) {
-    var perBasinLiang = totalLiangAll / pots;
+    var perBasinLiang = Math.ceil(Math.round(totalLiangAll / pots * 1000) / 1000);   // 兩無條件進位
     var perBasinJin = Math.floor(perBasinLiang / 16);
-    var perBasinLiangRem = Math.round(perBasinLiang % 16 * 10) / 10;
+    var perBasinLiangRem = perBasinLiang % 16;
     var perBasinStr = perBasinJin > 0
       ? perBasinJin + '斤' + (perBasinLiangRem > 0 ? perBasinLiangRem + '兩' : '')
       : perBasinLiangRem + '兩';
@@ -9987,7 +9987,7 @@ function recalcOilySeasoning() {
       { name: '胡椒粉',  base: 2.5, unit: '兩', defaultPkgG: 600,  defaultPkgUnit: '包', defaultPkgDesc: '1包1斤' },
       { name: '五香粉',  base: 0.2, unit: '兩', defaultPkgG: 600,  defaultPkgUnit: '包', defaultPkgDesc: '1包1斤' },
       { name: '水',      base: 3,   unit: '兩' },
-      { name: '鹽',      base: 3,   unit: '兩', saveIdx: 100, isNew: true },
+      { name: '鹽',      base: 1.5, unit: '兩', saveIdx: 100, isNew: true },
     ];
 
     function sauceLiangDisplay(liang) {
@@ -10003,7 +10003,7 @@ function recalcOilySeasoning() {
       var totalG = totalLiang * G_PER_LIANG_SAUCE;
       var count = Math.floor(totalG / pkgG);
       var remG = totalG - count * pkgG;
-      var remLiang = Math.ceil(remG / G_PER_LIANG_SAUCE);
+      var remLiang = Math.ceil(Math.round(remG / G_PER_LIANG_SAUCE * 1000) / 1000);
       if (count === 0) return sauceLiangDisplay(remLiang);
       if (remLiang === 0) return count + pkgUnitLabel;
       return count + pkgUnitLabel + '+' + sauceLiangDisplay(remLiang);
@@ -10028,8 +10028,11 @@ function recalcOilySeasoning() {
         var effPkgG = w * 600;
         var effPkgUnit = saved.u || item.defaultPkgUnit || '罐';
         convStr = sauceConvG(totalLiang, effPkgG, effPkgUnit);
+      } else if (item.defaultPkgG > 0) {
+        // 預設包裝換算：餘量的「兩」一律無條件進位為整數
+        convStr = sauceConvG(totalLiang, item.defaultPkgG, item.defaultPkgUnit);
       } else {
-        convStr = condimentDisplay(item.name, totalLiang, null);
+        convStr = rawStr;
       }
       var isConverted = convStr !== rawStr;
       var usingDefault = (w <= 0 || isNaN(w)) && item.defaultPkgG > 0;
@@ -10070,7 +10073,9 @@ function recalcOilySeasoning() {
     // ・原味每盆重：不含辣椒粉，以「一般（非辣）鍋數」計算並平均分配
     // ・辣G腿每盆重：含辣椒粉，以「辣G腿鍋數」計算並平均分配
     function liangToStr(liang) {
-      var j = Math.floor(liang / 16), l = Math.round(liang % 16 * 10) / 10;
+      // 每盆重：兩無條件進位為整數
+      var t = Math.ceil(Math.round(liang * 1000) / 1000);
+      var j = Math.floor(t / 16), l = t % 16;
       return (j > 0 ? j + '斤' : '') + (l > 0 ? l + '兩' : '') || '0兩';
     }
     var perBasinRegularStr = null, perBasinSpicyStr = null, perBasinStr = null;
@@ -10119,7 +10124,7 @@ function recalcOilySeasoning() {
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
     h += chipsHtml;
     h += '</div>';
-    h += '<div style="font-size:12px;color:#7b2d00;background:#fff8e1;border:1px solid #e8c56a;border-radius:6px;padding:5px 10px;margin-bottom:8px">🆕 新增調味料：<strong>鹽 3兩/鍋</strong></div>';
+    h += '<div style="font-size:12px;color:#7b2d00;background:#fff8e1;border:1px solid #e8c56a;border-radius:6px;padding:5px 10px;margin-bottom:8px">🆕 新增調味料：<strong>鹽 1.5兩/鍋</strong></div>';
     h += '<div style="font-size:11px;color:#7a6040;margin-top:4px;padding-top:8px;border-top:1px solid #e8c56a">';
     if (perBasinRegularStr !== null && perBasinSpicyStr !== null) {
       // 有辣有不辣：分別顯示兩種每盆重
