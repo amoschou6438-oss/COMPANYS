@@ -13407,7 +13407,7 @@ function recalcOilySeasoning() {
           targetFryDay = fridayKey;
         } else {
           // 找本週最後一個有真實排程的天
-          for (var li = weekKeys.length - 1; li >= 0; li--) {
+          for (var li = Math.min(weekKeys.length, 5) - 1; li >= 0; li--) { // 只看週一~週五，週六日不算
             var lr = schedData[weekKeys[li]];
             if (lr && lr.items && lr.items.filter(function(it){
               return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
@@ -13944,7 +13944,7 @@ function recalcOilySeasoning() {
     var nextWeekFirstHasTriPrep = weekFirstDayHasTriangle(nextWeekKeysForPrep);
     if (nextWeekFirstHasTriPrep) {
       var lastWorkDayPrep = null;
-      for (var lwi = weekKeys.length - 1; lwi >= 0; lwi--) {
+      for (var lwi = Math.min(weekKeys.length, 5) - 1; lwi >= 0; lwi--) { // 只看週一~週五，週六日不算
         var lwr = schedData[weekKeys[lwi]];
         if (lwr && lwr.items && lwr.items.filter(function(it){
           return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
