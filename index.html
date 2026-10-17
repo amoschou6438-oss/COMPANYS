@@ -20556,6 +20556,7 @@ function debugFixNow() {
         window._overviewSource = 'nw';  raw();   // 再以下週計算
         _homeMirrorEst();
       } catch(e) {
+        try { console.error('homeRefreshEst', e); } catch(_) {}
       } finally {
         if (prev !== 'nw') { window._overviewSource = prev; try { raw(); } catch(e) {} }
         window._overviewSource = prev;
@@ -20610,7 +20611,17 @@ function debugFixNow() {
     try { localStorage.setItem('mince_dumpling_bonus', on ? '1' : '0'); } catch(e) {}
     var cb = document.getElementById('home_mince_dumpling_bonus');
     if (cb) cb.checked = !!on;
+    // 立即反映在視窗的碎肉預計剩（先即時 ±56，再由完整重算校正為精確值）
+    try {
+      var _d = document.getElementById('home_est_mince');
+      var _wasOn = window._homeBonusShown === true;
+      if (_d && !isNaN(parseFloat(_d.textContent)) && _wasOn !== !!on) {
+        _d.textContent = Math.round((parseFloat(_d.textContent) + (on ? 56 : -56)) * 10) / 10;
+      }
+      window._homeBonusShown = !!on;
+    } catch(e) {}
     if (typeof recalcAll === 'function') recalcAll();
+    if (window.homeRefreshEst) window.homeRefreshEst();
   };
 
   // ── 輸入庫存剩料：開啟前先將目前數值帶入主畫面欄位；並依「今日排程」決定是否顯示油飯／粽子料庫存 ──
@@ -20670,6 +20681,7 @@ function debugFixNow() {
     if (window.homeRefreshEst) window.homeRefreshEst();
     var _bcb = document.getElementById('home_mince_dumpling_bonus');
     if (_bcb) _bcb.checked = window.getMinceDumplingBonus();
+    window._homeBonusShown = !!(_bcb && _bcb.checked);
     var _brow = document.getElementById('home_mince_bonus_row');
     if (_brow) _brow.style.display = window.nwHasDumplings() ? '' : 'none';
     window.dlOpenModal('modal-stock-input');
