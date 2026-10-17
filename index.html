@@ -20532,24 +20532,74 @@ function debugFixNow() {
     ['home_est_radish', 'nw_est_rem_radish'],
     ['home_est_tri', 'tri_est_left_display']
   ];
-  window.homeRefreshEst = function() {
+  window._homeRecalcRaw = null;
+  window._homeEstBusy = false;
+  function _homeMirrorEst() {
     HOME_EST_PAIRS.forEach(function(p) {
       var d = document.getElementById(p[0]), o = document.getElementById(p[1]);
       if (!d || !o) return;
       d.textContent = o.textContent;
-      var neg = parseFloat(o.textContent) < 0;
-      d.style.color = neg ? 'var(--red)' : '';
+      d.style.color = (parseFloat(o.textContent) < 0) ? 'var(--red)' : '';
     });
+  }
+  window.homeRefreshEst = function() {
+    if (window._homeEstBusy) return;
+    var modal = document.getElementById('modal-stock-input');
+    var visible = !!modal && modal.getClientRects().length > 0 && getComputedStyle(modal).visibility !== 'hidden' && getComputedStyle(modal).display !== 'none' && parseFloat(getComputedStyle(modal).opacity) > 0;
+    var raw = window._homeRecalcRaw;
+    // 視窗開著：不論目前是本週/下週模式，一律以「下週」基準重新計算，確保數字永遠是下週預計剩料
+    if (visible && raw) {
+      window._homeEstBusy = true;
+      var prev = window._overviewSource || 'cur';
+      try {
+        window._overviewSource = 'cur'; raw();   // 先建立本週預計剩快照
+        window._overviewSource = 'nw';  raw();   // 再以下週計算
+        _homeMirrorEst();
+      } catch(e) {
+      } finally {
+        if (prev !== 'nw') { window._overviewSource = prev; try { raw(); } catch(e) {} }
+        window._overviewSource = prev;
+        window._homeEstBusy = false;
+      }
+      return;
+    }
+    _homeMirrorEst();
   };
   setTimeout(function() {
     try {
-      var mo = new MutationObserver(window.homeRefreshEst);
+      var mo = new MutationObserver(function() { var m = document.getElementById('modal-stock-input'); if (!window._homeEstBusy && !(m && m.getClientRects().length > 0)) _homeMirrorEst(); });
       HOME_EST_PAIRS.forEach(function(p) {
         var o = document.getElementById(p[1]);
         if (o) mo.observe(o, { childList: true, characterData: true, subtree: true });
       });
     } catch(e) {}
     window.homeRefreshEst();
+    // 每次重新計算後、以及視窗內任何輸入變動後，立即更新預計剩料
+    try {
+      if (typeof window.recalcAll === 'function' && !window.recalcAll._homeWrapped) {
+        var _orig = window.recalcAll;
+        window._homeRecalcRaw = _orig;
+        window.recalcAll = function() {
+          var r = _orig.apply(this, arguments);
+          if (!window._homeEstBusy) { try { window.homeRefreshEst(); } catch(e) {} }
+          return r;
+        };
+        window.recalcAll._homeWrapped = true;
+      }
+    } catch(e) {}
+    var _modal = document.getElementById('modal-stock-input');
+    if (_modal) {
+      var _t = null;
+      var _live = function() {
+        clearTimeout(_t);
+        _t = setTimeout(function() {
+          try { if (typeof window.recalcAll === 'function') window.recalcAll(); } catch(e) {}
+          window.homeRefreshEst();
+        }, 60);
+      };
+      _modal.addEventListener('input', _live, true);
+      _modal.addEventListener('change', _live, true);
+    }
   }, 0);
 
   window.getMinceDumplingBonus = function() {
@@ -20623,6 +20673,7 @@ function debugFixNow() {
     var _brow = document.getElementById('home_mince_bonus_row');
     if (_brow) _brow.style.display = window.nwHasDumplings() ? '' : 'none';
     window.dlOpenModal('modal-stock-input');
+    setTimeout(function() { if (window.homeRefreshEst) window.homeRefreshEst(); }, 50);
   };
 
   // ── 輸入庫存剩料「完成」：主要原料／三角圓庫存／餛飩料庫存一律標記為已盤點；
