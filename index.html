@@ -371,6 +371,20 @@
   .per-unit-table td, .per-unit-table th { white-space: nowrap; width: 1%; padding: 5px 8px 5px 0; }
   .per-unit-table td:first-child, .per-unit-table th:first-child { padding-right: 0; }
 
+
+  /* 需求計算結果：窄螢幕可完整顯示／可橫向捲動 */
+  .calc-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .calc-table td.num, .calc-table th.num { text-align: left; }
+  .calc-table td:first-child, .calc-table th:first-child { min-width: 5.5em; white-space: normal; word-break: break-all; }
+  @media (max-width: 600px) {
+    .calc-table { font-size: 12px; }
+    .calc-table th { font-size: 11px; letter-spacing: 0; padding: 5px 3px; white-space: normal; line-height: 1.25; vertical-align: bottom; }
+    .calc-table td { padding: 5px 3px; }
+    .calc-table td.num, .calc-table th.num { width: auto; }
+    .calc-table td:first-child { min-width: 4.5em; }
+    .calc-table .badge { padding: 2px 5px; font-size: 11px; white-space: nowrap; }
+  }
+
   /* BUTTONS */
   .btn {
     padding: 8px 20px;
@@ -1626,6 +1640,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="input-block-title">🌿 主要原料</div>
         <div class="irow"><label>香菇頭</label><div class="ifield"><input type="number" id="home_inv_mushrHead" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mushrHead','nw_inv_mushrHead')"><span class="unit">斤</span></div></div>
         <div class="irow"><label>碎肉</label><div class="ifield"><input type="number" id="home_inv_mince" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mince','nw_inv_mince')"><span class="unit">斤</span></div></div>
+        <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0;display:none"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>下週有做水餃（碎肉預估剩餘 +56 斤）</span></label></div>
         <div class="irow"><label>菜脯</label><div class="ifield"><input type="number" id="home_inv_radish" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_radish','nw_inv_radish')"><span class="unit">斤</span></div></div>
       </div>
 
@@ -5900,18 +5915,19 @@ function recalcAll() {
     const convertH = Math.ceil(needH/93); // 需補包數
     const estRemH = convertH > 0 ? (convertH * 93 - needH) : (invH - mHeadTotal >= 0 ? invH - mHeadTotal : 0);
     const convertM = Math.ceil(needM/75);
-    const estRemM = convertM > 0 ? (convertM * 75 - needM) : (invM - mMinceTotal >= 0 ? invM - mMinceTotal : 0);
+    const minceDumplingBonus = (window._overviewSource === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) ? 56 : 0;
+    const estRemM = (convertM > 0 ? (convertM * 75 - needM) : (invM - mMinceTotal >= 0 ? invM - mMinceTotal : 0)) + minceDumplingBonus;
     const convertR = Math.ceil(needR/15);
     const estRemR = convertR > 0 ? (convertR * 15 - needR) : (invR - mRadish >= 0 ? invR - mRadish : 0);
 
-    mc.innerHTML = `<table class="data-table"><thead><tr>
+    mc.innerHTML = `<div class="calc-scroll"><table class="data-table calc-table"><thead><tr>
       <th style="color:var(--gold2)">原料</th><th class="num" style="color:var(--gold2)">需求(斤)</th><th class="num" style="color:var(--gold2)">庫存(斤)</th><th class="num" style="color:var(--gold2)">仍需(斤)</th><th style="color:var(--gold2)">換算</th><th class="num" style="color:var(--gold2)">使用後預估剩餘量(斤)</th><th style="color:var(--gold2)">狀態</th>
     </tr></thead><tbody>
       <tr><td style="color:var(--gold)">香菇頭${detailH}</td><td class="num">${mHeadTotal}</td><td class="num">${invH}</td><td class="num">${needH}</td><td>${needH > 0 ? convertH+'袋' : '-'}</td>
         <td class="num" style="color:var(--green);font-weight:700">${estRemH}</td>
         <td><span class="badge ${needH > 0 ? 'badge-out' : 'badge-ok'}">${needH > 0 ? '需補' : '足夠'}</span></td></tr>
       <tr><td style="color:var(--gold)">碎肉${detailM}</td><td class="num">${mMinceTotal}</td><td class="num">${invM}</td><td class="num">${needM}</td><td>${needM > 0 ? convertM+'袋' : '-'}</td>
-        <td class="num" style="color:var(--green);font-weight:700">${estRemM}</td>
+        <td class="num" style="color:var(--green);font-weight:700">${estRemM}${minceDumplingBonus ? '<div style="font-size:10px;color:var(--gold);font-weight:400">含水餃+56</div>' : ''}</td>
         <td><span class="badge ${needM > 0 ? 'badge-out' : 'badge-ok'}">${needM > 0 ? '需補' : '足夠'}</span></td></tr>
       <tr><td style="color:var(--gold)">菜脯<div style="font-size:10px;color:var(--ink3);font-weight:400">三角圓需炒${triCookPotsM}鍋×10 + 香椿水餃${q.dumpXC}鍋×3 + 下禮拜先備${q.triNext}鍋×10</div></td><td class="num">${mRadish}</td><td class="num">${invR}</td><td class="num">${needR}</td><td>${needR > 0 ? convertR+'箱' : '-'}</td>
         <td class="num" style="color:var(--green);font-weight:700">${estRemR}</td>
@@ -5919,7 +5935,7 @@ function recalcAll() {
       ${zCaipoJin > 0 ? `<tr><td style="color:var(--gold)">粽子菜脯<div style="font-size:10px;color:var(--ink3);font-weight:400">${totalZi > 0 ? '菜脯料菜脯' : '油飯需炒菜脯料菜脯'}${zCaipoLiang}兩÷16÷15=${zCaipoBox}箱</div></td><td class="num">${zCaipoJin}斤</td><td class="num">${invZR}</td><td class="num">${Math.max(0,zCaipoBox - Math.ceil(invZR/15))}箱</td><td>${zCaipoBox}箱</td>
         <td class="num" style="color:var(--green);font-weight:700">${zCaipoBox > Math.ceil(invZR/15) ? Math.ceil(Math.max(0,zCaipoBox*15 - zCaipoJin)) : Math.ceil(invZR - zCaipoJin)}</td>
         <td><span class="badge ${zCaipoBox > Math.ceil(invZR/15) ? 'badge-out' : 'badge-ok'}">${zCaipoBox > Math.ceil(invZR/15) ? '需補' : '足夠'}</span></td></tr>` : ''}
-    </tbody></table>`;
+    </tbody></table></div>`;
 
     // 更新主要原料預計剩餘顯示
     var _elRemH = document.getElementById('est_rem_mushrHead');
@@ -20498,6 +20514,24 @@ function debugFixNow() {
   var HOME_ZONGZI_SRC_IDS = ['inv_gLegFill', 'inv_mushroom', 'inv_redMeat', 'inv_whiteMeat', 'inv_corner', 'inv_chestnut'];
   var HOME_ZONGZI_NW_IDS = ['nw_inv_gLegFill', 'nw_inv_mushroom', 'nw_inv_redMeat', 'nw_inv_whiteMeat', 'nw_inv_corner', 'nw_inv_chestnut'];
 
+  // ── 碎肉：下週有做水餃 → 下週使用後預估剩餘量 +56 斤 ──
+  window.nwHasDumplings = function() {
+    return ['nw_q_dumplings_xc','nw_q_dumplings_hq','nw_q_dumplings_hq_fill'].some(function(id) {
+      var el = document.getElementById(id);
+      return el && parseFloat(el.value) > 0;
+    });
+  };
+  window.getMinceDumplingBonus = function() {
+    if (!window.nwHasDumplings()) return false;
+    try { return localStorage.getItem('mince_dumpling_bonus') === '1'; } catch(e) { return false; }
+  };
+  window.setMinceDumplingBonus = function(on) {
+    try { localStorage.setItem('mince_dumpling_bonus', on ? '1' : '0'); } catch(e) {}
+    var cb = document.getElementById('home_mince_dumpling_bonus');
+    if (cb) cb.checked = !!on;
+    if (typeof recalcAll === 'function') recalcAll();
+  };
+
   // ── 輸入庫存剩料：開啟前先將目前數值帶入主畫面欄位；並依「今日排程」決定是否顯示油飯／粽子料庫存 ──
   window.openHomeStockModal = function() {
     var pairs = [
@@ -20552,6 +20586,10 @@ function debugFixNow() {
       });
     }
 
+    var _bcb = document.getElementById('home_mince_dumpling_bonus');
+    if (_bcb) _bcb.checked = window.getMinceDumplingBonus();
+    var _brow = document.getElementById('home_mince_bonus_row');
+    if (_brow) _brow.style.display = window.nwHasDumplings() ? '' : 'none';
     window.dlOpenModal('modal-stock-input');
   };
 
