@@ -385,6 +385,10 @@
     .calc-table .badge { padding: 2px 5px; font-size: 11px; white-space: nowrap; }
   }
 
+  .irow:has(> .home-est) { flex-wrap: wrap; row-gap: 2px; }
+  .home-est { flex: 1 0 100%; text-align: left; font-size: 13px; color: var(--green); white-space: nowrap; margin: 0 0 2px; }
+  .home-est b { font-size: 15px; }
+
   /* BUTTONS */
   .btn {
     padding: 8px 20px;
@@ -1638,15 +1642,15 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
 
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🌿 主要原料</div>
-        <div class="irow"><label>香菇頭</label><div class="ifield"><input type="number" id="home_inv_mushrHead" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mushrHead','nw_inv_mushrHead')"><span class="unit">斤</span></div></div>
-        <div class="irow"><label>碎肉</label><div class="ifield"><input type="number" id="home_inv_mince" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mince','nw_inv_mince')"><span class="unit">斤</span></div></div>
+        <div class="irow"><label>香菇頭</label><div class="ifield"><input type="number" id="home_inv_mushrHead" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mushrHead','nw_inv_mushrHead')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mushrHead">—</b> 斤</span></div>
+        <div class="irow"><label>碎肉</label><div class="ifield"><input type="number" id="home_inv_mince" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mince','nw_inv_mince')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mince">—</b> 斤</span></div>
         <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0;display:none"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>下週有做水餃（碎肉預估剩餘 +56 斤）</span></label></div>
-        <div class="irow"><label>菜脯</label><div class="ifield"><input type="number" id="home_inv_radish" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_radish','nw_inv_radish')"><span class="unit">斤</span></div></div>
+        <div class="irow"><label>菜脯</label><div class="ifield"><input type="number" id="home_inv_radish" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_radish','nw_inv_radish')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_radish">—</b> 斤</span></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🔺 三角圓庫存</div>
-        <div class="irow"><label>實際剩料（盆）</label><div class="ifield"><input type="number" id="home_inv_tri_left" min="0" oninput="window.homeSyncStock('home_inv_tri_left','nw_inv_tri_left')"><span class="unit">盆</span></div></div>
+        <div class="irow"><label>實際剩料（盆）</label><div class="ifield"><input type="number" id="home_inv_tri_left" min="0" oninput="window.homeSyncStock('home_inv_tri_left','nw_inv_tri_left')"><span class="unit">盆</span></div><span class="home-est">預計剩料 <b id="home_est_tri">—</b> 盆</span></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
@@ -20521,6 +20525,33 @@ function debugFixNow() {
       return el && parseFloat(el.value) > 0;
     });
   };
+  // ── 庫存視窗：同步顯示各項目預計剩料（鏡射下週頁面的預計剩數值）──
+  var HOME_EST_PAIRS = [
+    ['home_est_mushrHead', 'nw_est_rem_mushrHead'],
+    ['home_est_mince', 'nw_est_rem_mince'],
+    ['home_est_radish', 'nw_est_rem_radish'],
+    ['home_est_tri', 'tri_est_left_display']
+  ];
+  window.homeRefreshEst = function() {
+    HOME_EST_PAIRS.forEach(function(p) {
+      var d = document.getElementById(p[0]), o = document.getElementById(p[1]);
+      if (!d || !o) return;
+      d.textContent = o.textContent;
+      var neg = parseFloat(o.textContent) < 0;
+      d.style.color = neg ? 'var(--red)' : '';
+    });
+  };
+  setTimeout(function() {
+    try {
+      var mo = new MutationObserver(window.homeRefreshEst);
+      HOME_EST_PAIRS.forEach(function(p) {
+        var o = document.getElementById(p[1]);
+        if (o) mo.observe(o, { childList: true, characterData: true, subtree: true });
+      });
+    } catch(e) {}
+    window.homeRefreshEst();
+  }, 0);
+
   window.getMinceDumplingBonus = function() {
     if (!window.nwHasDumplings()) return false;
     try { return localStorage.getItem('mince_dumpling_bonus') === '1'; } catch(e) { return false; }
@@ -20586,6 +20617,7 @@ function debugFixNow() {
       });
     }
 
+    if (window.homeRefreshEst) window.homeRefreshEst();
     var _bcb = document.getElementById('home_mince_dumpling_bonus');
     if (_bcb) _bcb.checked = window.getMinceDumplingBonus();
     var _brow = document.getElementById('home_mince_bonus_row');
