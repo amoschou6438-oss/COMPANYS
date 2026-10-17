@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<script>
+// ── 排程品項顯示順序（回報文字、每日摘要共用）──
+// G腿／粽子／油飯／水餃 → 三角圓 → 醬料類、炒菇、炒香菇絲 → 餛飩料 → 粉類 → 餛飩／麻油猴菇／補湯
+window._SCHED_PROD_ORDER = ['gleg','gleg_spicy','zongzi_d','zongzi_c','oily_rice','monkey_rice',
+  'dumplings_xc','dumplings_hq','dumplings_hq_fill',
+  'triangle','fry_triangle','fry_triangle_fill',
+  'minced','minced_chili','white_sauce','red_sauce','green_sauce','mushroom_sauce','black_pepper_sauce','rice_sauce','sesame_ginger','fried_mushr','mushr_shred',
+  'wonton_fill',
+  'curry','pepper_salt','dump_powder',
+  'wonton','sesame_monkey','soup_refill'];
+window.schedProdRank = function(prod) {
+  var i = window._SCHED_PROD_ORDER.indexOf(prod);
+  return i < 0 ? window._SCHED_PROD_ORDER.indexOf('dump_powder') + 0.5 : i; // 未列名品項：粉類之後、最後一組之前
+};
+
+</script>
   <link rel="manifest" href="der-life-manifest.json">
 
 <meta charset="UTF-8">
@@ -18124,20 +18140,6 @@ var LINE_REPORT_RATES = {
   sesame_monkey:      { label: '麻油猴菇',     perUnit: '鍋', perQty: 1,   suffix: 140,   resultUnit: '包'  },
   mushr_shred:        { label: '炒香菇頭絲',   perUnit: '斤', perQty: 100, suffix: 93,    resultUnit: null  },
   rice_sauce:         { label: '燴飯醬',       perUnit: '鍋', perQty: 1,   suffix: null,  resultUnit: null  },
-};
-
-// ── 排程品項顯示順序（回報文字、每日摘要共用）──
-// G腿／粽子／油飯／水餃 → 三角圓 → 醬料類、炒菇、炒香菇絲 → 餛飩料 → 粉類 → 餛飩／麻油猴菇／補湯
-window._SCHED_PROD_ORDER = ['gleg','gleg_spicy','zongzi_d','zongzi_c','oily_rice','monkey_rice',
-  'dumplings_xc','dumplings_hq','dumplings_hq_fill',
-  'triangle','fry_triangle','fry_triangle_fill',
-  'minced','minced_chili','white_sauce','red_sauce','green_sauce','mushroom_sauce','black_pepper_sauce','rice_sauce','sesame_ginger','fried_mushr','mushr_shred',
-  'wonton_fill',
-  'curry','pepper_salt','dump_powder',
-  'wonton','sesame_monkey','soup_refill'];
-window.schedProdRank = function(prod) {
-  var i = window._SCHED_PROD_ORDER.indexOf(prod);
-  return i < 0 ? window._SCHED_PROD_ORDER.indexOf('dump_powder') + 0.5 : i; // 未列名品項：粉類之後、最後一組之前
 };
 
 // ── 組成回報訊息文字（含換算數量）──
