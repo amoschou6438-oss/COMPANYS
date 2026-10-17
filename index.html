@@ -14117,6 +14117,29 @@ function recalcOilySeasoning() {
     }
     body.style.display = open ? 'none' : 'block';
     if (icon) icon.textContent = open ? '▶' : '▼';
+    // 展開某天後，畫面直接帶到該天第一張斤兩卡
+    if (!open) {
+      var _scrollToFirstCard = function() {
+        var cards = [];
+        var kids = body.querySelectorAll('[id^="sched-"]');
+        for (var i = 0; i < kids.length; i++) {
+          var c = kids[i];
+          if (c.tagName !== 'DIV' || !/^sched-[a-z-]+-\d{4}-\d{2}-\d{2}$/.test(c.id)) continue;
+          if (/^sched-(day|body|icon|items|prod|qty|note)-/.test(c.id)) continue;
+          if (!(c.textContent || '').trim()) continue;
+          Array.prototype.forEach.call(c.children, function(k) { if (k.tagName === 'DIV') cards.push(k); });
+        }
+        if (!cards.length) return;
+        // 第一張已收合就改顯示下一張，依序往後找第一張展開中的卡片；全部收合則停在第一張
+        var first = cards[0];
+        for (var j = 0; j < cards.length; j++) {
+          if (!cards[j].classList.contains('sm-collapsed')) { first = cards[j]; break; }
+        }
+        try { first.style.scrollMarginTop = '70px'; first.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        catch (e) { first.scrollIntoView(true); }
+      };
+      setTimeout(_scrollToFirstCard, 150);
+    }
   };
 
   window.schedAddItem = function(dateKey) {
