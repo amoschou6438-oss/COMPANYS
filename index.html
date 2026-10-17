@@ -9442,37 +9442,37 @@ function recalcOilySeasoning() {
     html += '</div>';
 
     // 各品項面板佔位
-    html += '<div id="sched-zongzi-seasoning-today-' + dateKey + '"></div>';
-    html += '<div id="sched-wonton-recipe-' + dateKey + '"></div>';
     html += '<div id="sched-gleg-powder-' + dateKey + '"></div>';
-    html += '<div id="sched-gleg-sauce-prep-' + dateKey + '"></div>';
+    html += '<div id="sched-soup-refill-' + dateKey + '"></div>';
+    html += '<div id="sched-oily-prep-' + dateKey + '"></div>';
     html += '<div id="sched-dumpling-recipe-' + dateKey + '"></div>';
-    html += '<div id="sched-mushr-shred-' + dateKey + '"></div>';
-    html += '<div id="sched-fried-mushr-' + dateKey + '"></div>';
+    html += '<div id="sched-dumpling-hq-' + dateKey + '"></div>';
+    html += '<div id="sched-dumpling-hq-fill-' + dateKey + '"></div>';
+    html += '<div id="sched-triangle-fill-' + dateKey + '"></div>';
     html += '<div id="sched-white-sauce-' + dateKey + '"></div>';
     html += '<div id="sched-green-sauce-' + dateKey + '"></div>';
-    html += '<div id="sched-soup-refill-' + dateKey + '"></div>';
     html += '<div id="sched-rice-sauce-' + dateKey + '"></div>';
     html += '<div id="sched-sesame-ginger-' + dateKey + '"></div>';
-    html += '<div id="sched-curry-' + dateKey + '"></div>';
-    html += '<div id="sched-pepper-' + dateKey + '"></div>';
-    html += '<div id="sched-zongzi-drysea-' + dateKey + '"></div>';
-    html += '<div id="sched-oily-redshred-' + dateKey + '"></div>';
-    html += '<div id="sched-oily-prep-' + dateKey + '"></div>';
-    html += '<div id="sched-zongzi-seasoning-' + dateKey + '"></div>';
-    html += '<div id="sched-zongzi-drysea-manual-' + dateKey + '"></div>';
-    html += '<div id="sched-sesame-monkey-' + dateKey + '"></div>';
-    html += '<div id="sched-dump-powder-' + dateKey + '"></div>';
-    html += '<div id="sched-triangle-fill-' + dateKey + '"></div>';
     html += '<div id="sched-mushroom-sauce-' + dateKey + '"></div>';
     html += '<div id="sched-black-pepper-sauce-' + dateKey + '"></div>';
     html += '<div id="sched-red-sauce-recipe-' + dateKey + '"></div>';
-    html += '<div id="sched-wonton-fill-recipe-' + dateKey + '"></div>';
-    html += '<div id="sched-dumpling-hq-' + dateKey + '"></div>';
-    html += '<div id="sched-dumpling-hq-fill-' + dateKey + '"></div>';
-    html += '<div id="sched-minced-recipe-' + dateKey + '"></div>';
     html += '<div id="sched-chili-sauce-' + dateKey + '"></div>';
+    html += '<div id="sched-minced-recipe-' + dateKey + '"></div>';
     html += '<div id="sched-lotus-monkey-' + dateKey + '"></div>';
+    html += '<div id="sched-fried-mushr-' + dateKey + '"></div>';
+    html += '<div id="sched-mushr-shred-' + dateKey + '"></div>';
+    html += '<div id="sched-wonton-fill-recipe-' + dateKey + '"></div>';
+    html += '<div id="sched-curry-' + dateKey + '"></div>';
+    html += '<div id="sched-pepper-' + dateKey + '"></div>';
+    html += '<div id="sched-dump-powder-' + dateKey + '"></div>';
+    html += '<div id="sched-zongzi-seasoning-today-' + dateKey + '"></div>';
+    html += '<div id="sched-zongzi-seasoning-' + dateKey + '"></div>';
+    html += '<div id="sched-zongzi-drysea-' + dateKey + '"></div>';
+    html += '<div id="sched-zongzi-drysea-manual-' + dateKey + '"></div>';
+    html += '<div id="sched-oily-redshred-' + dateKey + '"></div>';
+    html += '<div id="sched-wonton-recipe-' + dateKey + '"></div>';
+    html += '<div id="sched-sesame-monkey-' + dateKey + '"></div>';
+    html += '<div id="sched-gleg-sauce-prep-' + dateKey + '"></div>';
 
     html += '</div>'; // sched-day-body
     html += '</div>'; // sched-day
@@ -14482,17 +14482,37 @@ function recalcOilySeasoning() {
 
     // 排程頁面單一天會用到的所有面板 id 前綴（對照 buildDayHtml 裡的佔位 div）
     var PANEL_PREFIXES = [
-      'sched-zongzi-seasoning-today-', 'sched-wonton-recipe-', 'sched-gleg-powder-',
-      'sched-gleg-sauce-prep-', 'sched-dumpling-recipe-', 'sched-mushr-shred-',
-      'sched-fried-mushr-', 'sched-white-sauce-', 'sched-green-sauce-',
-      'sched-soup-refill-', 'sched-rice-sauce-', 'sched-sesame-ginger-',
-      'sched-curry-', 'sched-pepper-', 'sched-zongzi-drysea-',
-      'sched-oily-redshred-', 'sched-oily-prep-', 'sched-zongzi-seasoning-',
-      'sched-zongzi-drysea-manual-', 'sched-sesame-monkey-', 'sched-dump-powder-',
-      'sched-triangle-fill-', 'sched-mushroom-sauce-', 'sched-black-pepper-sauce-',
-      'sched-red-sauce-recipe-', 'sched-wonton-fill-recipe-', 'sched-dumpling-hq-',
-      'sched-dumpling-hq-fill-', 'sched-minced-recipe-', 'sched-chili-sauce-',
-      'sched-lotus-monkey-'
+      'sched-gleg-powder-',
+      'sched-soup-refill-',
+      'sched-oily-prep-',
+      'sched-dumpling-recipe-',
+      'sched-dumpling-hq-',
+      'sched-dumpling-hq-fill-',
+      'sched-triangle-fill-',
+      'sched-white-sauce-',
+      'sched-green-sauce-',
+      'sched-rice-sauce-',
+      'sched-sesame-ginger-',
+      'sched-mushroom-sauce-',
+      'sched-black-pepper-sauce-',
+      'sched-red-sauce-recipe-',
+      'sched-chili-sauce-',
+      'sched-minced-recipe-',
+      'sched-lotus-monkey-',
+      'sched-fried-mushr-',
+      'sched-mushr-shred-',
+      'sched-wonton-fill-recipe-',
+      'sched-curry-',
+      'sched-pepper-',
+      'sched-dump-powder-',
+      'sched-zongzi-seasoning-today-',
+      'sched-zongzi-seasoning-',
+      'sched-zongzi-drysea-',
+      'sched-zongzi-drysea-manual-',
+      'sched-oily-redshred-',
+      'sched-wonton-recipe-',
+      'sched-sesame-monkey-',
+      'sched-gleg-sauce-prep-'
     ];
 
     var tempHost = document.createElement('div');
@@ -21154,6 +21174,84 @@ function debugFixNow() {
   }
   if (document.readyState === 'complete') setTimeout(apply, 300);
   else window.addEventListener('load', function(){ setTimeout(apply, 300); });
+})();
+</script>
+<style>
+  .sm-fold-btn{position:absolute;top:8px;right:8px;width:30px;height:30px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:rgba(255,255,255,.85);font-size:15px;line-height:1;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;-webkit-tap-highlight-color:transparent}
+  .sm-fold-btn:active{transform:scale(.92)}
+  .sm-foldable{position:relative}
+  .sm-fold-head{padding-right:40px!important}
+  .sm-collapsed > :not(.sm-fold-head):not(.sm-fold-btn){display:none!important}
+  .sm-collapsed > .sm-fold-head{margin-bottom:0!important}
+</style>
+<script>
+/* 斤兩區塊收合功能：右上角 🔼(展開中，按下收合) / 🔽(已收合，按下展開)；收合狀態會記住 */
+(function(){
+  var PREFIX='fold_';
+  function store(k,v){try{if(v===undefined)return localStorage.getItem(PREFIX+k);if(v)localStorage.setItem(PREFIX+k,'1');else localStorage.removeItem(PREFIX+k);}catch(e){return null;}}
+  function keyOf(t){return (t.textContent||'').replace(/\s+/g,' ').trim().split(/[（(]/)[0].trim();}
+  function attach(box,head){
+    if(!box||!head||box.dataset.foldInit)return;
+    var key=keyOf(head); if(!key)return;
+    box.dataset.foldInit='1';
+    box.classList.add('sm-foldable');
+    head.classList.add('sm-fold-head');
+    var btn=document.createElement('button');
+    btn.type='button'; btn.className='sm-fold-btn';
+    function paint(){
+      var c=box.classList.contains('sm-collapsed');
+      btn.textContent=c?'\uD83D\uDD3D':'\uD83D\uDD3C';
+      btn.setAttribute('aria-label',c?'展開':'收合');
+      btn.setAttribute('aria-expanded',c?'false':'true');
+    }
+    if(store(key)==='1')box.classList.add('sm-collapsed');
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      box.classList.toggle('sm-collapsed');
+      store(key,box.classList.contains('sm-collapsed'));
+      paint();
+    });
+    paint();
+    box.appendChild(btn);
+  }
+  function enhance(){
+    // 動態產生的斤兩面板（排程頁等）：外框 border-radius:8px;padding:12px，第一個子元素為標題
+    document.querySelectorAll('div[style*="border-radius:8px"][style*="padding:12px"]').forEach(function(box){
+      var head=box.firstElementChild;
+      if(!head||box.dataset.foldInit)return;
+      var st=head.getAttribute('style')||'';
+      if(st.indexOf('font-weight:700')<0||st.indexOf('letter-spacing:1px')<0)return;
+      if(!/斤兩|配方/.test(head.textContent))return;
+      attach(box,head);
+    });
+    // 排程頁各日期的面板容器（sched-xxx-YYYY-MM-DD）與「排程製作斤兩」彈窗內容：每一張卡片都可收合
+    var containers=[];
+    document.querySelectorAll('[id^="sched-"]').forEach(function(c){
+      if(/^sched-[a-z-]+-\d{4}-\d{2}-\d{2}$/.test(c.id)&&!/^sched-(day|body|icon|items|prod|qty|note)-/.test(c.id)&&c.tagName==='DIV')containers.push(c);
+    });
+    var dw=document.getElementById('home-daily-weight-body');
+    if(dw)Array.prototype.forEach.call(dw.children,function(c){containers.push(c);});
+    containers.forEach(function(c){
+      Array.prototype.forEach.call(c.children,function(box){
+        if(box.dataset.foldInit||box.tagName!=='DIV')return;
+        var head=box.firstElementChild;
+        if(!head||!(head.textContent||'').trim())return;
+        attach(box,head);
+      });
+    });
+    // 靜態卡片：標題含「斤兩／配方」
+    document.querySelectorAll('.card > .card-title:first-child').forEach(function(head){
+      if(!/斤兩|配方/.test(head.textContent))return;
+      attach(head.parentElement,head);
+    });
+  }
+  var raf=0;
+  function schedule(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;try{enhance();}catch(e){}});}
+  function start(){
+    enhance();
+    try{new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});}catch(e){}
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
 </script>
 </body>
