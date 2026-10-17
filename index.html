@@ -13772,18 +13772,26 @@ function recalcOilySeasoning() {
   // ── 餛飩煮漿備料：取得下一個工作日（跳過週六日）的餛飩（包）數量 ──
   function getWontonNextWorkdayQty(dateKey) {
     schLoad();
+    function wq(dt) {
+      var k = fmtDate(dt.getFullYear(), dt.getMonth()+1, dt.getDate());
+      var r = schedData[k];
+      var q = 0;
+      if (r && r.items) r.items.forEach(function(it) { if (it.prod === 'wonton') q += parseFloat(it.qty) || 0; });
+      return q;
+    }
+    // 先看「隔天」（含週六日）：餛飩前一天一定要煮餛飩漿
+    var d1 = new Date(dateKey + 'T00:00:00');
+    d1.setDate(d1.getDate() + 1);
+    var q1 = wq(d1);
+    if (q1 > 0) return q1;
+    // 隔天沒有 → 沿用原規則：下一個工作日（跳過週六日）
     var d = new Date(dateKey + 'T00:00:00');
     for (var i = 1; i <= 7; i++) {
       d.setDate(d.getDate() + 1);
       var wd = d.getDay();
       if (wd !== 0 && wd !== 6) break;
     }
-    var nextDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
-    var rec = schedData[nextDk];
-    if (!rec || !rec.items) return 0;
-    var qty = 0;
-    rec.items.forEach(function(it) { if (it.prod === 'wonton') qty += parseFloat(it.qty) || 0; });
-    return qty;
+    return wq(d);
   }
 
   // ── 煮餛飩漿文字提示（排程摘要用）──
@@ -13791,7 +13799,7 @@ function recalcOilySeasoning() {
   function getWontonSlurryPrepLabel(dateKey) {
     var wontonQty = getWontonNextWorkdayQty(dateKey);
     if (wontonQty <= 0) return '';
-    return '🥟 煮餛飩漿（' + wontonQty + '包）';
+    return '🥟 煮餛飩漿（' + wontonQty + '包）、切香菜';
   }
 
   // ── 油飯備料文字提示（排程摘要用）──
