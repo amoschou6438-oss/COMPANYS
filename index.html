@@ -18160,7 +18160,7 @@ function buildLineMsg(dateKey) {
   var rec = sd[dateKey] || { items: [], note: '' };
   var items = (rec.items || []).slice();
   // 回報文字的品項顯示順序：G腿／粽子／油飯／水餃 → 三角圓 → 醬料類、炒菇、炒香菇絲 → 餛飩料 → 粉類 → 餛飩／麻油猴菇／補湯
-  var _lineRank = window.schedProdRank;
+  var _lineRank = function(p) { return p === 'egg_crepe' ? 9999 : window.schedProdRank(p); }; // 蛋餅皮固定排最後
   items = items.map(function(it, idx) { return { it: it, idx: idx }; })
     .sort(function(a, b) { return (_lineRank(a.it.prod) - _lineRank(b.it.prod)) || (a.idx - b.idx); })
     .map(function(o) { return o.it; });
