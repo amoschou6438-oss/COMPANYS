@@ -16,6 +16,27 @@ window.schedProdRank = function(prod) {
   return i < 0 ? window._SCHED_PROD_ORDER.indexOf('dump_powder') + 0.5 : i; // 未列名品項：粉類之後、最後一組之前
 };
 // 排程摘要：每個品項不可從中間斷行，只在「、」之後換行
+// 排程摘要若超過一行 → 日期欄靠上對齊；只有一行 → 上下置中
+window.schedAlignHeaders = function() {
+  try {
+    document.querySelectorAll('.sched-day-header').forEach(function(h) {
+      var sum = h.querySelector('.sched-summary');
+      if (!sum || !sum.offsetHeight) { return; }
+      var fs = parseFloat(getComputedStyle(sum).fontSize) || 13;
+      var want = (sum.offsetHeight > fs * 2.2) ? 'flex-start' : 'center';
+      if (h.style.alignItems !== want) h.style.alignItems = want;
+    });
+  } catch(e) {}
+};
+(function() {
+  var t = null;
+  function sched() { clearTimeout(t); t = setTimeout(window.schedAlignHeaders, 60); }
+  document.addEventListener('DOMContentLoaded', function() {
+    sched();
+    window.addEventListener('resize', sched);
+    new MutationObserver(sched).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+  });
+})();
 window.schedJoinItems = function(parts, isHtml) {
   var esc = function(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
   return parts.map(function(t, i) {
@@ -766,7 +787,7 @@ window.schedJoinItems = function(parts, isHtml) {
     background: #fffef9;
     font-size: 13px;
     font-family: 'Noto Sans TC', sans-serif;
-    color: var(--red);
+    color: #000;
     font-weight: 700;
     text-align: center;
     transition: border-color 0.2s;
@@ -954,7 +975,7 @@ window.schedJoinItems = function(parts, isHtml) {
   .sched-week-summary-bar .wsb-title {
     font-weight: 700;
     color: var(--green);
-    margin-right: 4px;
+    flex: 0 0 100%;
   }
   .sched-week-summary-bar .wsb-item {
     background: #fff;
@@ -994,7 +1015,7 @@ window.schedJoinItems = function(parts, isHtml) {
   }
   .sched-day-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
     padding: 10px 14px;
     cursor: pointer;
@@ -1465,6 +1486,9 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
 .remark-textarea:focus,.irow-remark-input:focus{outline:none;border-color:var(--fd);box-shadow:0 0 0 4px color-mix(in srgb,var(--f) 30%,transparent)}
 .irow,.irow-with-remark{border-bottom:2px dotted var(--border-light)}
 
+/* 數量輸入欄文字一律黑色 */
+.ifield input,.input-row input,.input-number-big{color:#000 !important}
+
 /* ---------- 表格 ---------- */
 .data-table th,.order-table th,.per-unit-table th{background:linear-gradient(90deg,var(--f),var(--f2));color:var(--ft);letter-spacing:.5px}
 .data-table tr:nth-child(even) td,.order-table tr:nth-child(even) td{background:var(--fs)}
@@ -1683,6 +1707,16 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="irow"><label>餛飩黏膠</label><div class="ifield"><input type="number" id="home_inv_wonton_glue" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_wonton_glue','inv_wonton_glue')"><span class="unit">盆</span></div></div>
       </div>
 
+      <div class="input-block" id="home-stock-block-zongzi" style="--label-w:9.5em;display:none">
+        <div class="input-block-title">🎋 粽子料庫存</div>
+        <div class="irow"><label>菜脯料</label><div class="ifield"><input type="number" id="home_inv_gLegFill" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gLegFill','nw_inv_gLegFill')"><span class="unit">斤</span></div></div>
+        <div class="irow"><label>乾香菇</label><div class="ifield"><input type="number" id="home_inv_mushroom" min="0" oninput="window.homeSyncStock('home_inv_mushroom','nw_inv_mushroom')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>紅糟肉片</label><div class="ifield"><input type="number" id="home_inv_redMeat" min="0" oninput="window.homeSyncStock('home_inv_redMeat','nw_inv_redMeat')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>乾肉片</label><div class="ifield"><input type="number" id="home_inv_whiteMeat" min="0" oninput="window.homeSyncStock('home_inv_whiteMeat','nw_inv_whiteMeat')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>乾肉角</label><div class="ifield"><input type="number" id="home_inv_corner" min="0" oninput="window.homeSyncStock('home_inv_corner','nw_inv_corner')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>栗子</label><div class="ifield"><input type="number" id="home_inv_chestnut" min="0" oninput="window.homeSyncStock('home_inv_chestnut','nw_inv_chestnut')"><span class="unit">g</span></div></div>
+      </div>
+
       <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🍗 G腿拌料庫存</div>
         <div class="irow"><label>杏鮑菇</label><div class="ifield"><input type="number" id="home_inv_gleg_mushroom_left" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gleg_mushroom_left','inv_gleg_mushroom_left_inv')"><span class="unit">鍋</span></div></div>
@@ -1700,16 +1734,6 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="irow"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="home_inv_riceMushr" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceMushr','nw_inv_riceMushr')"><span class="unit">兩</span></div></div>
         <div class="irow"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="home_inv_riceSource" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSource','nw_inv_riceSource')"><span class="unit">斤</span></div></div>
         <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="home_inv_riceSourceExtra" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSourceExtra','nw_inv_riceSourceExtra')"><span class="unit">斤</span></div></div>
-      </div>
-
-      <div class="input-block" id="home-stock-block-zongzi" style="--label-w:9.5em;display:none">
-        <div class="input-block-title">🎋 粽子料庫存</div>
-        <div class="irow"><label>菜脯料</label><div class="ifield"><input type="number" id="home_inv_gLegFill" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_gLegFill','nw_inv_gLegFill')"><span class="unit">斤</span></div></div>
-        <div class="irow"><label>乾香菇</label><div class="ifield"><input type="number" id="home_inv_mushroom" min="0" oninput="window.homeSyncStock('home_inv_mushroom','nw_inv_mushroom')"><span class="unit">g</span></div></div>
-        <div class="irow"><label>紅糟肉片</label><div class="ifield"><input type="number" id="home_inv_redMeat" min="0" oninput="window.homeSyncStock('home_inv_redMeat','nw_inv_redMeat')"><span class="unit">g</span></div></div>
-        <div class="irow"><label>乾肉片</label><div class="ifield"><input type="number" id="home_inv_whiteMeat" min="0" oninput="window.homeSyncStock('home_inv_whiteMeat','nw_inv_whiteMeat')"><span class="unit">g</span></div></div>
-        <div class="irow"><label>乾肉角</label><div class="ifield"><input type="number" id="home_inv_corner" min="0" oninput="window.homeSyncStock('home_inv_corner','nw_inv_corner')"><span class="unit">g</span></div></div>
-        <div class="irow"><label>栗子</label><div class="ifield"><input type="number" id="home_inv_chestnut" min="0" oninput="window.homeSyncStock('home_inv_chestnut','nw_inv_chestnut')"><span class="unit">g</span></div></div>
       </div>
 
       <div style="text-align:right;margin-top:6px">
@@ -1958,21 +1982,6 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
-        <div class="input-block-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-          <span>🍚 油飯料庫存</span>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <button class="invck-btn" id="nw_invck-btn-oilyRiceInv" onclick="nwInvCkDoneGroup('oilyRiceInv',['inv_riceTop','inv_redShred','inv_riceMushr','inv_riceSource','inv_riceSourceExtra'],['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra'])">尚未盤點</button>
-            <span class="invck-status" id="nw_invck-status-oilyRiceInv"></span>
-          </div>
-        </div>
-        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>飯上料</label><div class="ifield"><input type="number" id="nw_inv_riceTop" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceTop" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
-        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>紅糟肉絲</label><div class="ifield"><input type="number" id="nw_inv_redShred" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_redShred');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_redShred" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
-        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="nw_inv_riceMushr" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_riceMushr');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceMushr" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
-        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="nw_inv_riceSource" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceSource" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
-        <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="nw_inv_riceSourceExtra" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div></div>
-      </div>
-
-      <div class="input-block" style="--label-w:9.5em">
         <div class="input-block-title">🍗 G腿拌料庫存</div>
         <div class="irow">
           <label>杏鮑菇</label>
@@ -2033,6 +2042,21 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>乾肉片</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_whiteMeat" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_whiteMeat');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_whiteMeat_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_whiteMeat_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">片</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_whiteMeat" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_whiteMeat_rem_display" style="font-weight:700;color:var(--green)">—</span>片</div></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>乾肉角</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_corner" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_corner');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_corner_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_corner_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">個</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_corner" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_corner_rem_display" style="font-weight:700;color:var(--green)">—</span>個</div></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>栗子</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_chestnut" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_chestnut');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_chestnut_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_chestnut_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">顆</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_chestnut" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_chestnut_rem_display" style="font-weight:700;color:var(--green)">—</span>顆</div></div></div>
+      </div>
+
+      <div class="input-block" style="--label-w:9.5em">
+        <div class="input-block-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span>🍚 油飯料庫存</span>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+            <button class="invck-btn" id="nw_invck-btn-oilyRiceInv" onclick="nwInvCkDoneGroup('oilyRiceInv',['inv_riceTop','inv_redShred','inv_riceMushr','inv_riceSource','inv_riceSourceExtra'],['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra'])">尚未盤點</button>
+            <span class="invck-status" id="nw_invck-status-oilyRiceInv"></span>
+          </div>
+        </div>
+        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>飯上料</label><div class="ifield"><input type="number" id="nw_inv_riceTop" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceTop" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
+        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>紅糟肉絲</label><div class="ifield"><input type="number" id="nw_inv_redShred" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_redShred');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_redShred" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
+        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="nw_inv_riceMushr" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_riceMushr');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceMushr" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
+        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="nw_inv_riceSource" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceSource" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
+        <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="nw_inv_riceSourceExtra" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div></div>
       </div>
 
   </div>
@@ -9347,15 +9371,15 @@ function recalcOilySeasoning() {
       html += '<span class="sched-date-num">' + dateLabel + '</span>';
     }
     html += '<span class="sched-weekday">（' + weekdayLabel(wd) + '）</span>';
+    // 今日標記（放在星期下面）
+    if (isToday) {
+      html += '<span style="font-size:11px;background:var(--red);color:#fff;padding:1px 8px;border-radius:8px;font-weight:700;letter-spacing:0.5px;white-space:nowrap">今日</span>';
+    }
     html += '</span>';
 
     // 跨月標記
     if (di.isCrossMonth) {
       html += '<span class="cross-month-badge">' + di.m + '月</span>';
-    }
-    // 今日標記
-    if (isToday) {
-      html += '<span style="font-size:11px;background:var(--red);color:#fff;padding:1px 8px;border-radius:8px;font-weight:700;letter-spacing:0.5px">今日</span>';
     }
 
     // 台灣節日標記
