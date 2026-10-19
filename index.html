@@ -9340,12 +9340,14 @@ function recalcOilySeasoning() {
 
     // 日期數字
     var dateLabel = (di.m + '/' + di.d);
+    html += '<span class="sched-date-col" style="display:inline-flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">';
     if (isWed) {
       html += '<span class="sched-date-num sched-wed-date">' + dateLabel + '</span>';
     } else {
       html += '<span class="sched-date-num">' + dateLabel + '</span>';
     }
     html += '<span class="sched-weekday">（' + weekdayLabel(wd) + '）</span>';
+    html += '</span>';
 
     // 跨月標記
     if (di.isCrossMonth) {
@@ -16686,9 +16688,10 @@ function buildOrderMonthlyView() {
     var isFri = wd === 5, isWeekend = (wd === 0 || wd === 6);
 
     var dayClass = 'sched-day' + (isWeekend ? ' weekend' : '') + (isFri ? ' friday' : '');
-    var dateNumHtml = isFri
-      ? '<span class="sched-date-num sched-wed-date">' + d + ' (' + wLabel + ')</span>'
-      : '<span class="sched-date-num">' + d + '</span><span class="sched-weekday">（' + wLabel + '）</span>';
+    var dateNumHtml = (isFri
+      ? '<span class="sched-date-num sched-wed-date">' + d + '</span>'
+      : '<span class="sched-date-num">' + d + '</span>')
+      + '<span class="sched-weekday">（' + wLabel + '）</span>';
 
     // Check arrival info for this date's items
     var arrivalData = {};
@@ -16699,9 +16702,11 @@ function buildOrderMonthlyView() {
 
     html += '<div class="' + dayClass + '" style="margin-bottom:8px">';
     html += '<div class="sched-day-header" style="cursor:default">';
+    html += '<span style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">';
     html += dateNumHtml;
     if (isFri) html += '<span class="sched-fri-badge">叫貨日</span>';
-    if (allArrived) html += '<span style="font-size:11px;background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-weight:700;margin-left:4px">✅ 已全數到貨</span>';
+    if (allArrived) html += '<span style="font-size:11px;background:#d4edda;color:#155724;padding:2px 8px;border-radius:10px;font-weight:700;white-space:nowrap">✅ 已全數到貨</span>';
+    html += '</span>';
     html += '<span class="sched-summary">' + items.slice(0,4).map(function(x){return x.item+' '+x.qty+x.unit;}).join('、') + (items.length>4?'…':'') + '</span>';
     html += '</div>';
     html += '<div class="sched-day-body" style="padding:10px 14px">';
