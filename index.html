@@ -9297,11 +9297,25 @@ function recalcOilySeasoning() {
     return h;
   }
 
+  // 判斷某日是否為「當週第一個工作日」（週一～週五中，第一個非國定假日的日子）
+  function isWeekFirstWorkday(dateKey) {
+    var pp = String(dateKey).split('-');
+    var dt = new Date(parseInt(pp[0],10), parseInt(pp[1],10)-1, parseInt(pp[2],10));
+    var wdx = dt.getDay();
+    if (wdx === 0 || wdx === 6) return false;
+    for (var k = 1; k <= wdx; k++) {
+      var t = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - (wdx - k));
+      var tk = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
+      if (!getTaiwanHolidayLabel(tk)) return (tk === dateKey);
+    }
+    return false;
+  }
+
   // 產生單天 HTML（公用）
   function buildDayHtml(di, isToday) {
     var dateKey = di.key;
     var wd = di.wd;
-    var isWed = (wd === 3);
+    var isWed = isWeekFirstWorkday(dateKey); // 當週第一個工作日
     var isWeekend = (wd === 0 || wd === 6);
     var dayRec = schedData[dateKey] || { items: [], note: '' };
     var hasItems = dayRec.items && dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle'; }).length > 0;
@@ -9438,7 +9452,7 @@ function recalcOilySeasoning() {
     html += '<div class="sched-day-body" id="sched-body-' + dateKey + '" style="display:none">';
 
     if (isWed) {
-      html += '<div style="background:#fff3e0;border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--ink3)">⭐ 此為<strong>星期三</strong>，本日資料將自動帶入下週的本次製作欄位供參考。</div>';
+      html += '<div style="background:#fff3e0;border-left:3px solid var(--gold);padding:8px 12px;margin-bottom:10px;font-size:12px;color:var(--ink3)">⭐ 此為<strong>當週第一個工作日</strong>，本日資料將自動帶入下週的本次製作欄位供參考。</div>';
     }
 
     html += '<div id="sched-items-' + dateKey + '">';
@@ -9601,7 +9615,7 @@ function recalcOilySeasoning() {
     html += '</div>';
 
     html += '<div class="section-title">' + year + ' 年 ' + month + ' 月　每日工作排程表</div>';
-    html += '<div class="notice">點選日期展開後可輸入製作項目與數量。<strong>當週三</strong>資料會自動帶入下週的「本次製作」供參考。<br>灰色日期為相鄰月份（跨月完整週），工作仍連續顯示。</div>';
+    html += '<div class="notice">點選日期展開後可輸入製作項目與數量。<strong>當週第一個工作日</strong>資料會自動帶入下週的「本次製作」供參考。<br>灰色日期為相鄰月份（跨月完整週），工作仍連續顯示。</div>';
 
     // 下週彙總帶入區塊（保留原有功能）
     (function(){
@@ -13079,9 +13093,8 @@ function recalcOilySeasoning() {
         requestAnimationFrame(function(){ autoShrinkSummaries(header); });
       }
     }
-    // Friday → fill next week (改為星期三觸發)
-    var d = new Date(dateKey);
-    if (d.getDay() === 3) schedFillNextWeek(dateKey, dayRec.items);
+    // 當週第一個工作日 → fill next week
+    if (isWeekFirstWorkday(dateKey)) schedFillNextWeek(dateKey, dayRec.items);
 
     // 即時更新當週彙總 banner
     refreshWeekBanner();
