@@ -21256,6 +21256,38 @@ function debugFixNow() {
       lineItem.hidden = !(c === 'order' && isVisible(lineBtn));
       lineItem.classList.toggle('is-disabled', !!(lineBtn && lineBtn.disabled));
     }
+    // 回到今天：今天的排程已顯示在螢幕中時停用
+    var todayItem = document.getElementById('fab-item-today');
+    if (todayItem) {
+      var tn = new Date();
+      var tk = tn.getFullYear() + '-' + String(tn.getMonth() + 1).padStart(2, '0') + '-' + String(tn.getDate()).padStart(2, '0');
+      var tel = document.getElementById('sched-day-' + tk);
+      var onScreen = false;
+      if (tel && isVisible(tel)) {
+        var tr = tel.getBoundingClientRect();
+        onScreen = tr.bottom > 0 && tr.top < (window.innerHeight || document.documentElement.clientHeight);
+      }
+      todayItem.classList.toggle('is-disabled', onScreen);
+      todayItem.disabled = onScreen;
+    }
+    // 到頂端：已在頂端時停用
+    var topItem = document.getElementById('fab-item-top');
+    var vhNow = window.innerHeight || document.documentElement.clientHeight;
+    var yNow = window.pageYOffset || document.documentElement.scrollTop || 0;
+    if (topItem) { var atTop = yNow <= 2; topItem.classList.toggle('is-disabled', atTop); topItem.disabled = atTop; }
+    // 到尾端：排程頁最後一天已在螢幕最下方（或其他頁已在底部）時停用
+    var botItem = document.getElementById('fab-item-bottom');
+    if (botItem) {
+      var pageH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+      var atBottom = (yNow + vhNow) >= pageH - 2;
+      if (!atBottom && c === 'sched') {
+        var dl = document.querySelectorAll('#hub-sub-schedule .sched-day[id^="sched-day-"]');
+        for (var di = dl.length - 1; di >= 0; di--) {
+          if (isVisible(dl[di])) { atBottom = Math.abs(dl[di].getBoundingClientRect().bottom - vhNow) <= 4; break; }
+        }
+      }
+      botItem.classList.toggle('is-disabled', atBottom); botItem.disabled = atBottom;
+    }
     if (c !== lastCtx) { fab.classList.remove('open'); jumpIdx = 0; lastCtx = c; }
     syncIcon();
   }
@@ -21294,11 +21326,13 @@ function debugFixNow() {
   // ── 選單項目 ──
   document.getElementById('fab-item-home').addEventListener('click', goHome);
   document.getElementById('fab-item-top').addEventListener('click', function () {
+    if (this.disabled) return;
     closeMenu();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
   document.getElementById('fab-item-bottom').addEventListener('click', function () {
+    if (this.disabled) return;
     closeMenu();
     // 排程頁：讓排程最後一天顯示在螢幕最下方
     if (ctx() === 'sched') {
@@ -21320,6 +21354,7 @@ function debugFixNow() {
   });
 
   document.getElementById('fab-item-today').addEventListener('click', function () {
+    if (this.disabled) return;
     closeMenu();
     var now = new Date();
     var y = now.getFullYear(), m = now.getMonth() + 1;
