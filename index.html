@@ -409,6 +409,8 @@ window.schedJoinItems = function(parts, isHtml) {
   .data-table .red { color: var(--red); font-weight: 700; }
   #overview-table td:first-child { white-space: nowrap; width: 1%; padding-right: 0; }
   #overview-table td.num        { white-space: nowrap; width: 1%; padding-left: 0; padding-right: 0; }
+  #overview-table td.num, #overview-table td.num.red { color: #000; }
+  #overview-table-wrap th.num { color: var(--ft); }
   #overview-table td:last-child  { white-space: nowrap; width: 1%; padding-left: 4px; color: var(--ink3); }
   /* 各品項每份用量表：同樣緊縮 */
   .per-unit-table { width: auto !important; }
@@ -1489,6 +1491,10 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
 /* 數量輸入欄文字一律黑色 */
 .ifield input,.input-row input,.input-number-big{color:#000 !important}
 
+/* 所有表格：數量欄文字黑色；數量表頭不再金色疊金底 */
+.data-table td.num,.data-table td.red,.calc-table td.num,.per-unit-table td.num,.order-table td.num{color:#000}
+.data-table th.num,.calc-table th.num,.per-unit-table th.num,.order-table th.num{color:var(--ft)}
+
 /* ---------- 表格 ---------- */
 .data-table th,.order-table th,.per-unit-table th{background:linear-gradient(90deg,var(--f),var(--f2));color:var(--ft);letter-spacing:.5px}
 .data-table tr:nth-child(even) td,.order-table tr:nth-child(even) td{background:var(--fs)}
@@ -2077,7 +2083,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
   <div class="two-col">
     <div class="card">
       <div class="card-title" id="overview-card-title">各品項數量</div>
-      <table class="data-table" style="width:auto">
+      <table class="data-table" id="overview-table-wrap" style="width:auto">
         <thead><tr><th>品項</th><th class="num" style="text-align:left">數量</th><th>單位</th></tr></thead>
         <tbody id="overview-table"></tbody>
       </table>
