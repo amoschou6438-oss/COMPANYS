@@ -15,6 +15,13 @@ window.schedProdRank = function(prod) {
   var i = window._SCHED_PROD_ORDER.indexOf(prod);
   return i < 0 ? window._SCHED_PROD_ORDER.indexOf('dump_powder') + 0.5 : i; // 未列名品項：粉類之後、最後一組之前
 };
+// 排程摘要：每個品項不可從中間斷行，只在「、」之後換行
+window.schedJoinItems = function(parts, isHtml) {
+  var esc = function(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+  return parts.map(function(t, i) {
+    return '<span style="white-space:nowrap">' + (isHtml ? t : esc(t)) + (i < parts.length - 1 ? '、' : '') + '</span><wbr>';
+  }).join('');
+};
 
 </script>
   <link rel="manifest" href="der-life-manifest.json">
@@ -9424,7 +9431,7 @@ function recalcOilySeasoning() {
       var summaryParts = summaryRanked.map(function(o, i){ return { o: o, i: i }; })
         .sort(function(a, b){ return (a.o.r - b.o.r) || (a.i - b.i); })
         .map(function(x){ return x.o.s; });
-      html += summaryParts.join('、');
+      html += window.schedJoinItems(summaryParts, true);
       html += '</span>';
     } else {
       var noItemParts = [];
@@ -9442,7 +9449,7 @@ function recalcOilySeasoning() {
       var wontonSlurryLabelNI = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabelNI) noItemParts.push(redNumsNI(wontonSlurryLabelNI));
       if (noItemParts.length > 0) {
-        html += '<span class="sched-summary">' + noItemParts.join('、') + '</span>';
+        html += '<span class="sched-summary">' + window.schedJoinItems(noItemParts, true) + '</span>';
       }
     }
 
@@ -12963,6 +12970,7 @@ function recalcOilySeasoning() {
         var rec = schedData[dk] || { items:[] };
         var normItems = (rec.items || []).filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
         var spicyGlegItemRS = (rec.items || []).find(function(it){ return it.prod === 'gleg_spicy'; });
+        normItems = normItems.filter(function(it){ return it.prod !== 'egg_crepe'; }).concat(normItems.filter(function(it){ return it.prod === 'egg_crepe'; })); // 蛋餅皮排最後
         var parts = normItems.map(function(it){
           var p = PRODUCTS.find(function(pp){ return pp.id === it.prod; });
           var pQty = (it.plannedQty != null) ? it.plannedQty : it.qty;
@@ -12986,12 +12994,13 @@ function recalcOilySeasoning() {
         if (glegL) parts.push(glegL);
         var oilyL= (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dk) : '';
         if (oilyL) parts.push(oilyL);
+        (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
         if (parts.length > 0) {
           var icon = h.querySelector('.sched-toggle-icon');
           var sum  = document.createElement('span');
           sum.className = 'sched-summary';
           sum.setAttribute('data-autoshrink', '');
-          sum.textContent = parts.join('、');
+          sum.innerHTML = window.schedJoinItems(parts, false);
           h.querySelector('.sched-day-header').insertBefore(sum, icon);
           requestAnimationFrame(function(){ autoShrinkSummaries(h); });
         }
@@ -13087,7 +13096,7 @@ function recalcOilySeasoning() {
         if (oilyPrepLabel2) parts2.push(oilyPrepLabel2);
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
         (function(){ var ei = normItems2.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts2.length) { var ep = parts2.splice(ei,1)[0]; parts2.push(ep); } })(); // 蛋餅皮文字放最後
-        sum.textContent = parts2.join('、');
+        sum.innerHTML = window.schedJoinItems(parts2, false);
         header.querySelector('.sched-day-header').insertBefore(sum, icon);
         // 自動縮小摘要字體
         requestAnimationFrame(function(){ autoShrinkSummaries(header); });
@@ -19037,7 +19046,7 @@ window.AR = (function() {
         var spOnly = glegSpicyItem.actual || 0;
         if (spOnly > 0) summaryParts.push('🌶️ 辣G腿'+spOnly+'鍋');
       }
-      html += '<span class="sched-summary" data-autoshrink>'+summaryParts.join('、')+'</span>';
+      html += '<span class="sched-summary" data-autoshrink>'+window.schedJoinItems(summaryParts, false)+'</span>';
     }
     html += '<span style="margin-left:auto;color:var(--ink3);font-size:12px" id="ar-toggle-'+dk+'">▼</span>';
     html += '</div>';
