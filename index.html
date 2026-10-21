@@ -5769,6 +5769,23 @@ function recalcAll() {
   // 直接沿用 q_tri_next 欄位值：帶入當週時該欄對應下週，帶入下週時對應下下週，已正確反映情境
   var _triNextWeekPrep = q.triNext > 0 ? 1 : 0;
 
+  // G腿：有辣味G腿 → 顯示辣味G腿鍋數；同週同時有原味＋辣味 → G腿改顯示「原味G腿」
+  var _glegRows;
+  (function() {
+    var spicy = 0;
+    try {
+      if (typeof window._getWeekSpicyGleg === 'function') {
+        var wk = (window._overviewSource === 'nw') ? window._getNextWeekKeys() : window._getCurrentWeekKeys();
+        spicy = window._getWeekSpicyGleg(wk) || 0;
+      }
+    } catch(e) { spicy = 0; }
+    spicy = Math.min(spicy, q.gleg);
+    var normal = q.gleg - spicy;
+    if (spicy > 0 && normal > 0) _glegRows = [['原味G腿', normal, '鍋'], ['辣味G腿', spicy, '鍋']];
+    else if (spicy > 0)          _glegRows = [['辣味G腿', spicy, '鍋']];
+    else                         _glegRows = [['G腿', q.gleg, '鍋']];
+  })();
+
   const ot = document.getElementById('overview-table');
   if (ot) ot.innerHTML = [
     ['餛飩', q.wonton, '包'],
@@ -5780,7 +5797,7 @@ function recalcAll() {
     ['三角圓', q.triangle, '袋'],
     ['炒三角圓料', triCookPots > 0 ? triCookPots : 0, '鍋'],
     ['炒三角圓料（下禮拜）', _triNextWeekPrep, '鍋'],
-    ['G腿', q.gleg, '鍋'],
+    ..._glegRows,
     ['得來素粽子', q.zongziD, '粒'],
     ['慈濟粽子', q.zongziC, '粒'],
     ['油飯', q.oilyRice, '盤'],
@@ -8668,6 +8685,20 @@ function recalcOilySeasoning() {
   };
 
   // 逐日取得辣椒醬／素肉燥鍋數（供香菇頭需求判斷：當天只有辣椒醬→0.3鍋素肉燥）
+  // 取得整週辣G腿鍋數（辣G腿是G腿總鍋數的其中一部分）
+  window._getWeekSpicyGleg = function(weekKeys) {
+    schLoad();
+    var n = 0;
+    (weekKeys || []).forEach(function(dk) {
+      var rec = schedData[dk];
+      if (!rec || !rec.items) return;
+      rec.items.forEach(function(it) {
+        if (it.prod === 'gleg_spicy') n += parseFloat(it.qty) || 0;
+      });
+    });
+    return n;
+  };
+
   window._getChiliDayList = function(weekKeys) {
     schLoad();
     var list = [];
