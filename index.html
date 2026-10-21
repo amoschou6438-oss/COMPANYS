@@ -1959,6 +1959,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">鍋</span></div></div>
         <div class="irow"><label>辣G腿（鍋）</label><div id="nw-spicy-gleg-days" style="flex:1"></div></div>
+        <div style="display:none" aria-hidden="true"><input type="number" id="nw_q_minced" value="0"><input type="number" id="nw_q_minced_chili" value="0"><input type="number" id="nw_q_mushr_shred" value="0"><input type="number" id="nw_q_curry" value="0"><input type="number" id="nw_q_pepper_salt" value="0"></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="nw_q_gleg_times" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">次</span></div></div>
       </div>
 
@@ -5853,7 +5854,7 @@ function recalcAll() {
   const mc = document.getElementById('mushroom-calc');
   if (mc) {
     const triCookPotsM = triCookPots; // 已在外層計算
-    const mHead = q.wontonFill * 15 + triCookPots * 2 + q.triNext * 2 + q.dumpXC * 2 + q.dumpHQFill * 15 + q.minced * 6 + q.mincedChili * 6;
+    const mHead = q.wontonFill * 15 + triCookPots * 2 + q.triNext * 2 + q.dumpXC * 2 + q.dumpHQFill * 15 + q.minced * 6 + chiliHeadCalc(window._overviewSource === 'nw' ? 'nw' : 'cur', q.mincedChili, q.minced).jin;
     const mMince = q.wontonFill * 28 + triCookPots * 28 + q.dumpHQFill * 36 + q.triNext * 28;
     const mRadish = triCookPotsM * 10 + q.dumpXC * 3 + q.triNext * 10;
     // 庫存讀取：nw 模式時讀取庫存，優先使用本週預計剩快照（_curEstRem），已盤點則用盤點值
@@ -5981,7 +5982,13 @@ function recalcAll() {
     if (q.dumpXC      > 0) headParts.push(`香椿水餃${q.dumpXC}鍋×2`);
     if (q.dumpHQFill  > 0) headParts.push(`紅麴水餃料${q.dumpHQFill}鍋×15`);
     if (q.minced      > 0) headParts.push(`素肉燥${q.minced}鍋×6`);
-    if (q.mincedChili > 0) headParts.push(`辣椒醬${q.mincedChili}鍋×6`);
+    if (q.mincedChili > 0) (function(){
+      var _ch = chiliHeadCalc(window._overviewSource === 'nw' ? 'nw' : 'cur', q.mincedChili, q.minced);
+      var _p = [];
+      if (_ch.onlyPots > 0) _p.push(`辣椒醬${_ch.onlyPots}鍋×0.3鍋素肉燥×6`);
+      if (_ch.withPots > 0) _p.push(`辣椒醬${_ch.withPots}鍋×6`);
+      _p.forEach(function(t){ headParts.push(t); });
+    })();
     if (zMushrHead    > 0) headParts.push(totalZi > 0 ? `粽子香菇頭料香菇頭${zMushrHead}斤（含庫存/油飯調整）` : `油飯需炒香菇頭料香菇頭${zMushrHead}斤`);
     const detailH = headParts.length > 0
       ? `<div style="font-size:10px;color:var(--ink3);font-weight:400">${headParts.join(' + ')}</div>` : '';
@@ -6404,7 +6411,7 @@ function recalcAll() {
     var zMushrHead2 = totalZi2 > 0 ? Math.ceil(320 * 2 * zRatio2 * 37.5 / 600) : 0;
     var zMince2     = totalZi2 > 0 ? Math.ceil(256 * 3 * zRatio2 * 37.5 / 600) : 0;
 
-    var mHead2   = q.wontonFill*15 + triCookPots*2 + q.triNext*2 + q.dumpXC*2 + q.dumpHQFill*15 + q.minced*6 + q.mincedChili*6 + zMushrHead2;
+    var mHead2   = q.wontonFill*15 + triCookPots*2 + q.triNext*2 + q.dumpXC*2 + q.dumpHQFill*15 + q.minced*6 + chiliHeadCalc(window._overviewSource === 'nw' ? 'nw' : 'cur', q.mincedChili, q.minced).jin + zMushrHead2;
     var mMince2  = q.wontonFill*28 + triCookPots*28 + q.dumpHQFill*36 + q.triNext*28 + zMince2;
     var mRadish2 = triCookPots*10 + q.dumpXC*3 + q.triNext*10;
 
@@ -7091,6 +7098,7 @@ var NW_INPUT_IDS = [
   'nw_q_triangle','nw_q_gleg','nw_q_gleg_times',
   'nw_q_zongzi_d','nw_q_zongzi_c',
   'nw_q_oily_rice','nw_q_monkey_rice',
+  'nw_q_minced','nw_q_minced_chili','nw_q_mushr_shred','nw_q_curry','nw_q_pepper_salt',
   // 盤點庫存
   'nw_inv_mushrHead','nw_inv_mince','nw_inv_radish',
   'nw_inv_tri_left','nw_inv_tri_fry','nw_inv_tri_next',
@@ -7303,6 +7311,28 @@ function clearNwInputs() {
   recalcAll();
 }
 
+// 辣椒醬用香菇頭：當天排程只有辣椒醬（沒排素肉燥）→ 每鍋用0.3鍋素肉燥×6斤=1.8斤；當天有排素肉燥→每鍋6斤
+function chiliHeadCalc(mode, chili, minced) {
+  chili = chili || 0; minced = minced || 0;
+  var onlyPots = 0, withPots = 0;
+  if (chili > 0) {
+    var done = false;
+    try {
+      if (typeof window._getChiliDayList === 'function') {
+        var keys = mode === 'nw' ? window._getNextWeekKeys() : window._getCurrentWeekKeys();
+        var days = window._getChiliDayList(keys);
+        var sum = 0; days.forEach(function(d){ sum += d.chili; });
+        if (days.length && Math.abs(sum - chili) < 1e-6) {
+          days.forEach(function(d){ if (d.minced > 0) withPots += d.chili; else onlyPots += d.chili; });
+          done = true;
+        }
+      }
+    } catch(e) {}
+    if (!done) { if (minced > 0) withPots = chili; else onlyPots = chili; }
+  }
+  return { jin: Math.round((onlyPots * 1.8 + withPots * 6) * 10) / 10, onlyPots: onlyPots, withPots: withPots };
+}
+
 // Get nw values as an object matching q keys used in recalcAll
 function getNwQValues() {
   // Returns null if no nw data has been saved yet
@@ -7477,7 +7507,7 @@ function buildDryGoodsSummaryText(totals, prefix) {
 
   // 香菇頭需求(斤) — 與 recalcAll 完全相同
   var mHead = wontonFill*15 + triCookPots*2 + triNext*2 + dumpXC*2 +
-              dumpHQFill*15 + minced*6 + mincedChili*6;
+              dumpHQFill*15 + minced*6 + chiliHeadCalc(p2 === 'nw' ? 'nw' : 'cur', mincedChili, minced).jin;
   // 碎肉需求(斤)
   var mMince = wontonFill*28 + triCookPots*28 + dumpHQFill*36 + triNext*28;
   // 菜脯需求(斤)
@@ -8635,6 +8665,24 @@ function recalcOilySeasoning() {
       });
     });
     return totals;
+  };
+
+  // 逐日取得辣椒醬／素肉燥鍋數（供香菇頭需求判斷：當天只有辣椒醬→0.3鍋素肉燥）
+  window._getChiliDayList = function(weekKeys) {
+    schLoad();
+    var list = [];
+    (weekKeys || []).forEach(function(dk) {
+      var rec = schedData[dk];
+      if (!rec || !rec.items) return;
+      var c = 0, m = 0;
+      rec.items.forEach(function(it) {
+        var q = parseFloat(it.qty) || 0;
+        if (it.prod === 'minced_chili') c += q;
+        else if (it.prod === 'minced') m += q;
+      });
+      if (c > 0) list.push({ chili: c, minced: m });
+    });
+    return list;
   };
 
   window.applyWeekToInput = function() {
