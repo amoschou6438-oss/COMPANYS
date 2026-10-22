@@ -1638,6 +1638,15 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
 .sched-summary{margin:0!important;line-height:1.5}
 .sched-toggle-icon{display:flex!important;align-items:center!important;line-height:1!important;margin-top:0!important;margin-bottom:0!important}
 </style>
+<script id="zz-che-helpers">
+/* 粽子單位：車（1車=1600粒=12盤）。內部儲存／計算仍以粒（排程）、盤（實際記錄）為準，僅在顯示與輸入時換算 */
+window.ZZ_LI_PER_CHE = 1600; window.ZZ_PAN_PER_CHE = 12;
+window.zzIs = function(id){ return id === 'zongzi_d' || id === 'zongzi_c'; };
+window.zq   = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFloat(v); return isNaN(n) ? v : Math.round(n / 1600 * 100) / 100; };
+window.zqIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFloat(v); return isNaN(n) ? v : Math.round(n * 1600); };
+window.zqAR   = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFloat(v); return isNaN(n) ? v : Math.round(n / 12 * 100) / 100; };
+window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFloat(v); return isNaN(n) ? v : Math.round(n * 12); };
+</script>
 </head>
 <body>
 
@@ -2576,7 +2585,7 @@ body{font-family:'Noto Sans TC',sans-serif;color:var(--ink);
         <div class="input-group"><label>粽子總數（個）</label><div class="input-row"><input type="number" id="z-sea-total" value="12800" oninput="zCalcAllDebounced()"></div></div>
         <div class="input-group"><label>製作盤數（自動）</label><div class="input-row"><input type="number" id="z-sea-pan" readonly style="background:#eef7f0;color:var(--green);font-weight:700"></div></div>
       </div>
-      <div class="notice" style="margin-top:10px">48盤 = 4車（6200個）。香椿醬：1鍋；香菇頭料：2鍋；菜脯料：3鍋；拌飯醬：2鍋（以48盤為基準）。</div>
+      <div class="notice" style="margin-top:10px">48盤 = 4車（6400個）。香椿醬：1鍋；香菇頭料：2鍋；菜脯料：3鍋；拌飯醬：2鍋（以48盤為基準）。</div>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -4581,9 +4590,9 @@ function glegInnerShow(id, btn) {
 }
 
 // 依是否有慈濟粽子決定每48盤的基準粒數
-// 純得來素：6200粒；有慈濟時：慈濟2300+得來素4400=6700粒
+// 所有粽子一律 1車=1600粒=12盤（48盤=6400粒）
 function zGetBase(cijiQty) {
-  return (cijiQty > 0) ? 6700 : 6200;
+  return 6400; // 所有粽子一律 1車=1600粒=12盤（48盤=6400粒）
 }
 
 function zCalcAll() {
@@ -5021,7 +5030,7 @@ function zCalcCurrent() {
   var pan=zNumOrZero('z-sea-pan')||48;
   var ratio=pan/48;
   var info=document.getElementById('z-cur-pan-info');
-  if(info) info.textContent='製作盤數：'+pan+' 盤（粽子約 '+(pan/48*6200).toLocaleString()+' 個）';
+  if(info) info.textContent='製作盤數：'+pan+' 盤（粽子約 '+(pan/48*6400).toLocaleString()+' 個）';
 
   // ── 粽子總數 ──
   var totalZiCur = zNumOrZero('z_ciji') + zNumOrZero('z_dlsu');
@@ -5806,8 +5815,8 @@ function recalcAll() {
     ['炒三角圓料', triCookPots > 0 ? triCookPots : 0, '鍋'],
     ['炒三角圓料（下禮拜）', _triNextWeekPrep, '鍋'],
     ..._glegRows,
-    ['得來素粽子', q.zongziD, '粒'],
-    ['慈濟粽子', q.zongziC, '粒'],
+    ['得來素粽子', window.zq('zongzi_d', q.zongziD), '車'],
+    ['慈濟粽子', window.zq('zongzi_c', q.zongziC), '車'],
     ['油飯', q.oilyRice, '盤'],
     ['炒香菇頭絲', q.mushrShred, '斤'],
     ['咖哩粉', q.curry, '包'],
@@ -6095,7 +6104,7 @@ function recalcAll() {
     const zpH = document.getElementById('zongzi-mushrhead-per-serving');
     const zpM = document.getElementById('zongzi-mince-per-serving');
     const zpC = document.getElementById('zongzi-caipo-per-serving');
-    if (zpLabel) zpLabel.textContent = totalZi > 0 ? `（${totalZi.toLocaleString()}粒）` : '';
+    if (zpLabel) zpLabel.textContent = totalZi > 0 ? `（${window.zq('zongzi_d', totalZi)}車）` : '';
     if (zpH) zpH.textContent = totalZi > 0 ? zMushrHead + '斤' : '—';
     if (zpM) zpM.textContent = totalZi > 0 ? zMince + '斤' : '—';
     if (zpC) zpC.textContent = totalZi > 0 ? zCaipoBox + '箱' : '—';
@@ -6137,7 +6146,7 @@ function recalcAll() {
       var zRatio2 = zTotal / zGetBase(q.zongziC);
       // 重建 zCalcCurrent 情境A 的調整邏輯
       var _pan2 = Math.ceil(zTotal / zGetBase(q.zongziC) * 48); // 製作盤數（參考 zCalcSeasoning ratio 的算法）
-      var _ratio2 = _pan2 / 48; // 等同 zTotal/6200 for 粽子基準
+      var _ratio2 = _pan2 / 48; // 等同 zTotal/6400 for 粽子基準
       // 油飯菜脯料用量（與 zCalcCurrent 一致）
       var _oilyPans2 = q.oilyRice + q.monkeyRice;
       var _riceDataCaipo2 = riceData.find(function(i){ return i.name==='菜脯料' && i.sauce; });
@@ -6219,7 +6228,7 @@ function recalcAll() {
         return (j>0?j+'斤':'')+(r>0?r+'兩':'') || '0兩';
       }
 
-      chips += '<div style="width:100%;font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:4px">🎋 粽子（'+zTotal.toLocaleString()+'粒）</div>';
+      chips += '<div style="width:100%;font-size:11px;font-weight:700;color:var(--ink3);margin-bottom:4px">🎋 粽子（'+window.zq('zongzi_d', zTotal)+'車）</div>';
       chips += chip('香菇頭料香菇頭', liangToStr(mushrH_liang));
       chips += chip('菜脯料碎肉', liangToStr(mince_liang));
       chips += chip('菜脯料菜脯', liangToStr(caipo_liang));
@@ -7397,7 +7406,7 @@ function nwUpdateMini() {
     ['nw_q_dumplings_xc','香椿水餃','鍋'],['nw_q_dumplings_hq','紅麴水餃','鍋'],
     ['nw_q_dumplings_hq_fill','紅麴水餃料','鍋'],['nw_q_triangle','三角圓','袋'],
     ['nw_q_gleg','G腿','鍋'],['nw_q_gleg_times','G腿製作次數','次'],
-    ['nw_q_zongzi_d','得來素粽子','粒'],['nw_q_zongzi_c','慈濟粽子','粒'],
+    ['nw_q_zongzi_d','得來素粽子','車'],['nw_q_zongzi_c','慈濟粽子','車'],
     ['nw_q_oily_rice','油飯','盤'],['nw_q_monkey_rice','猴菇荷葉油飯','盤'],
     ['nw_q_minced','素肉燥','鍋'],['nw_q_minced_chili','辣椒醬','鍋'],
     ['nw_q_mushr_shred','炒香菇頭絲','斤'],['nw_q_curry','咖哩粉','包'],
@@ -7406,7 +7415,7 @@ function nwUpdateMini() {
   var lines = labels.map(function(row) {
     var v = parseFloat((document.getElementById(row[0])||{value:'0'}).value) || 0;
     if (v <= 0) return '';
-    return '<span style="margin-right:12px"><span style="color:var(--ink3)">'+row[1]+'</span> <strong style="color:var(--red)">'+v+'</strong><span style="color:var(--ink3)">'+row[2]+'</span></span>';
+    return '<span style="margin-right:12px"><span style="color:var(--ink3)">'+row[1]+'</span> <strong style="color:var(--red)">'+(row[2]==='車'?Math.round(v/1600*100)/100:v)+'</strong><span style="color:var(--ink3)">'+row[2]+'</span></span>';
   }).filter(Boolean);
   el.innerHTML = lines.length ? lines.join('') : '<span style="color:var(--ink3);font-size:12px">尚未輸入下週數量</span>';
 }
@@ -7483,7 +7492,7 @@ function buildWeekSummaryText(weekKeys, schedDataObj, prefix) {
     {id:'dumplings_xc',label:'香椿水餃',unit:'鍋'},{id:'dumplings_hq',label:'紅麴水餃',unit:'鍋'},
     {id:'dumplings_hq_fill',label:'紅麴水餃料',unit:'鍋'},
     {id:'triangle',label:'三角圓',unit:'袋'},{id:'gleg',label:'G腿',unit:'鍋'},
-    {id:'zongzi_d',label:'得來素粽子',unit:'粒'},{id:'zongzi_c',label:'慈濟粽子',unit:'粒'},
+    {id:'zongzi_d',label:'得來素粽子',unit:'車'},{id:'zongzi_c',label:'慈濟粽子',unit:'車'},
     {id:'oily_rice',label:'油飯',unit:'盤'},{id:'monkey_rice',label:'猴菇荷葉油飯',unit:'盤'},
     {id:'minced',label:'素肉燥',unit:'鍋'},{id:'minced_chili',label:'辣椒醬',unit:'鍋'},
     {id:'mushr_shred',label:'炒香菇頭絲',unit:'斤'},{id:'curry',label:'咖哩粉',unit:'包'},
@@ -7550,7 +7559,7 @@ function buildDryGoodsSummaryText(totals, prefix) {
       zCaipoBox  = window._zCaipoBoxCalc  || 0;
     } else if (totalZi > 0) {
       // fallback 簡單估算
-      var zBase6200 = (zongziC > 0) ? 6200 : 6200;
+      var zBase6200 = (zongziC > 0) ? 6400 : 6400;
       var zRatio = totalZi / zBase6200;
       zMushrHead = Math.ceil(320 * 2 * zRatio * 37.5 / 600);
       zMince     = Math.ceil(256 * 3 * zRatio * 37.5 / 600);
@@ -8421,8 +8430,8 @@ function recalcOilySeasoning() {
     { id:'triangle',     label:'三角圓',         unit:'袋' },
     { id:'gleg',         label:'G腿',            unit:'鍋' },
     { id:'gleg_spicy',   label:'辣G腿',          unit:'鍋', hidden:true },
-    { id:'zongzi_d',     label:'得來素粽子',     unit:'粒' },
-    { id:'zongzi_c',     label:'慈濟粽子',       unit:'粒' },
+    { id:'zongzi_d',     label:'得來素粽子',     unit:'車' },
+    { id:'zongzi_c',     label:'慈濟粽子',       unit:'車' },
     { id:'oily_rice',    label:'油飯',           unit:'盤' },
     { id:'monkey_rice',  label:'猴菇荷葉油飯',   unit:'盤' },
     { id:'minced',       label:'素肉燥',         unit:'鍋' },
@@ -8973,7 +8982,7 @@ function recalcOilySeasoning() {
     var changed = [];
     PRODUCTS.forEach(function(p) {
       if (p.noWeekSummary) return;
-      if (totals[p.id] > 0) changed.push(p.label + ' ' + totals[p.id] + p.unit);
+      if (totals[p.id] > 0) changed.push(p.label + ' ' + window.zq(p.id, totals[p.id]) + p.unit);
     });
     var msgEl = document.getElementById('week-apply-msg');
     if (msgEl) {
@@ -9043,7 +9052,7 @@ function recalcOilySeasoning() {
     var changed = [];
     PRODUCTS.forEach(function(p) {
       if (p.noWeekSummary) return;
-      if (totals[p.id] > 0) changed.push(p.label + ' ' + totals[p.id] + p.unit);
+      if (totals[p.id] > 0) changed.push(p.label + ' ' + window.zq(p.id, totals[p.id]) + p.unit);
     });
     var msgEl = document.getElementById('week-apply-msg');
     if (msgEl) {
@@ -9275,7 +9284,7 @@ function recalcOilySeasoning() {
     var parts = [];
     PRODUCTS.forEach(function(p) {
       if (p.noWeekSummary) return;
-      if ((totals[p.id] || 0) > 0) parts.push(p.label + ' <strong style="color:var(--red)">' + totals[p.id] + '</strong><span style="color:var(--ink3)">' + p.unit + '</span>');
+      if ((totals[p.id] || 0) > 0) parts.push(p.label + ' <strong style="color:var(--red)">' + window.zq(p.id, totals[p.id]) + '</strong><span style="color:var(--ink3)">' + p.unit + '</span>');
     });
     var wkStart = weekDateList[0].key.slice(5).replace('-','/');
     var wkEnd   = weekDateList[6].key.slice(5).replace('-','/');
@@ -9406,7 +9415,7 @@ function recalcOilySeasoning() {
     var weekParts = [];
     PRODUCTS.forEach(function(p) {
       if (p.noWeekSummary) return;
-      if ((weekTotals[p.id]||0) > 0) weekParts.push('<span style="margin-right:8px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + weekTotals[p.id] + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
+      if ((weekTotals[p.id]||0) > 0) weekParts.push('<span style="margin-right:8px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + window.zq(p.id, weekTotals[p.id]) + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
     });
     if (weekParts.length > 0) {
       html += '<div style="background:linear-gradient(135deg,#e8f5e9,#d4edda);border:1px solid #a8d5b5;border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:13px">';
@@ -9553,7 +9562,7 @@ function recalcOilySeasoning() {
         var p = PRODUCTS.find(function(pp){return pp.id===it.prod;});
         var pQty = (it.plannedQty != null) ? it.plannedQty : it.qty;
         var aQty = (it.actualQty  != null) ? it.actualQty  : it.qty;
-        var cn = (pQty != aQty) ? '(原'+pQty+'改'+aQty+')' : '';
+        var cn = (pQty != aQty) ? '(原'+window.zq(it.prod,pQty)+'改'+window.zq(it.prod,aQty)+')' : '';
         var emoji = PROD_EMOJI_BUILD[it.prod] ? PROD_EMOJI_BUILD[it.prod]+' ' : '';
         var spicyStrBuild = '';
         if (it.prod === 'gleg' && spicyGlegItemBuild) {
@@ -9563,7 +9572,7 @@ function recalcOilySeasoning() {
           }
           if (parseFloat(spQtyBuild) > 0) spicyStrBuild = '《辣G腿' + spQtyBuild + (p?p.unit:'鍋') + '》';
         }
-        return redNums(emoji+(p?p.label:it.prod) + ' ' + aQty + (p?p.unit:'') + cn + spicyStrBuild);
+        return redNums(emoji+(p?p.label:it.prod) + ' ' + window.zq(it.prod,aQty) + (p?p.unit:'') + cn + spicyStrBuild);
       });
       summaryRanked = summaryRanked.map(function(str, i){ return { r: (normalItems[i].prod === 'egg_crepe') ? 9999 : (normalItems[i].prod === 'fried_mushr') ? window.schedProdRank('triangle') + 0.3 : window.schedProdRank(normalItems[i].prod), s: str }; }); // 蛋餅皮固定顯示在最後
       var sjyLabel = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
@@ -9787,7 +9796,7 @@ function recalcOilySeasoning() {
       var lines = [];
       PRODUCTS.forEach(function(p) {
         if (p.noWeekSummary) return;
-        if (totals[p.id] > 0) lines.push('<span style="margin-right:10px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + totals[p.id] + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
+        if (totals[p.id] > 0) lines.push('<span style="margin-right:10px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + window.zq(p.id, totals[p.id]) + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
       });
       var wkStart = weekKeys[0].slice(5).replace('-','/');
       var wkEnd   = weekKeys[6].slice(5).replace('-','/');
@@ -9883,12 +9892,12 @@ function recalcOilySeasoning() {
         html += '<td style="padding:5px 10px;color:var(--ink2);font-weight:500;word-break:keep-all">'+(p?p.label:item.prod)+'</td>';
         // 計劃數量：可編輯，同步更新實際製作記錄的 planned（用 prod 名稱定位，避免 idx 錯位）
         html += '<td style="padding:5px 10px;text-align:center">'
-          + '<input type="number" min="0" value="'+plannedQty
+          + '<input type="number" min="0" value="'+window.zq(prodId,plannedQty)
           + '" onchange="schedUpdatePlannedQtyByProd(\''+dateKey+'\',\''+prodId+'\',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur();}"'
           + ' style="width:70px;padding:3px 6px;border:1px solid var(--ink3);border-radius:4px;font-size:14px;font-weight:700;color:var(--ink3);text-align:center;font-family:\'Noto Sans TC\',sans-serif"></td>';
         // 實際數量：可編輯，若與計劃不同則標黃（用 prod 名稱定位）
         html += '<td style="padding:5px 10px;text-align:center">'
-          + '<input type="number" min="0" value="'+actualQty
+          + '<input type="number" min="0" value="'+window.zq(prodId,actualQty)
           + '" onchange="schedUpdateActualQtyByProd(\''+dateKey+'\',\''+prodId+'\',this.value)" onkeydown="if(event.key===\'Enter\'){this.blur();}"'
           + ' style="width:70px;padding:3px 6px;border:1px solid var(--red);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;'+actualDiffStyle+'font-family:\'Noto Sans TC\',sans-serif"></td>';
         html += '<td style="padding:5px 10px;text-align:center;color:var(--ink3)">'+(p?p.unit:'')+'</td>';
@@ -13152,7 +13161,7 @@ function recalcOilySeasoning() {
           var p = PRODUCTS.find(function(pp){ return pp.id === it.prod; });
           var pQty = (it.plannedQty != null) ? it.plannedQty : it.qty;
           var aQty = (it.actualQty  != null) ? it.actualQty  : it.qty;
-          var cn   = (pQty != aQty) ? '(原'+pQty+'改'+aQty+')' : '';
+          var cn   = (pQty != aQty) ? '(原'+window.zq(it.prod,pQty)+'改'+window.zq(it.prod,aQty)+')' : '';
           var spicyStrRS = '';
           if (it.prod === 'gleg' && spicyGlegItemRS) {
             var spQtyRS = (spicyGlegItemRS.actualQty != null) ? spicyGlegItemRS.actualQty : spicyGlegItemRS.qty;
@@ -13161,7 +13170,7 @@ function recalcOilySeasoning() {
             }
             if (parseFloat(spQtyRS) > 0) spicyStrRS = '《辣G腿' + spQtyRS + (p?p.unit:'鍋') + '》';
           }
-          return (p ? p.label : it.prod) + ' ' + aQty + (p ? p.unit : '') + cn + spicyStrRS;
+          return (p ? p.label : it.prod) + ' ' + window.zq(it.prod,aQty) + (p ? p.unit : '') + cn + spicyStrRS;
         });
         var sjyL = (typeof getSanJiaoYuanLabel  === 'function') ? getSanJiaoYuanLabel(dk)  : '';
         if (sjyL)  parts.push(sjyL);
@@ -13246,7 +13255,7 @@ function recalcOilySeasoning() {
           var p = PRODUCTS.find(function(pp){return pp.id===it.prod;});
           var pQty2 = (it.plannedQty != null) ? it.plannedQty : it.qty;
           var aQty2 = (it.actualQty  != null) ? it.actualQty  : it.qty;
-          var cn2 = (pQty2 != aQty2) ? '(原'+pQty2+'改'+aQty2+')' : '';
+          var cn2 = (pQty2 != aQty2) ? '(原'+window.zq(it.prod,pQty2)+'改'+window.zq(it.prod,aQty2)+')' : '';
           var emoji = PROD_EMOJI[it.prod] ? PROD_EMOJI[it.prod]+' ' : '';
           var spicyStr2 = '';
           if (it.prod === 'gleg' && spicyGlegItem2) {
@@ -13256,7 +13265,7 @@ function recalcOilySeasoning() {
             }
             if (parseFloat(spQty2) > 0) spicyStr2 = '《辣G腿' + spQty2 + (p?p.unit:'鍋') + '》';
           }
-          return emoji+(p?p.label:it.prod)+' '+aQty2+(p?p.unit:'')+cn2+spicyStr2;
+          return emoji+(p?p.label:it.prod)+' '+window.zq(it.prod,aQty2)+(p?p.unit:'')+cn2+spicyStr2;
         });
         // autoItems2 由 getSanJiaoYuanLabel 統一顯示，不在此重複
         // ── 三角圓炒料計算追加 ──
@@ -13367,7 +13376,7 @@ function recalcOilySeasoning() {
       var lines = [];
       PRODUCTS.forEach(function(p) {
         if (p.noWeekSummary) return;
-        if (totals[p.id] > 0) lines.push('<span style="margin-right:10px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + totals[p.id] + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
+        if (totals[p.id] > 0) lines.push('<span style="margin-right:10px"><span style="color:var(--ink3)">' + p.label + '</span> <strong style="color:var(--red)">' + window.zq(p.id, totals[p.id]) + '</strong><span style="color:var(--ink3)">' + p.unit + '</span></span>');
       });
       bannerEl.innerHTML = lines.length > 0 ? lines.join('') : '<span style="font-size:12px;color:var(--ink3)">下週尚無排程項目。</span>';
       var msgEl = document.getElementById('week-apply-msg');
@@ -13391,7 +13400,7 @@ function recalcOilySeasoning() {
     html += '<div style="font-weight:700;color:#155724;margin-bottom:4px">📋 已帶入下週本次製作（'+fridayDateKey+'→下週）</div>';
     html += items.map(function(it){
       var p = PRODUCTS.find(function(pp){return pp.id===it.prod;});
-      return '<span style="margin-right:10px;color:var(--ink2)">'+(p?p.label:it.prod)+' <strong style="color:var(--red)">'+it.qty+'</strong>'+(p?p.unit:'')+'</span>';
+      return '<span style="margin-right:10px;color:var(--ink2)">'+(p?p.label:it.prod)+' <strong style="color:var(--red)">'+window.zq(it.prod,it.qty)+'</strong>'+(p?p.unit:'')+'</span>';
     }).join('');
     html += '</div>';
     fridayEl.innerHTML = html;
@@ -14376,7 +14385,7 @@ function recalcOilySeasoning() {
     var qtyEl = document.getElementById('sched-qty-'+dateKey);
     if (!prodSel || !qtyEl) return;
     var prod = prodSel.value;
-    var qty = parseFloat(qtyEl.value) || 0;
+    var qty = window.zqIn(prod, parseFloat(qtyEl.value) || 0);
     if (!prod || qty <= 0) { alert('請選擇商品並輸入數量。'); return; }
     // 不允許直接新增隱藏項目
     if (prod === 'fry_triangle_fill' || prod === 'fry_triangle') { alert('此項目為系統自動填入，不可手動新增。'); return; }
@@ -14524,7 +14533,7 @@ function recalcOilySeasoning() {
     if (!schedData[dateKey] || !schedData[dateKey].items[idx]) return;
     var item = schedData[dateKey].items[idx];
     if (item && (item.prod === 'fry_triangle_fill' || item.prod === 'fry_triangle')) return;
-    var newVal = parseFloat(val) || 0;
+    var newVal = window.zqIn(item.prod, parseFloat(val) || 0);
     item.actualQty = newVal;
     item.qty       = newVal; // 向後相容：qty 跟著 actualQty 走
     schSave();
@@ -14547,8 +14556,8 @@ function recalcOilySeasoning() {
           var _pq = parseFloat((it.plannedQty != null) ? it.plannedQty : it.qty) || 0;
           var _aq = parseFloat((it.actualQty  != null) ? it.actualQty  : it.qty) || 0;
           if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-            _pq = Math.round(_pq / 6200 * 48);
-            _aq = Math.round(_aq / 6200 * 48);
+            _pq = Math.round(_pq / 6400 * 48);
+            _aq = Math.round(_aq / 6400 * 48);
           }
           _dayItems.push({ prod: it.prod, planned: _pq, actual: _aq });
         });
@@ -14575,7 +14584,7 @@ function recalcOilySeasoning() {
     var item = schedData[dateKey].items.find(function(it){ return it.prod === prod; });
     if (!item) return;
     if (item.prod === 'fry_triangle_fill' || item.prod === 'fry_triangle') return;
-    var newVal = parseFloat(val) || 0;
+    var newVal = window.zqIn(item.prod, parseFloat(val) || 0);
     item.plannedQty = newVal;
     item.qty = (item.actualQty != null) ? item.actualQty : newVal;
     schSave();
@@ -14593,7 +14602,7 @@ function recalcOilySeasoning() {
     var item = schedData[dateKey].items.find(function(it){ return it.prod === prod; });
     if (!item) return;
     if (item.prod === 'fry_triangle_fill' || item.prod === 'fry_triangle') return;
-    var newVal = parseFloat(val) || 0;
+    var newVal = window.zqIn(item.prod, parseFloat(val) || 0);
     item.actualQty = newVal;
     item.qty       = newVal;
     schSave();
@@ -14613,8 +14622,8 @@ function recalcOilySeasoning() {
           var _pq = parseFloat((it.plannedQty != null) ? it.plannedQty : it.qty) || 0;
           var _aq = parseFloat((it.actualQty  != null) ? it.actualQty  : it.qty) || 0;
           if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-            _pq = Math.round(_pq / 6200 * 48);
-            _aq = Math.round(_aq / 6200 * 48);
+            _pq = Math.round(_pq / 6400 * 48);
+            _aq = Math.round(_aq / 6400 * 48);
           }
           _dayItems.push({ prod: it.prod, planned: _pq, actual: _aq });
         });
@@ -14637,7 +14646,7 @@ function recalcOilySeasoning() {
     if (!schedData[dateKey] || !schedData[dateKey].items[idx]) return;
     var item = schedData[dateKey].items[idx];
     if (item && (item.prod === 'fry_triangle_fill' || item.prod === 'fry_triangle')) return;
-    var newVal = parseFloat(val) || 0;
+    var newVal = window.zqIn(item.prod, parseFloat(val) || 0);
     item.plannedQty = newVal;
     item.qty = (item.actualQty != null) ? item.actualQty : newVal; // qty 跟 actualQty 走（向後相容）
     schSave();
@@ -14889,6 +14898,9 @@ function recalcOilySeasoning() {
     var u = String(rawUnit || '').trim();
     if ((prodId === 'zongzi_d' || prodId === 'zongzi_c') && /盤/.test(u)) {
       return { qty: qty * 130, converted: true, note: qty + '盤 ×130 = ' + (qty*130) + '粒' };
+    }
+    if ((prodId === 'zongzi_d' || prodId === 'zongzi_c') && /車/.test(u)) {
+      return { qty: Math.round(qty * 1600), converted: true, note: qty + '車 ×1600 = ' + Math.round(qty*1600) + '粒' };
     }
     return { qty: qty, converted: false, note: '' };
   }
@@ -15185,8 +15197,8 @@ function recalcOilySeasoning() {
     { id:'dumplings_hq',       label:'紅麴水餃',     unit:'鍋' },
     { id:'triangle',           label:'三角圓',       unit:'袋' },
     { id:'gleg',               label:'G腿',          unit:'鍋' },
-    { id:'zongzi_d',           label:'得來素粽子',   unit:'粒' },
-    { id:'zongzi_c',           label:'慈濟粽子',     unit:'粒' },
+    { id:'zongzi_d',           label:'得來素粽子',   unit:'車' },
+    { id:'zongzi_c',           label:'慈濟粽子',     unit:'車' },
     { id:'oily_rice',          label:'油飯',         unit:'盤' },
     { id:'monkey_rice',        label:'猴菇荷葉油飯', unit:'盤' },
     { id:'minced',             label:'素肉燥',       unit:'鍋' },
@@ -15310,7 +15322,7 @@ function recalcOilySeasoning() {
             var prodObj = PRODUCTS_IMPORT.find(function(pp){ return pp.id === it.prod; });
             var label = prodObj ? prodObj.label : it.prod;
             var unit  = prodObj ? prodObj.unit  : '';
-            var base = '<strong style="color:var(--green)">' + label + '</strong> ' + it.qty + unit;
+            var base = '<strong style="color:var(--green)">' + label + '</strong> ' + window.zq(it.prod, it.qty) + unit;
             if (it.convNote) base += ' <span style="font-size:10px;color:var(--gold2)">(' + it.convNote + ')</span>';
             return base;
           }).join('、');
@@ -15419,7 +15431,7 @@ function recalcOilySeasoning() {
           var qty = parseFloat(it.qty) || 0;
           // 粽子：粒 → 盤
           if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-            qty = Math.round(qty / 6200 * 48);
+            qty = Math.round(qty / 6400 * 48);
           }
           var existing = dayItems.find(function(x){ return x.prod === it.prod; });
           if (existing) {
@@ -18410,7 +18422,7 @@ function buildLineMsg(dateKey) {
     // 粽子合併處理
     if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
       if (!zongziPushed && zongziTotal > 0) {
-        // 盤數 = 粒數 / 基準 * 48（有慈濟時基準6700，純得來素6200）
+        // 盤數 = 粒數 / 基準 * 48（一律6400）
         var pans = Math.round(zongziTotal / zGetBase(zongziCiji) * 48);
         lines.push('粽子' + pans + '盤  ' + zongziTotal);
         zongziPushed = true;
@@ -18540,11 +18552,11 @@ function writeSchedToActual(dateKey, msgText) {
         // 按排程比例分配回 zongzi_d / zongzi_c，並換算成盤
         var grainsD = Math.round(totalGrains * zongziD / zongziSchedTotal);
         var grainsC = Math.round(totalGrains * zongziC / zongziSchedTotal);
-        parsedMap['zongzi_d'] = Math.round(grainsD / 6200 * 48);
-        parsedMap['zongzi_c'] = Math.round(grainsC / 6200 * 48);
+        parsedMap['zongzi_d'] = Math.round(grainsD / 6400 * 48);
+        parsedMap['zongzi_c'] = Math.round(grainsC / 6400 * 48);
       } else {
         // 排程無粽子資料，全歸得來素粽子，換算成盤
-        parsedMap['zongzi_d'] = Math.round(totalGrains / 6200 * 48);
+        parsedMap['zongzi_d'] = Math.round(totalGrains / 6400 * 48);
       }
       return;
     }
@@ -18596,7 +18608,7 @@ function writeSchedToActual(dateKey, msgText) {
       var planned = schedIt ? (parseFloat((schedIt.plannedQty != null) ? schedIt.plannedQty : schedIt.qty) || 0) : qty;
       // 粽子 planned 也要從粒換算成盤
       if ((prodId === 'zongzi_d' || prodId === 'zongzi_c') && schedIt) {
-        planned = Math.round(planned / 6200 * 48);
+        planned = Math.round(planned / 6400 * 48);
       }
       dayItems.push({ prod: prodId, planned: planned, actual: qty });
     }
@@ -18958,9 +18970,9 @@ window.AR = (function() {
   // 使用與排程表相同的品項清單（window._PRODUCTS），排除不回報 LINE 的品項及隱藏項目
   var EXCLUDE_PRODS = { wonton_fill:1, pepper_salt:1, sesame_ginger:1, fry_triangle_fill:1, fry_triangle:1, dumplings_hq_fill:1, dump_powder:1 };
   var PRODUCTS = (window._PRODUCTS || []).filter(function(p){ return !p.hidden && !EXCLUDE_PRODS[p.id]; }).map(function(p) {
-    // 粽子在實際記錄中以「盤」為單位（48盤 = 6200粒）
+    // 粽子在實際記錄中以「盤」為單位（48盤 = 6400粒）
     if (p.id === 'zongzi_d' || p.id === 'zongzi_c') {
-      return Object.assign({}, p, { unit: '盤' });
+      return Object.assign({}, p, { unit: '車' });
     }
     return p;
   });
@@ -19035,10 +19047,10 @@ window.AR = (function() {
             if (SKIP_PRODS[it.prod] || EXCLUDE_PRODS[it.prod]) return;
             var _plannedQty = parseFloat((it.plannedQty != null) ? it.plannedQty : it.qty) || 0;
             var _actualQty  = parseFloat((it.actualQty  != null) ? it.actualQty  : it.qty) || 0;
-            // 粽子：粒 → 盤（48盤 = 6200粒）
+            // 粽子：粒 → 盤（48盤 = 6400粒）
             if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-              _plannedQty = Math.round(_plannedQty / 6200 * 48);
-              _actualQty  = Math.round(_actualQty  / 6200 * 48);
+              _plannedQty = Math.round(_plannedQty / 6400 * 48);
+              _actualQty  = Math.round(_actualQty  / 6400 * 48);
             }
             items.push({ prod:it.prod, planned: _plannedQty, actual: _actualQty });
           });
@@ -19055,8 +19067,8 @@ window.AR = (function() {
           // 粽子舊資料若仍為粒（> 48），換算成盤
           existRec.items.forEach(function(it) {
             if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-              if ((it.planned || 0) > 48) it.planned = Math.round(it.planned / 6200 * 48);
-              if ((it.actual  || 0) > 48) it.actual  = Math.round(it.actual  / 6200 * 48);
+              if ((it.planned || 0) > 48) it.planned = Math.round(it.planned / 6400 * 48);
+              if ((it.actual  || 0) > 48) it.actual  = Math.round(it.actual  / 6400 * 48);
             }
           });
         }
@@ -19082,8 +19094,8 @@ window.AR = (function() {
             // ── 從排程取 actualQty（排程表中使用者已修改的實際數量）──
             var _schedActual = parseFloat((it.actualQty != null) ? it.actualQty : it.qty) || 0;
             if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-              _newPlanned   = Math.round(_newPlanned   / 6200 * 48);
-              _schedActual  = Math.round(_schedActual  / 6200 * 48);
+              _newPlanned   = Math.round(_newPlanned   / 6400 * 48);
+              _schedActual  = Math.round(_schedActual  / 6400 * 48);
             }
             var found = existRec.items && existRec.items.find(function(x){ return x.prod===it.prod; });
             if (found) {
@@ -19159,12 +19171,12 @@ window.AR = (function() {
       var diffHtml = diff === 0
         ? '<span style="font-size:10px;color:#888">—</span>'
         : diff > 0
-          ? '<span style="font-size:10px;color:#388e3c;font-weight:700">▲'+diff+'</span>'
-          : '<span style="font-size:10px;color:#e65100;font-weight:700">▼'+Math.abs(diff)+'</span>';
+          ? '<span style="font-size:10px;color:#388e3c;font-weight:700">▲'+window.zqAR(id,diff)+'</span>'
+          : '<span style="font-size:10px;color:#e65100;font-weight:700">▼'+window.zqAR(id,Math.abs(diff))+'</span>';
       return '<div style="background:#fff;border:1px solid #a8d5b5;border-radius:6px;padding:6px 12px;min-width:90px;text-align:center">'
         +'<div style="font-size:10px;color:var(--ink3);margin-bottom:2px">'+lbl+'</div>'
-        +'<div style="font-size:15px;font-weight:700;color:var(--green)">'+t.actual+'<span style="font-size:10px;font-weight:400;color:var(--ink3)"> '+unit+'</span></div>'
-        +'<div style="font-size:10px;color:var(--ink3)">計劃:'+t.planned+' '+diffHtml+'</div>'
+        +'<div style="font-size:15px;font-weight:700;color:var(--green)">'+window.zqAR(id,t.actual)+'<span style="font-size:10px;font-weight:400;color:var(--ink3)"> '+unit+'</span></div>'
+        +'<div style="font-size:10px;color:var(--ink3)">計劃:'+window.zqAR(id,t.planned)+' '+diffHtml+'</div>'
         +'</div>';
     }).join('');
   }
@@ -19207,7 +19219,7 @@ window.AR = (function() {
           var planned = it.planned || 0;
           var actual  = it.actual  || 0;
           // G腿不顯示「(原X改Y)」註記，只顯示實際鍋數（跟其他一般品項的簡單格式一致）
-          var cn = (it.prod !== 'gleg' && planned !== actual) ? '(原'+planned+'改'+actual+')' : '';
+          var cn = (it.prod !== 'gleg' && planned !== actual) ? '(原'+window.zqAR(it.prod,planned)+'改'+window.zqAR(it.prod,actual)+')' : '';
           if (it.prod === 'gleg' && glegSpicyItem) {
             var spActual = glegSpicyItem.actual || 0;
             // 當天G腿全部都是辣的（辣G腿數量＝G腿實際數量）→ 只顯示「辣G腿」，跟排程表一致
@@ -19219,7 +19231,7 @@ window.AR = (function() {
               return (p?p.label:it.prod)+' '+actual+(p?p.unit:'')+'《辣G腿'+spActual+(p?p.unit:'鍋')+'》';
             }
           }
-          return (p?p.label:it.prod)+' '+actual+(p?p.unit:'')+cn;
+          return (p?p.label:it.prod)+' '+window.zqAR(it.prod,actual)+(p?p.unit:'')+cn;
         });
       // 若當天只有辣G腿、沒有一般G腿項目，仍需單獨顯示
       if (glegSpicyItem && !hasGlegItem) {
@@ -19283,15 +19295,15 @@ window.AR = (function() {
       var diffHtml = diff === 0
         ? '<span style="color:#aaa;font-size:11px">—</span>'
         : diff > 0
-          ? '<span style="color:#388e3c;font-size:11px;font-weight:700">▲&nbsp;'+diff+'</span>'
-          : '<span style="color:#e65100;font-size:11px;font-weight:700">▼&nbsp;'+Math.abs(diff)+'</span>';
+          ? '<span style="color:#388e3c;font-size:11px;font-weight:700">▲&nbsp;'+window.zqAR(it.prod,diff)+'</span>'
+          : '<span style="color:#e65100;font-size:11px;font-weight:700">▼&nbsp;'+window.zqAR(it.prod,Math.abs(diff))+'</span>';
       var rowBg = diff !== 0 ? 'background:#fffbea' : '';
       return '<div id="ar-row-'+dk+'-'+idx+'" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dotted var(--border-light);flex-wrap:wrap;'+rowBg+'">'
         +'<span style="font-size:13px;color:var(--ink2);font-weight:500;min-width:8em">'+lbl+'</span>'
-        +'<span style="font-size:12px;color:var(--ink3);min-width:6em">計劃：<strong>'+planned+'</strong> '+unit+'</span>'
+        +'<span style="font-size:12px;color:var(--ink3);min-width:6em">計劃：<strong>'+window.zqAR(it.prod,planned)+'</strong> '+unit+'</span>'
         +'<span style="display:flex;align-items:center;gap:3px;min-width:9em">'
         +  '<span style="font-size:11px;color:var(--red);font-weight:700">實際：</span>'
-        +  '<input type="number" min="0" step="1" value="'+actual+'"'
+        +  '<input type="number" min="0" step="any" value="'+window.zqAR(it.prod,actual)+'"'
         +  ' data-dk="'+dk+'" data-idx="'+idx+'"'
         +  ' style="width:54px;padding:4px 5px;border:1px solid var(--red);border-radius:4px;font-size:13px;font-weight:700;text-align:center;background:#fff9f9;color:var(--red);font-family:\'Noto Sans TC\',sans-serif"'
         +  ' oninput="window.AR.onInput(this)">'
@@ -19364,6 +19376,7 @@ window.AR = (function() {
       var ym  = getSelYM();
       var actualData = getActual();
       var mk  = monthKey(ym.y, ym.m);
+      try { var _itz = actualData[mk][dk].items[idx]; if (_itz) val = window.zqARIn(_itz.prod, val); } catch(e) {}
       if (actualData[mk] && actualData[mk][dk] && actualData[mk][dk].items[idx]) {
         actualData[mk][dk].items[idx].actual = val;
         saveActual(actualData);
@@ -19381,7 +19394,7 @@ window.AR = (function() {
               // 粽子在實際記錄以「盤」為單位，回寫排程時換算回「粒」
               var _writeVal = val;
               if (_prod === 'zongzi_d' || _prod === 'zongzi_c') {
-                _writeVal = Math.round(val / 48 * 6200);
+                _writeVal = Math.round(val / 48 * 6400);
               }
               _sit.actualQty = _writeVal;
               _sit.qty       = _writeVal; // 向後相容
@@ -19400,8 +19413,8 @@ window.AR = (function() {
         var rowEl    = document.getElementById('ar-row-'+dk+'-'+idx);
         if (diffSpan) {
           if (diff === 0)    { diffSpan.innerHTML = '<span style="color:#aaa;font-size:11px">—</span>'; if(rowEl) rowEl.style.background=''; }
-          else if (diff > 0) { diffSpan.innerHTML = '<span style="color:#388e3c;font-size:11px;font-weight:700">▲&nbsp;'+diff+'</span>'; if(rowEl) rowEl.style.background='#f1fff5'; }
-          else               { diffSpan.innerHTML = '<span style="color:#e65100;font-size:11px;font-weight:700">▼&nbsp;'+Math.abs(diff)+'</span>'; if(rowEl) rowEl.style.background='#fffbea'; }
+          else if (diff > 0) { diffSpan.innerHTML = '<span style="color:#388e3c;font-size:11px;font-weight:700">▲&nbsp;'+window.zqAR(actualData[mk][dk].items[idx].prod,diff)+'</span>'; if(rowEl) rowEl.style.background='#f1fff5'; }
+          else               { diffSpan.innerHTML = '<span style="color:#e65100;font-size:11px;font-weight:700">▼&nbsp;'+window.zqAR(actualData[mk][dk].items[idx].prod,Math.abs(diff))+'</span>'; if(rowEl) rowEl.style.background='#fffbea'; }
         }
         renderSummary(ym.y, ym.m, actualData);
       }
@@ -19503,7 +19516,7 @@ window.AR = (function() {
         dayList.forEach(function(item) {
           var summary = item.dayRec.items.map(function(it) {
             var p = prodById(it.prod);
-            return (p ? p.label : it.prod) + ' ' + (it.actual || 0) + (p ? p.unit : '');
+            return (p ? p.label : it.prod) + ' ' + window.zqAR(it.prod, it.actual || 0) + (p ? p.unit : '');
           }).join('、');
           var wdColor = item.wd === 0 ? 'var(--red)' : (item.wd === 6 ? '#1565c0' : 'var(--ink3)');
           listHtml += '<button onclick="window.AR._confirmDeleteDay(\''+item.dk+'\','+y+','+m+')"'
@@ -19609,7 +19622,7 @@ window.AR = (function() {
       function mkKey(s) { var p=s.split('-'); return p[0]+'-'+(parseInt(p[1],10)<10?'0':'')+parseInt(p[1],10); }
       function conv(v, p2) {
         var q = parseFloat(v) || 0;
-        if (p2 === 'zongzi_d' || p2 === 'zongzi_c') q = Math.round(q / 6200 * 48);
+        if (p2 === 'zongzi_d' || p2 === 'zongzi_c') q = Math.round(q / 6400 * 48);
         return q;
       }
 
@@ -19688,7 +19701,7 @@ window.AR = (function() {
           var _srec4a = _schd4a[dk] || {};
           var _sit4a = (_srec4a.items||[]).find(function(x){ return x.prod===prod; });
           var _pq4a = _sit4a ? (parseFloat((_sit4a.plannedQty!=null)?_sit4a.plannedQty:_sit4a.qty)||0) : upAc;
-          if (prod === 'zongzi_d' || prod === 'zongzi_c') _pq4a = Math.round(_pq4a / 6200 * 48);
+          if (prod === 'zongzi_d' || prod === 'zongzi_c') _pq4a = Math.round(_pq4a / 6400 * 48);
           actualData[mk4a][dk].items.push({ prod: prod, planned: _pq4a, actual: upAc });
           saveA(actualData);
         }
@@ -19757,7 +19770,7 @@ window.AR = (function() {
               if (SKIP_PRODS[it.prod] || EXCLUDE_PRODS[it.prod]) return;
               var _pqty = parseFloat((it.plannedQty != null) ? it.plannedQty : it.qty) || 0;
               if (it.prod === 'zongzi_d' || it.prod === 'zongzi_c') {
-                _pqty = Math.round(_pqty / 6200 * 48);
+                _pqty = Math.round(_pqty / 6400 * 48);
               }
               items2.push({ prod:it.prod, planned: _pqty, actual: 0 });
             });
@@ -21640,6 +21653,42 @@ function debugFixNow() {
     try{new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true});}catch(e){}
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+<script id="zz-che-inputs">
+/* 製作數量輸入頁：粽子欄位改用「車」輸入；原欄位（單位粒）改為隱藏，計算與儲存不變 */
+(function(){
+  var ids = ['cw_q_zongzi_d','cw_q_zongzi_c','nw_q_zongzi_d','nw_q_zongzi_c'];
+  var proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+  function fmt(v){ var n = parseFloat(v) || 0; return String(Math.round(n / 1600 * 100) / 100); }
+  ids.forEach(function(id){
+    var orig = document.getElementById(id);
+    if (!orig || orig._zzProxy) return;
+    orig._zzProxy = true;
+    var row  = orig.closest('.irow');
+    var lab  = row && row.querySelector('label');
+    if (lab) lab.textContent = lab.textContent.replace('（粒）', '（車）');
+    var unit = row && row.querySelector('.unit');
+    if (unit) unit.textContent = '車';
+    var vis = document.createElement('input');
+    vis.type = 'number'; vis.min = '0'; vis.step = 'any'; vis.id = id + '_che';
+    vis.setAttribute('inputmode', 'decimal');
+    vis.style.cssText = orig.style.cssText;
+    orig.parentNode.insertBefore(vis, orig);
+    orig.style.display = 'none';
+    function sync(){ if (document.activeElement === vis) return; vis.value = fmt(proto.get.call(orig)); }
+    Object.defineProperty(orig, 'value', {
+      configurable: true,
+      get: function(){ return proto.get.call(orig); },
+      set: function(v){ proto.set.call(orig, v); sync(); }
+    });
+    vis.addEventListener('input', function(){
+      var li = Math.round((parseFloat(vis.value) || 0) * 1600);
+      proto.set.call(orig, String(li));
+      if (typeof orig.oninput === 'function') orig.oninput.call(orig, new Event('input'));
+    });
+    sync();
+  });
 })();
 </script>
 </body>
