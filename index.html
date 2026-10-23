@@ -9585,6 +9585,8 @@ function recalcOilySeasoning() {
       if (oilyPrepLabel) summaryRanked.push({ r: window.schedProdRank('monkey_rice') + 0.4, s: redNums(oilyPrepLabel) });
       var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
+      var sugarWaterLabel = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
+      if (sugarWaterLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.45, s: redNums(sugarWaterLabel) });
       var summaryParts = summaryRanked.map(function(o, i){ return { o: o, i: i }; })
         .sort(function(a, b){ return (a.o.r - b.o.r) || (a.i - b.i); })
         .map(function(x){ return x.o.s; });
@@ -13280,6 +13282,8 @@ function recalcOilySeasoning() {
         // ── 油飯備料文字提示追加 ──
         var oilyPrepLabel2 = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
         if (oilyPrepLabel2) parts2.push(oilyPrepLabel2);
+        var sugarWaterLabel2 = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
+        if (sugarWaterLabel2) parts2.push(sugarWaterLabel2);
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
         (function(){ var ei = normItems2.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts2.length) { var ep = parts2.splice(ei,1)[0]; parts2.push(ep); } })(); // 蛋餅皮文字放最後
         sum.innerHTML = window.schedJoinItems(parts2, false);
@@ -14010,6 +14014,45 @@ function recalcOilySeasoning() {
     var wontonQty = getWontonNextWorkdayQty(dateKey);
     if (wontonQty <= 0) return '';
     return '🥟 煮餛飩漿（' + wontonQty + '包）、切香菜';
+  }
+
+  // ── 煮糖水提示（排程摘要用）──
+  // 排程有「炒菇」→ 前一個有排程的工作日（週一至週五）加「煮糖水5斤」；
+  // 排程有「香椿水餃」→ 前一個有排程的工作日（週一至週五）加「煮糖水」
+  function getSugarWaterPrepLabel(dateKey) {
+    schLoad();
+    function hasItems(dk) {
+      var r = schedData[dk];
+      return !!(r && r.items && r.items.some(function(it){ return (parseFloat(it.qty) || 0) > 0; }));
+    }
+    function isWeekday(d) { var w = d.getDay(); return w >= 1 && w <= 5; }
+    function keyOf(d) { return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
+    // 本日必須是週一至週五且有排程
+    var base = new Date(dateKey + 'T00:00:00');
+    if (!isWeekday(base) || !hasItems(dateKey)) return '';
+    function prevWorkSched(dk) {
+      var d = new Date(dk + 'T00:00:00');
+      for (var i = 0; i < 28; i++) {
+        d.setDate(d.getDate() - 1);
+        if (isWeekday(d) && hasItems(keyOf(d))) return keyOf(d);
+      }
+      return '';
+    }
+    var mushDays = 0, dumpDays = 0;
+    var f = new Date(dateKey + 'T00:00:00');
+    for (var k = 1; k <= 14; k++) {
+      f.setDate(f.getDate() + 1);
+      var fk = keyOf(f), rec = schedData[fk];
+      if (!rec || !rec.items) continue;
+      var hasMush = rec.items.some(function(it){ return it.prod === 'fried_mushr'   && (parseFloat(it.qty) || 0) > 0; });
+      var hasDump = rec.items.some(function(it){ return it.prod === 'dumplings_xc' && (parseFloat(it.qty) || 0) > 0; });
+      if (!hasMush && !hasDump) continue;
+      if (prevWorkSched(fk) !== dateKey) continue;
+      if (hasMush) mushDays++;
+      if (hasDump) dumpDays++;
+    }
+    if (mushDays <= 0 && dumpDays <= 0) return '';
+    return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '');
   }
 
   // ── 油飯備料文字提示（排程摘要用）──
