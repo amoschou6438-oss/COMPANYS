@@ -14018,7 +14018,7 @@ function recalcOilySeasoning() {
 
   // ── 煮糖水提示（排程摘要用）──
   // 排程有「炒菇」→ 前一個有排程的工作日（週一至週五）加「煮糖水5斤」；
-  // 排程有「香椿水餃」→ 前一個有排程的工作日（週一至週五）加「煮糖水」
+  // 排程有「香椿水餃」→ 前一個有排程的工作日（週一至週五）加「煮糖水、備鹽巴」
   function getSugarWaterPrepLabel(dateKey) {
     schLoad();
     function hasItems(dk) {
@@ -14052,7 +14052,7 @@ function recalcOilySeasoning() {
       if (hasDump) dumpDays++;
     }
     if (mushDays <= 0 && dumpDays <= 0) return '';
-    return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '');
+    return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '') + (dumpDays > 0 ? '、備鹽巴' : '');
   }
 
   // ── 油飯備料文字提示（排程摘要用）──
