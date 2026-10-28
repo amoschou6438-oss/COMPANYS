@@ -1741,7 +1741,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title">🌿 主要原料</div>
         <div class="irow"><label>香菇頭</label><div class="ifield"><input type="number" id="home_inv_mushrHead" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mushrHead','nw_inv_mushrHead')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mushrHead">—</b> 斤</span></div>
         <div class="irow"><label>碎肉</label><div class="ifield"><input type="number" id="home_inv_mince" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mince','nw_inv_mince')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mince">—</b> 斤</span></div>
-        <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>水餃碎肉多56斤</span></label></div>
+        <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0;display:none"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>水餃碎肉多56斤</span></label></div>
         <div class="irow"><label>菜脯</label><div class="ifield"><input type="number" id="home_inv_radish" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_radish','nw_inv_radish')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_radish">—</b> 斤</span></div>
       </div>
 
@@ -10427,7 +10427,7 @@ function recalcOilySeasoning() {
     if (xcQty > 0) h += '香椿水餃 <strong style="color:var(--red)">' + xcQty + '</strong> 鍋';
     if (xcQty > 0 && hqQty > 0) h += '　＋　';
     if (hqQty > 0) h += '紅麴水餃 <strong style="color:var(--red)">' + hqQty + '</strong> 鍋';
-    h += '　→　合計 <strong style="color:var(--red)">' + totalPots + '</strong> 鍋' + (xcQty > 0 ? '<span style="font-size:11px;color:var(--red);margin-left:10px;font-weight:700">※碎肉拌好粉後1鍋約10斤8兩</span>' : '') + '</div>';
+    h += '　→　合計 <strong style="color:var(--red)">' + totalPots + '</strong> 鍋' + (xcQty > 0 ? '<br><span style="font-size:11px;color:var(--red);font-weight:700">※碎肉拌好粉後1鍋約9斤11兩（原10斤8兩）</span>' : '') + '</div>';
     // 只有紅麴水餃（無香椿水餃）時，僅顯示水、鹽、鮮味多、青線、勾芡水五項基本配方
     var dumpDataToRender = (xcQty === 0 && hqQty > 0)
       ? DUMP_DATA.filter(function(item) { return !item.perPot && !item.xcOnly; })
@@ -21078,6 +21078,7 @@ function debugFixNow() {
 
 
   window.getMinceDumplingBonus = function() {
+    if (!window.nwHasDumplings()) return false;
     try { return localStorage.getItem('mince_dumpling_bonus') === '1'; } catch(e) { return false; }
   };
   window.setMinceDumplingBonus = function(on) {
@@ -21155,6 +21156,8 @@ function debugFixNow() {
     var _bcb = document.getElementById('home_mince_dumpling_bonus');
     if (_bcb) _bcb.checked = window.getMinceDumplingBonus();
     window._homeBonusShown = !!(_bcb && _bcb.checked);
+    var _brow = document.getElementById('home_mince_bonus_row');
+    if (_brow) _brow.style.display = window.nwHasDumplings() ? '' : 'none';
     window.dlOpenModal('modal-stock-input');
     setTimeout(function() { if (window.homeRefreshEst) window.homeRefreshEst(); }, 50);
   };
