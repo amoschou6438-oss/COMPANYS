@@ -1741,7 +1741,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title">🌿 主要原料</div>
         <div class="irow"><label>香菇頭</label><div class="ifield"><input type="number" id="home_inv_mushrHead" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mushrHead','nw_inv_mushrHead')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mushrHead">—</b> 斤</span></div>
         <div class="irow"><label>碎肉</label><div class="ifield"><input type="number" id="home_inv_mince" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_mince','nw_inv_mince')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_mince">—</b> 斤</span></div>
-        <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0;display:none"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>下週有做香椿水餃（碎肉會多 56斤）</span></label></div>
+        <div class="irow" id="home_mince_bonus_row" style="border-bottom:none;padding-top:0"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="home_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>水餃碎肉多56斤</span></label></div>
         <div class="irow"><label>菜脯</label><div class="ifield"><input type="number" id="home_inv_radish" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_radish','nw_inv_radish')"><span class="unit">斤</span></div><span class="home-est">下週預計剩 <b id="home_est_radish">—</b> 斤</span></div>
       </div>
 
@@ -2008,6 +2008,8 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title">🌿 主要原料</div>
         <div class="irow" style="flex-wrap:wrap;row-gap:4px"><label>香菇頭</label><div class="ifield"><input type="number" id="nw_inv_mushrHead" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('inv_mushrHead')"><span class="unit">斤</span></div><span style="font-size:14px;color:var(--green);white-space:nowrap;margin-left:4px">預計剩 <span id="nw_est_rem_mushrHead" style="font-weight:700">—</span> 斤</span><button class="invck-btn" id="nw_invck-btn-inv_mushrHead" onclick="nwInvCkDone('inv_mushrHead','nw_inv_mushrHead')">尚未盤點</button><span class="invck-status" id="nw_invck-status-inv_mushrHead"></span></div>
         <div class="irow" style="flex-wrap:wrap;row-gap:4px"><label>碎肉</label><div class="ifield"><input type="number" id="nw_inv_mince" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('inv_mince')"><span class="unit">斤</span></div><span style="font-size:14px;color:var(--green);white-space:nowrap;margin-left:4px">預計剩 <span id="nw_est_rem_mince" style="font-weight:700">—</span> 斤</span><button class="invck-btn" id="nw_invck-btn-inv_mince" onclick="nwInvCkDone('inv_mince','nw_inv_mince')">尚未盤點</button><span class="invck-status" id="nw_invck-status-inv_mince"></span></div>
+        <div class="irow" style="border-bottom:none;padding-top:0"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;width:100%;font-size:14px;color:var(--gold)"><input type="checkbox" id="nw_mince_dumpling_bonus" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--gold)" onchange="window.setMinceDumplingBonus(this.checked)"><span>水餃碎肉多56斤</span></label></div>
+        <script>try{var _c=document.getElementById('nw_mince_dumpling_bonus');if(_c)_c.checked=localStorage.getItem('mince_dumpling_bonus')==='1';}catch(e){}</script>
         <div class="irow" style="flex-wrap:wrap;row-gap:4px"><label>菜脯</label><div class="ifield"><input type="number" id="nw_inv_radish" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('inv_radish')"><span class="unit">斤</span></div><span style="font-size:14px;color:var(--green);white-space:nowrap;margin-left:4px">預計剩 <span id="nw_est_rem_radish" style="font-weight:700">—</span> 斤</span><button class="invck-btn" id="nw_invck-btn-inv_radish" onclick="nwInvCkDone('inv_radish','nw_inv_radish')">尚未盤點</button><span class="invck-status" id="nw_invck-status-inv_radish"></span></div>
       </div>
 
@@ -5892,7 +5894,7 @@ function recalcAll() {
   if (mc) {
     const triCookPotsM = triCookPots; // 已在外層計算
     const mHead = q.wontonFill * 15 + triCookPots * 2 + q.triNext * 2 + q.dumpXC * 2 + q.dumpHQFill * 15 + q.minced * 6 + chiliHeadCalc(window._overviewSource === 'nw' ? 'nw' : 'cur', q.mincedChili, q.minced).jin;
-    const mMince = q.wontonFill * 28 + triCookPots * 28 + q.dumpHQFill * 36 + q.triNext * 28;
+    const mMince = q.wontonFill * 28 + triCookPots * 28 + q.dumpHQFill * 36 + q.triNext * 28 + ((window._overviewSource === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) ? 56 : 0);
     const mRadish = triCookPotsM * 10 + q.dumpXC * 3 + q.triNext * 10;
     // 庫存讀取：nw 模式時讀取庫存，優先使用本週預計剩快照（_curEstRem），已盤點則用盤點值
     var _nwCkIds = { 'nw_inv_mushrHead':'inv_mushrHead', 'nw_inv_mince':'inv_mince', 'nw_inv_radish':'inv_radish' };
@@ -6036,6 +6038,7 @@ function recalcAll() {
     if (triCookPots            > 0) minceParts.push(`三角圓${triCookPots}鍋×28`);
     if (q.dumpHQFill           > 0) minceParts.push(`紅麴水餃料${q.dumpHQFill}鍋×36`);
     if (q.triNext              > 0) minceParts.push(`下禮拜先備${q.triNext}鍋×28`);
+    if (window._overviewSource === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) minceParts.push('水餃碎肉多56');
     if (zMince                 > 0) minceParts.push(totalZi > 0 ? `粽子菜脯料碎肉${zMince}斤（含庫存/油飯調整）` : `油飯需炒菜脯料碎肉${zMince}斤`);
     const detailM = minceParts.length > 0
       ? `<div style="font-size:10px;color:var(--ink3);font-weight:400">${minceParts.join(' + ')}</div>` : '';
@@ -6045,7 +6048,7 @@ function recalcAll() {
     const convertH = Math.ceil(needH/93); // 需補包數
     const estRemH = convertH > 0 ? (convertH * 93 - needH) : (invH - mHeadTotal >= 0 ? invH - mHeadTotal : 0);
     const convertM = Math.ceil(needM/75);
-    const minceDumplingBonus = (window._overviewSource === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) ? 56 : 0;
+    const minceDumplingBonus = 0; // 水餃碎肉56斤已改為計入需求，不再加在預計剩餘量
     const estRemM = (convertM > 0 ? (convertM * 75 - needM) : (invM - mMinceTotal >= 0 ? invM - mMinceTotal : 0)) + minceDumplingBonus;
     const convertR = Math.ceil(needR/15);
     const estRemR = convertR > 0 ? (convertR * 15 - needR) : (invR - mRadish >= 0 ? invR - mRadish : 0);
@@ -6449,7 +6452,7 @@ function recalcAll() {
     var zMince2     = totalZi2 > 0 ? Math.ceil(256 * 3 * zRatio2 * 37.5 / 600) : 0;
 
     var mHead2   = q.wontonFill*15 + triCookPots*2 + q.triNext*2 + q.dumpXC*2 + q.dumpHQFill*15 + q.minced*6 + chiliHeadCalc(window._overviewSource === 'nw' ? 'nw' : 'cur', q.mincedChili, q.minced).jin + zMushrHead2;
-    var mMince2  = q.wontonFill*28 + triCookPots*28 + q.dumpHQFill*36 + q.triNext*28 + zMince2;
+    var mMince2  = q.wontonFill*28 + triCookPots*28 + q.dumpHQFill*36 + q.triNext*28 + zMince2 + ((window._overviewSource === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) ? 56 : 0);
     var mRadish2 = triCookPots*10 + q.dumpXC*3 + q.triNext*10;
 
     // nw 模式時讀取庫存，優先使用本週預計剩快照（_curEstRem），已盤點則用盤點值
@@ -7546,7 +7549,7 @@ function buildDryGoodsSummaryText(totals, prefix) {
   var mHead = wontonFill*15 + triCookPots*2 + triNext*2 + dumpXC*2 +
               dumpHQFill*15 + minced*6 + chiliHeadCalc(p2 === 'nw' ? 'nw' : 'cur', mincedChili, minced).jin;
   // 碎肉需求(斤)
-  var mMince = wontonFill*28 + triCookPots*28 + dumpHQFill*36 + triNext*28;
+  var mMince = wontonFill*28 + triCookPots*28 + dumpHQFill*36 + triNext*28 + ((p2 === 'nw' && window.getMinceDumplingBonus && window.getMinceDumplingBonus()) ? 56 : 0);
   // 菜脯需求(斤)
   var mRadish = triCookPots*10 + dumpXC*3 + triNext*10;
 
@@ -16032,9 +16035,13 @@ riceSeaLoadAll();
 
     // 掃描所有排程日期，找出「今天（含）之前」且「尚未扣除」的有餛飩/餛飩料的日期
     var toDeduct = []; // [{ dateKey, qty }]
+    var weekMonKey = getWeekMondayKey(now);
+    var staleDates = [];
     Object.keys(schedData).forEach(function(dk) {
       if (dk > todayKey) return; // 未來的跳過
       if (deductedDates.indexOf(dk) >= 0) return; // 已扣過的跳過
+      // 上週（含更早）的排程：冷凍庫存已由實際盤點反映，不再扣除，也不會標記「已扣除本週量」
+      if (dk < weekMonKey) { staleDates.push(dk); return; }
       var rec = schedData[dk];
       if (!rec || !rec.items) return;
       var dayQty = 0;
@@ -16047,6 +16054,10 @@ riceSeaLoadAll();
       if (dayQty > 0) toDeduct.push({ dateKey: dk, qty: dayQty });
     });
 
+    if (staleDates.length) {
+      staleDates.forEach(function(dk) { if (deductedDates.indexOf(dk) < 0) deductedDates.push(dk); });
+      saveDeductedDates(deductedDates);
+    }
     if (toDeduct.length === 0) return;
 
     // 計算總扣除量
@@ -16114,13 +16125,13 @@ riceSeaLoadAll();
       weekKeys.push(fmtDate(d));
     }
     var curTotal = getWeekWontonTotal(weekKeys, schedData);
-    if (curTotal <= 0) return; // 本週沒有餛飩排程，維持原狀不動
+    // 不論本週有沒有餛飩排程，進入新的一週一律回復為「尚未扣除」
 
     // 回復為「尚未扣除」
     try { localStorage.removeItem(DEDUCT_FLAG_KEY); } catch(e) {}
     if (typeof _wontonCurDeductRender === 'function') _wontonCurDeductRender();
     if (typeof recalcAll === 'function') { try { recalcAll(); } catch(e) {} }
-    console.log('[餛飩冷凍] 已進入新的一週（' + curWeekKey + '），本週排程有餛飩，自動回復「這禮拜用量」為尚未扣除');
+    console.log('[餛飩冷凍] 已進入新的一週（' + curWeekKey + '），自動回復「這禮拜用量」為尚未扣除');
   }
 
   function tick() {
@@ -21068,19 +21079,20 @@ function debugFixNow() {
   }, 0);
 
   window.getMinceDumplingBonus = function() {
-    if (!window.nwHasDumplings()) return false;
     try { return localStorage.getItem('mince_dumpling_bonus') === '1'; } catch(e) { return false; }
   };
   window.setMinceDumplingBonus = function(on) {
     try { localStorage.setItem('mince_dumpling_bonus', on ? '1' : '0'); } catch(e) {}
     var cb = document.getElementById('home_mince_dumpling_bonus');
     if (cb) cb.checked = !!on;
+    var cb2 = document.getElementById('nw_mince_dumpling_bonus');
+    if (cb2) cb2.checked = !!on;
     // 立即反映在視窗的碎肉預計剩（先即時 ±56，再由完整重算校正為精確值）
     try {
       var _d = document.getElementById('home_est_mince');
       var _wasOn = window._homeBonusShown === true;
       if (_d && !isNaN(parseFloat(_d.textContent)) && _wasOn !== !!on) {
-        _d.textContent = Math.round((parseFloat(_d.textContent) + (on ? 56 : -56)) * 10) / 10;
+        _d.textContent = Math.round((parseFloat(_d.textContent) + (on ? -56 : 56)) * 10) / 10;
       }
       window._homeBonusShown = !!on;
     } catch(e) {}
@@ -21147,7 +21159,7 @@ function debugFixNow() {
     if (_bcb) _bcb.checked = window.getMinceDumplingBonus();
     window._homeBonusShown = !!(_bcb && _bcb.checked);
     var _brow = document.getElementById('home_mince_bonus_row');
-    if (_brow) _brow.style.display = window.nwHasDumplings() ? '' : 'none';
+    if (_brow) _brow.style.display = '';
     window.dlOpenModal('modal-stock-input');
     setTimeout(function() { if (window.homeRefreshEst) window.homeRefreshEst(); }, 50);
   };
