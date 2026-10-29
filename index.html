@@ -10016,6 +10016,11 @@ function recalcOilySeasoning() {
     if (!glegItem) { el.innerHTML = ''; return; }
 
     var pots = parseFloat(glegItem.qty) || 0;
+    // 「粉類多1鍋」勾選：當天沾粉、粉漿、打漿水、黏皮粉一律依（原鍋數 + 1）計算
+    var origPots = pots;
+    var extraPot = false;
+    try { extraPot = !!(schedData[dateKey] && schedData[dateKey].glegPowderExtraPot); } catch (e) {}
+    if (extraPot) pots += 1;
     // 優先使用排程日儲存的剩餘拌粉量；若為0則嘗試讀盤點庫存的G腿剩餘拌粉量
     var invPowderEl = document.getElementById('inv_gleg_powder_left_inv');
     var invPowderKg = invPowderEl ? (parseFloat(invPowderEl.value) || 0) : 0;
@@ -10077,7 +10082,7 @@ function recalcOilySeasoning() {
 
     // 打漿水 = (粉漿總重(g)/1000 + G腿拌粉(kg)) × 1.6
     var slurryWater  = ((Math.max(0, pots * r_batt_total - leftG) / 1000 + leftKg) * 1.6).toFixed(1);
-    var stickyPowder = (pots * 1.5).toFixed(1);
+    var stickyPowder = (origPots * 1.5).toFixed(1); // 黏皮粉不受「粉類多1鍋」影響，一律依原鍋數
 
     // 合計總重（粉漿已扣剩餘，再加回剩餘拌粉量 = 沾粉 + 完整粉漿）
     var grandTotal = (Math.round(pots * r_coat_total) + Math.max(0, Math.round(pots * r_batt_total - leftG)) + Math.round(leftG)).toLocaleString();
@@ -10094,7 +10099,7 @@ function recalcOilySeasoning() {
     }
 
     var h = '<div style="margin-top:12px;background:linear-gradient(135deg,#e8f5e9,#d4edda);border:1px solid #a8d5b5;border-radius:8px;padding:12px">';
-    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:10px;letter-spacing:1px">🍗 G腿沾粉、粉漿用量（' + pots + ' 鍋）</div>';
+    h += '<div style="font-size:12px;font-weight:700;color:var(--ink2);margin-bottom:10px;letter-spacing:1px">🍗 G腿沾粉、粉漿用量（' + pots + ' 鍋' + (extraPot ? '＝原 ' + origPots + ' 鍋＋1' : '') + '）</div>';
 
     // 剩餘拌粉量輸入
     h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px dashed #a8d5b5">';
@@ -10104,6 +10109,11 @@ function recalcOilySeasoning() {
       + ' style="width:80px;padding:4px 8px;border:1px solid #a8d5b5;border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:\'Noto Sans TC\',sans-serif">';
     h += '<span style="font-size:12px;color:var(--ink3)">kg（粉漿將扣除此量）</span>';
     h += '</div>';
+
+    // 粉類多1鍋 勾選
+    h += '<label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;background:rgba(255,255,255,0.7);border-radius:6px;border:1px dashed #a8d5b5;cursor:pointer;font-size:13px;font-weight:700;color:var(--ink2)">'
+      + '<input type="checkbox" ' + (extraPot ? 'checked ' : '') + 'onchange="schedToggleGlegPowderExtra(\'' + dateKey + '\',this.checked,this)" style="width:20px;height:20px;flex:0 0 auto;accent-color:var(--green)">'
+      + '<span>粉類多1鍋<span style="font-weight:400;font-size:12px;color:var(--ink3)">（當天斤兩依原鍋數 ' + origPots + ' ＋1 計算）</span></span></label>';
 
     // Chips
     h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
@@ -12964,6 +12974,16 @@ function recalcOilySeasoning() {
       });
     });
   }
+
+  // 勾選／取消「粉類多1鍋」：記錄在排程日資料，並重繪當日G腿沾粉、粉漿面板
+  window.schedToggleGlegPowderExtra = function(dateKey, checked, srcEl) {
+    if (!schedData[dateKey]) schedData[dateKey] = { items:[], note:'' };
+    schedData[dateKey].glegPowderExtraPot = !!checked;
+    schSave();
+    var dayRec = schedData[dateKey] || { items:[], note:'' };
+    var panelEl = (srcEl && srcEl.closest) ? srcEl.closest('[data-gleg-powder-panel]') : null;
+    renderGlegPowderPanel(dateKey, dayRec.items, dayRec.glegPowderLeft, panelEl || undefined);
+  };
 
   // 儲存排程日的剩餘拌粉量，並同步到製作數量輸入的 q_gleg_powder_left
   window.schedSaveGlegPowderLeft = function(dateKey, val, srcEl) {
