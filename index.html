@@ -9589,6 +9589,8 @@ function recalcOilySeasoning() {
       if (glegSauceLabel) summaryRanked.push({ r: window.schedProdRank('soup_refill') + 0.5, s: redNums(glegSauceLabel) });
       var oilyPrepLabel = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
       if (oilyPrepLabel) summaryRanked.push({ r: zprLabel ? window.schedProdRank('triangle') + 0.45 : window.schedProdRank('monkey_rice') + 0.4, s: redNums(oilyPrepLabel) });
+      var monkeyPrepLabel = (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dateKey) : '';
+      if (monkeyPrepLabel) summaryRanked.push({ r: (zprLabel ? window.schedProdRank('triangle') + 0.46 : window.schedProdRank('monkey_rice') + 0.41), s: redNums(monkeyPrepLabel) });
       var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
       var sugarWaterLabel = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
@@ -9611,6 +9613,8 @@ function recalcOilySeasoning() {
       if (glegSauceLabelNI) noItemParts.push(redNumsNI(glegSauceLabelNI));
       var oilyPrepLabelNI = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
       if (oilyPrepLabelNI) noItemParts.push(redNumsNI(oilyPrepLabelNI));
+      var monkeyPrepLabelNI = (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dateKey) : '';
+      if (monkeyPrepLabelNI) noItemParts.push(redNumsNI(monkeyPrepLabelNI));
       var wontonSlurryLabelNI = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabelNI) noItemParts.push(redNumsNI(wontonSlurryLabelNI));
       var zprTailNI = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : '';
@@ -13210,6 +13214,8 @@ function recalcOilySeasoning() {
         if (glegL) parts.push(glegL);
         var oilyL= (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dk) : '';
         if (oilyL) parts.push(oilyL);
+        var monkeyL= (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dk) : '';
+        if (monkeyL) parts.push(monkeyL);
         (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
         (function(){ var tl = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dk, 'tail') : ''; if (tl) parts.push(tl); })(); // 醃粽子料、備粽子料、調味料放最後
         if (parts.length > 0) {
@@ -13311,6 +13317,8 @@ function recalcOilySeasoning() {
         // ── 油飯備料文字提示追加 ──
         var oilyPrepLabel2 = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
         if (oilyPrepLabel2) parts2.push(oilyPrepLabel2);
+        var monkeyPrepLabel2 = (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dateKey) : '';
+        if (monkeyPrepLabel2) parts2.push(monkeyPrepLabel2);
         var sugarWaterLabel2 = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
         if (sugarWaterLabel2) parts2.push(sugarWaterLabel2);
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
@@ -14085,6 +14093,24 @@ function recalcOilySeasoning() {
     }
     if (mushDays <= 0 && dumpDays <= 0) return '';
     return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '') + (dumpDays > 0 ? '、備鹽巴' : '');
+  }
+
+  // ── 拌猴菇、炸猴菇提示（排程摘要用）──
+  // 下一個工作日有猴菇荷葉油飯 → 當天顯示「拌猴菇、炸猴菇」
+  function getMonkeyPrepLabel(dateKey) {
+    schLoad();
+    var d = new Date(dateKey + 'T00:00:00');
+    for (var i = 1; i <= 7; i++) {
+      d.setDate(d.getDate() + 1);
+      var wd = d.getDay();
+      if (wd !== 0 && wd !== 6) break;
+    }
+    var nextDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+    var rec = schedData[nextDk];
+    if (!rec || !rec.items) return '';
+    var q = 0;
+    rec.items.forEach(function(it) { if (it.prod === 'monkey_rice') q += parseFloat(it.qty) || 0; });
+    return q > 0 ? '🌿 拌猴菇、炸猴菇' : '';
   }
 
   // ── 油飯備料文字提示（排程摘要用）──
