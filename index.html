@@ -9581,12 +9581,14 @@ function recalcOilySeasoning() {
       summaryRanked = summaryRanked.map(function(str, i){ return { r: (normalItems[i].prod === 'egg_crepe') ? 9999 : (normalItems[i].prod === 'fried_mushr') ? window.schedProdRank('triangle') + 0.3 : window.schedProdRank(normalItems[i].prod), s: str }; }); // 蛋餅皮固定顯示在最後
       var sjyLabel = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
       if (sjyLabel) summaryRanked.push({ r: window.schedProdRank('triangle') + 0.4, s: redNums(sjyLabel) });
-      var zprLabel = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey) : '';
-      if (zprLabel) summaryRanked.push({ r: window.schedProdRank('zongzi_c') + 0.4, s: redNums(zprLabel) });
+      var zprLabel = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'zha') : '';
+      if (zprLabel) summaryRanked.push({ r: window.schedProdRank('triangle') + 0.42, s: redNums(zprLabel) }); // 炸粽子料：三角圓之後、油飯備料之前
+      var zprTail = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : '';
+      if (zprTail) summaryRanked.push({ r: 10000, s: redNums(zprTail) }); // 醃粽子料、備粽子料、調味料：放最後
       var glegSauceLabel = (typeof getGlegSaucePrepLabel === 'function') ? getGlegSaucePrepLabel(dateKey) : '';
       if (glegSauceLabel) summaryRanked.push({ r: window.schedProdRank('soup_refill') + 0.5, s: redNums(glegSauceLabel) });
       var oilyPrepLabel = (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dateKey) : '';
-      if (oilyPrepLabel) summaryRanked.push({ r: window.schedProdRank('monkey_rice') + 0.4, s: redNums(oilyPrepLabel) });
+      if (oilyPrepLabel) summaryRanked.push({ r: zprLabel ? window.schedProdRank('triangle') + 0.45 : window.schedProdRank('monkey_rice') + 0.4, s: redNums(oilyPrepLabel) });
       var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
       var sugarWaterLabel = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
@@ -9603,7 +9605,7 @@ function recalcOilySeasoning() {
       }
       var sjyLabelNI = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
       if (sjyLabelNI) noItemParts.push(redNumsNI(sjyLabelNI));
-      var zprLabelNI = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey) : '';
+      var zprLabelNI = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'zha') : '';
       if (zprLabelNI) noItemParts.push(redNumsNI(zprLabelNI));
       var glegSauceLabelNI = (typeof getGlegSaucePrepLabel === 'function') ? getGlegSaucePrepLabel(dateKey) : '';
       if (glegSauceLabelNI) noItemParts.push(redNumsNI(glegSauceLabelNI));
@@ -9611,6 +9613,8 @@ function recalcOilySeasoning() {
       if (oilyPrepLabelNI) noItemParts.push(redNumsNI(oilyPrepLabelNI));
       var wontonSlurryLabelNI = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabelNI) noItemParts.push(redNumsNI(wontonSlurryLabelNI));
+      var zprTailNI = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : '';
+      if (zprTailNI) noItemParts.push(redNumsNI(zprTailNI)); // 放最後
       if (noItemParts.length > 0) {
         html += '<span class="sched-summary">' + window.schedJoinItems(noItemParts, true) + '</span>';
       }
@@ -13200,13 +13204,14 @@ function recalcOilySeasoning() {
         });
         var sjyL = (typeof getSanJiaoYuanLabel  === 'function') ? getSanJiaoYuanLabel(dk)  : '';
         if (sjyL)  parts.push(sjyL);
-        var zprL = (typeof getZongziPrepLabel   === 'function') ? getZongziPrepLabel(dk)   : '';
+        var zprL = (typeof getZongziPrepLabel   === 'function') ? getZongziPrepLabel(dk, 'zha')   : '';
         if (zprL)  parts.push(zprL);
         var glegL= (typeof getGlegSaucePrepLabel=== 'function') ? getGlegSaucePrepLabel(dk): '';
         if (glegL) parts.push(glegL);
         var oilyL= (typeof getOilyRicePrepLabel === 'function') ? getOilyRicePrepLabel(dk) : '';
         if (oilyL) parts.push(oilyL);
         (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
+        (function(){ var tl = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dk, 'tail') : ''; if (tl) parts.push(tl); })(); // 醃粽子料、備粽子料、調味料放最後
         if (parts.length > 0) {
           var icon = h.querySelector('.sched-toggle-icon');
           var sum  = document.createElement('span');
@@ -13298,7 +13303,7 @@ function recalcOilySeasoning() {
         var sjyLabel2 = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
         if (sjyLabel2) parts2.push(sjyLabel2);
         // ── 粽子前置提醒追加 ──
-        var zprLabel2 = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey) : '';
+        var zprLabel2 = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'zha') : '';
         if (zprLabel2) parts2.push(zprLabel2);
         // ── G腿醬備料文字提示追加 ──
         var glegSauceLabel2 = (typeof getGlegSaucePrepLabel === 'function') ? getGlegSaucePrepLabel(dateKey) : '';
@@ -13310,6 +13315,7 @@ function recalcOilySeasoning() {
         if (sugarWaterLabel2) parts2.push(sugarWaterLabel2);
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
         (function(){ var ei = normItems2.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts2.length) { var ep = parts2.splice(ei,1)[0]; parts2.push(ep); } })(); // 蛋餅皮文字放最後
+        (function(){ var tl2 = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : ''; if (tl2) parts2.push(tl2); })(); // 醃粽子料、備粽子料、調味料放最後
         sum.innerHTML = window.schedJoinItems(parts2, false);
         header.querySelector('.sched-day-header').insertBefore(sum, icon);
         // 自動縮小摘要字體
@@ -13761,7 +13767,7 @@ function recalcOilySeasoning() {
   //       若上一週最後工作天有G腿排程 → 固定在生產日前一天（日曆日）
   //       若上一週最後工作天無G腿排程 → 安排在上一週最後工作天
   //     生產日：得來素粽子
-  function getZongziPrepLabel(dateKey) {
+  function getZongziPrepLabel(dateKey, mode) {  // mode: 'zha'＝只回傳炸粽子料；'tail'＝只回傳醃粽子料、備粽子料、調味料（排在最後）；省略＝全部
     schLoad();
 
     // ── 工具函式 ──
@@ -13931,7 +13937,7 @@ function recalcOilySeasoning() {
           beiDay = subWorkDays(prodDay, 1);
         }
         if (beiDay === dateKey) {
-          labels.push('🍙 備粽子料調味料');
+          labels.push('🍙 備粽子料、調味料');
           break; // 只標一次（最近的那個粽子生產日）
         }
       }
@@ -13971,6 +13977,8 @@ function recalcOilySeasoning() {
       }
     })();
 
+    if (mode === 'zha')  labels = labels.filter(function(l){ return l.indexOf('炸粽子料') >= 0; });
+    if (mode === 'tail') labels = labels.filter(function(l){ return l.indexOf('炸粽子料') < 0; });
     return labels.join('、');
   }
 
