@@ -20226,6 +20226,9 @@ window.setOverviewSource = function(src) {
     window._overviewSource = src;
   }
   _updateOverviewSourceBtns();
+  // ★ 先算粽子需求（寫入 zDmG_shared 乾香菇需備量），再 recalcAll 渲染配料需備量，
+  //   否則 recalcAll 會讀到上一次（或初始 0）的乾香菇數值，造成主畫面「計算備料斤兩」與實際不同
+  if (typeof zCalcAll === 'function') zCalcAll();
   if (typeof recalcAll === 'function') recalcAll();
   if (typeof zCalcAll === 'function') zCalcAll();
   if (typeof recalcFryRice === 'function') recalcFryRice();
