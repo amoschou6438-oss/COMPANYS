@@ -4191,6 +4191,34 @@ var oilyTopData = [
   { name: '薑汁',     base: 8,    unit: '兩' },
   { name: '拌料醬',   base: 5.5,  unit: '兩' },
 ];
+// 油飯比例（與 recalcFryRice 相同公式）：
+//   topRatio      = 飯上料扣庫存後的縮放比例（讀 nw_inv_riceTop）
+//   extraBackRatio= 拌飯醬加量的等比例放大（讀 inv_riceSourceExtra，斤）
+// 乾貨需備總量／粽子乾香菇等處共用，確保與油飯頁數值一致
+function _oilyRatios(oilyPans, monkeyPans) {
+  oilyPans = oilyPans || 0; monkeyPans = monkeyPans || 0;
+  var bags = (oilyPans + monkeyPans) * 13.5 / 48;
+  var oilyBagsTop = oilyPans * 13.5 / 48;
+  function liangOf(item, qty, allowPkg) {
+    if (item.unit === '包') return (allowPkg && item.liangPerPkg) ? Math.ceil(qty) * item.liangPerPkg : 0;
+    if (item.unit === '兩') return Math.ceil(qty);
+    if (item.unit === '斤') return Math.ceil(qty) * 16;
+    return 0;
+  }
+  var sauceTotal = 0, mixExtra = 0;
+  riceData.filter(function(i){ return i.sauce; }).forEach(function(it){ sauceTotal += liangOf(it, it.base * bags, false); });
+  riceData.filter(function(i){ return i.mix; }).forEach(function(it){ mixExtra += liangOf(it, it.base * bags, true); });
+  var topSauceItem = oilyTopData.find(function(i){ return i.name === '拌料醬'; });
+  var topSauceLiang = topSauceItem ? Math.ceil(topSauceItem.base * bags) : 0;
+  var baseMix = sauceTotal + mixExtra - topSauceLiang;
+  var extraLiang = (parseFloat((document.getElementById('inv_riceSourceExtra')||{value:'0'}).value) || 0) * 16;
+  var extraBackRatio = (baseMix > 0 && extraLiang > 0) ? (baseMix + extraLiang) / baseMix : 1;
+  var baseTop = 0;
+  oilyTopData.forEach(function(it){ baseTop += liangOf(it, it.base * oilyBagsTop, true); });
+  var invTop = parseFloat((document.getElementById('nw_inv_riceTop')||{value:'0'}).value) || 0;
+  var topRatio = baseTop > 0 ? Math.max(0, baseTop - invTop) / baseTop : 0;
+  return { topRatio: topRatio, extraBackRatio: extraBackRatio, bags: bags, oilyBagsTop: oilyBagsTop };
+}
 function recalcOilyTop() {
   function chip(label, val) {
     return '<div class="daily-chip"><div class="chip-label">' + label + '</div><div class="chip-value">' + val + '</div></div>';
@@ -4874,8 +4902,9 @@ function zCalcDemand() {
   // 炸香菇絲需備量（兩）= (拌飯醬9.85×totalBags + 飯上料19.7×oilyBagsExact) - 庫存inv_riceMushr，無條件進位
   var dmTotalBagsZ  = (oilyPansZ + monkeyPansZ) * 13.5 / 48;
   var dmOilyBagsExZ = oilyPansZ * 13.5 / 48;
-  var dmFriedMushrMix = Math.ceil(9.85  * dmTotalBagsZ);
-  var dmFriedMushrTop = Math.ceil(19.7  * dmOilyBagsExZ);
+  var _dmOr = _oilyRatios(oilyPansZ, monkeyPansZ);
+  var dmFriedMushrMix = Math.ceil(9.85  * dmTotalBagsZ * _dmOr.extraBackRatio);
+  var dmFriedMushrTop = Math.ceil(19.7  * dmOilyBagsExZ * _dmOr.topRatio);
   var dmFriedMushrInv = parseFloat((document.getElementById('nw_inv_riceMushr')||{value:'0'}).value)||0;
   var dmFriedMushrNeed= Math.max(0, dmFriedMushrMix + dmFriedMushrTop - dmFriedMushrInv);
   // 乾香菇 = 炸香菇絲需備量(兩) / 3，無條件進位（兩）→ 換算 g（西制1兩=31.25g）
@@ -6266,6 +6295,7 @@ function recalcAll() {
     if (oTotal > 0) {
       // 油飯各食材需備量（以袋數換算）
       var oilyBags = (q.oilyRice + q.monkeyRice) * 13.5 / 48;
+      var _or = _oilyRatios(q.oilyRice, q.monkeyRice); // 飯上料扣庫存比例、拌飯醬加量比例（與油飯頁一致）
       chips += '<div style="width:100%;font-size:11px;font-weight:700;color:var(--ink3);margin:8px 0 4px">🍚 油飯（油飯'+q.oilyRice+'盤+猴菇'+q.monkeyRice+'盤 / 約'+(oilyBags%1===0?oilyBags:oilyBags.toFixed(2))+'袋米）</div>';
 
       // 需在此處定義 liangToStr（若粽子區塊未執行時也能用）
@@ -6295,8 +6325,8 @@ function recalcAll() {
       // 炸香菇絲：拌飯醬 = riceData[香菇絲].base × 總袋數；飯上料 = oilyTopData[香菇絲].base × 油飯袋數
       var _scMushrShrd  = riceData.find(function(i){ return i.name === '香菇絲' && i.mix; });
       var _scTopMushrShrd = oilyTopData.find(function(i){ return i.name === '香菇絲'; });
-      var friedMushrMix = Math.ceil((_scMushrShrd  ? _scMushrShrd.base  : 9.85) * oilyBags);
-      var friedMushrTop = Math.ceil((_scTopMushrShrd ? _scTopMushrShrd.base : 19.7) * (q.oilyRice * 13.5 / 48));
+      var friedMushrMix = Math.ceil((_scMushrShrd  ? _scMushrShrd.base  : 9.85) * oilyBags * _or.extraBackRatio);
+      var friedMushrTop = Math.ceil((_scTopMushrShrd ? _scTopMushrShrd.base : 19.7) * (q.oilyRice * 13.5 / 48) * _or.topRatio);
       // 庫存來源：永遠讀 nw_inv_riceMushr（唯一庫存來源）
       var _mushrInvId = 'nw_inv_riceMushr';
       var friedMushrInv = parseFloat((document.getElementById(_mushrInvId)||{value:'0'}).value) || 0;
@@ -6307,8 +6337,8 @@ function recalcAll() {
       var _scTopRedShrd= oilyTopData.find(function(i){ return i.name === '紅糟肉絲'; });
       var _rsRdBase    = _scRedShrd   ? _scRedShrd.base   : 12.35;
       var _rsTopBase   = _scTopRedShrd? _scTopRedShrd.base : 24.7;
-      var _rsMix       = Math.ceil(_rsRdBase  * oilyBags);
-      var _rsTop       = Math.ceil(_rsTopBase * (q.oilyRice * 13.5 / 48));
+      var _rsMix       = Math.ceil(_rsRdBase  * oilyBags * _or.extraBackRatio);
+      var _rsTop       = Math.ceil(_rsTopBase * (q.oilyRice * 13.5 / 48) * _or.topRatio);
       // 庫存來源：永遠讀 nw_inv_redShred（唯一庫存來源）
       var _redShredInvId = 'nw_inv_redShred';
       var _rsInv       = parseFloat((document.getElementById(_redShredInvId)||{value:'0'}).value) || 0;
@@ -6324,10 +6354,10 @@ function recalcAll() {
       // 香菇頭絲：拌飯醬 = riceData[香菇頭絲].base × 總袋數；飯上料 = oilyTopData[香菇頭絲].base × 油飯袋數
       var _scMushrHead  = riceData.find(function(i){ return i.name === '香菇頭絲' && i.mix; });
       var _scTopMushrHead = oilyTopData.find(function(i){ return i.name === '香菇頭絲'; });
-      var mushrHeadMixJin = (_scMushrHead  ? _scMushrHead.base  : 0.78) * oilyBags;        // 斤
+      var mushrHeadMixJin = Math.ceil((_scMushrHead  ? _scMushrHead.base  : 0.78) * oilyBags * _or.extraBackRatio * 100) / 100;        // 斤（同油飯頁進位至0.01）
       var mushrHeadTopBags = (q.oilyRice * 13.5 / 48);
-      var mushrHeadTopJin = (_scTopMushrHead ? _scTopMushrHead.base : 1.08) * mushrHeadTopBags; // 斤
-      var mushrHeadTotalJin = mushrHeadMixJin + mushrHeadTopJin;
+      var mushrHeadTopJin = Math.ceil((_scTopMushrHead ? _scTopMushrHead.base : 1.08) * mushrHeadTopBags * _or.topRatio * 100) / 100; // 斤
+      var mushrHeadTotalJin = Math.ceil((mushrHeadMixJin + mushrHeadTopJin) * 100) / 100;
       var mushrHeadTotal = Math.ceil(mushrHeadTotalJin / 2); // 換算包數
 
       // 薑汁：拌飯醬 = riceData[薑汁].base × 總袋數；飯上料 = oilyTopData[薑汁].base × 油飯袋數；合計
@@ -6338,13 +6368,14 @@ function recalcAll() {
       var sesameBaseD = parseFloat((document.getElementById('ginger-base-oil')||{value:'11'}).value) || 11;
       var rdGingerBase = _scGinger ? _scGinger.base : 16;
       var topGingerBase = _scTopGinger ? _scTopGinger.base : 8;
-      var gingerMixLiang = Math.ceil(rdGingerBase * gingerExactBags);
-      var gingerTopLiang = Math.ceil(topGingerBase * (q.oilyRice * 13.5 / 48));
+      var gingerMixLiang = Math.ceil(rdGingerBase * gingerExactBags * _or.extraBackRatio);
+      var gingerTopLiang = Math.ceil(topGingerBase * (q.oilyRice * 13.5 / 48) * _or.topRatio);
       var gingerTotalLiang = gingerMixLiang + gingerTopLiang;
       var gingerRatioD = (gingerBaseD + sesameBaseD) > 0 ? gingerBaseD / (gingerBaseD + sesameBaseD) : 13/24;
       var sesameRatioD = (gingerBaseD + sesameBaseD) > 0 ? sesameBaseD / (gingerBaseD + sesameBaseD) : 11/24;
-      var gingerLiang = Math.ceil(gingerTotalLiang * gingerRatioD);
-      var sesameOilLiang = Math.ceil(gingerTotalLiang * sesameRatioD);
+      // 與油飯頁相同：拌飯醬、飯上料各自分配薑／香油後再相加
+      var gingerLiang = Math.ceil(gingerMixLiang * gingerRatioD) + Math.ceil(gingerTopLiang * gingerRatioD);
+      var sesameOilLiang = Math.ceil(gingerMixLiang * sesameRatioD) + Math.ceil(gingerTopLiang * sesameRatioD);
 
       if (zTotal === 0) {
         // 乾香菇（含炸香菇絲）= 油飯頁香菇總粒數（已扣剩料）×1.7g換算兩 + 炸香菇絲需求量（兩）
@@ -11844,8 +11875,9 @@ function recalcOilySeasoning() {
       // 炸香菇絲用乾香菇（同 zCalcDemand 邏輯）
       var totalBags     = (oilyPans + monkeyPans) * 13.5 / 48;
       var oilyBagsEx    = oilyPans * 13.5 / 48;
-      var friedMix      = Math.ceil(9.85  * totalBags);
-      var friedTop      = Math.ceil(19.7  * oilyBagsEx);
+      var _fOr          = _oilyRatios(oilyPans, monkeyPans);
+      var friedMix      = Math.ceil(9.85  * totalBags * _fOr.extraBackRatio);
+      var friedTop      = Math.ceil(19.7  * oilyBagsEx * _fOr.topRatio);
       var friedInv      = getV('nw_inv_riceMushr');
       var friedNeed     = Math.max(0, friedMix + friedTop - friedInv);
       var friedDryLiang = Math.ceil(friedNeed / 3);
