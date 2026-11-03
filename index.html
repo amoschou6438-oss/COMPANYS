@@ -6414,9 +6414,9 @@ function recalcAll() {
       chips += chip('🫚 薑汁用香油', liangToStr(sesameOilLiang));
       // 猴頭菇：只在猴菇盤數 > 0 時顯示
       if (q.monkeyRice > 0) {
-        var monkeyRawEl = document.getElementById('fry-monkey-raw');
-        var monkeyRawDisp = (monkeyRawEl && monkeyRawEl.textContent.trim() !== '—')
-          ? monkeyRawEl.textContent.trim() : '—';
+        // 直接用本週/下週猴菇盤數計算（不讀 DOM，避免切換來源時讀到舊值而顯示 0 斤）
+        var _monkeyCooked = Math.ceil(q.monkeyRice * 120 * 5 / 3000 * (300 / 12));
+        var monkeyRawDisp = Math.ceil(_monkeyCooked * 110 / 108) + ' 斤';
         chips += chip('🍄 猴頭菇', monkeyRawDisp);
       }
     }
@@ -6447,8 +6447,7 @@ function recalcAll() {
         _zIng.gingerLiang      = gingerLiang;     // 薑(兩)
         _zIng.sesameOilLiang   = sesameOilLiang;  // 香油(兩)
         _zIng.monkeyDisp       = q.monkeyRice > 0 ? (function(){
-          var el2 = document.getElementById('fry-monkey-raw');
-          return (el2 && el2.textContent.trim() !== '—') ? el2.textContent.trim() : '—';
+          return Math.ceil(Math.ceil(q.monkeyRice * 120 * 5 / 3000 * (300 / 12)) * 110 / 108) + ' 斤';
         })() : null;
         _zIng.chestnutCount    = chestnutCount;
         _zIng.chestnutPkg      = chestnutPkg;
@@ -20266,6 +20265,7 @@ window.setOverviewSource = function(src) {
   // ★ 先算粽子需求（寫入 zDmG_shared 乾香菇需備量），再 recalcAll 渲染配料需備量，
   //   否則 recalcAll 會讀到上一次（或初始 0）的乾香菇數值，造成主畫面「計算備料斤兩」與實際不同
   if (typeof zCalcAll === 'function') zCalcAll();
+  if (typeof recalcFryRice === 'function') recalcFryRice(); // 先更新油飯頁欄位，recalcAll 才不會讀到舊的 DOM 值
   if (typeof recalcAll === 'function') recalcAll();
   if (typeof zCalcAll === 'function') zCalcAll();
   if (typeof recalcFryRice === 'function') recalcFryRice();
