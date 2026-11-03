@@ -7850,6 +7850,7 @@ function nwCalcTriangle() {
     });
     // 同步油飯料庫存（兩）：紅糟肉絲、油飯香菇絲 → inv_redShred、inv_riceMushr
     var _oilyInvPairs = [
+      ['nw_inv_riceTop',   'inv_riceTop'],
       ['nw_inv_redShred',  'inv_redShred'],
       ['nw_inv_riceMushr', 'inv_riceMushr'],
     ];
@@ -7896,6 +7897,10 @@ function recalcFryRice() {
   var oilyPans   = _orSrc === 'nw' ? (parseFloat((document.getElementById('nw_q_oily_rice')||{}).value)||0) : getVal('cw_q_oily_rice') || getVal('q_oily_rice');
   var monkeyPans = _orSrc === 'nw' ? (parseFloat((document.getElementById('nw_q_monkey_rice')||{}).value)||0) : getVal('cw_q_monkey_rice') || getVal('q_monkey_rice');
   var totalPans  = oilyPans + monkeyPans;
+  // 粽子總數（依本週/下週來源）：粽子已扣栗子、香菇庫存（含油飯用量）時，油飯不可重複扣
+  var _zongziAll = _orSrc === 'nw'
+    ? ((parseFloat((document.getElementById('nw_q_zongzi_d')||{}).value)||0) + (parseFloat((document.getElementById('nw_q_zongzi_c')||{}).value)||0))
+    : ((getVal('cw_q_zongzi_d') || getVal('q_zongzi_d')) + (getVal('cw_q_zongzi_c') || getVal('q_zongzi_c')));
 
   // 換算袋米：48盤=13.5袋，精確值不進位
   var bagsExact = totalPans * 13.5 / 48;
@@ -8038,7 +8043,7 @@ function recalcFryRice() {
     else if (item.unit === '兩') baseTopTotalLiang += Math.ceil(qty);
     else if (item.unit === '斤') baseTopTotalLiang += Math.ceil(qty) * 16;
   });
-  var invRiceTopLiang = parseFloat((document.getElementById('inv_riceTop')||{value:'0'}).value) || 0;
+  var invRiceTopLiang = parseFloat((document.getElementById('nw_inv_riceTop')||{value:'0'}).value) || 0; // 庫存來源：盤點欄位 nw_inv_riceTop
   var netTopTotalLiang = Math.max(0, baseTopTotalLiang - invRiceTopLiang);
   var topRatio = (baseTopTotalLiang > 0) ? (netTopTotalLiang / baseTopTotalLiang) : 0;
 
@@ -8190,7 +8195,7 @@ function recalcFryRice() {
   (function() {
     var boxes = oilyPans * 30;
     var total = boxes * 4;
-    var totalZiC = getVal('q_zongzi_d') + getVal('q_zongzi_c');
+    var totalZiC = _zongziAll;
     // 粽子=0 且 油飯>0：扣除粽子料庫存栗子（z-dc-rem）
     var deductChestnut = 0;
     if (totalZiC === 0 && oilyPans > 0) {
@@ -8210,7 +8215,7 @@ function recalcFryRice() {
     var oilyAmt   = oilyPans   * 30 * 4;
     var monkeyAmt = monkeyPans * 25 * 4;
     var total     = oilyAmt + monkeyAmt;
-    var totalZiM = getVal('q_zongzi_d') + getVal('q_zongzi_c');
+    var totalZiM = _zongziAll;
     // 粽子=0 且 油飯>0：扣除粽子料庫存香菇（z-dm-rem，單位：朵）
     var deductMushr = 0;
     if (totalZiM === 0 && oilyPans > 0) {
@@ -8245,7 +8250,7 @@ function recalcFryRice() {
     var notice = document.getElementById('fry-caipo-sauce-notice');
     if (!block || !grid) return;
 
-    var totalZiCheck = (getVal('q_zongzi_d') + getVal('q_zongzi_c'));
+    var totalZiCheck = _zongziAll;
     if (totalZiCheck > 0 || totalPans <= 0) {
       block.style.display = 'none';
       return;
@@ -12722,7 +12727,7 @@ function recalcOilySeasoning() {
         });
         return L;
       })();
-      var invRiceTopLiang = getV('inv_riceTop');
+      var invRiceTopLiang = getV('nw_inv_riceTop');
       var topRatio = baseTopTotalLiang > 0 ? Math.max(0, baseTopTotalLiang - invRiceTopLiang) / baseTopTotalLiang : 0;
 
       var mix  = Math.ceil(rdBase  * bags        * extraBackRatio);
