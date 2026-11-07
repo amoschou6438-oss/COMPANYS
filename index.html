@@ -1765,6 +1765,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="irow"><label>乾肉片</label><div class="ifield"><input type="number" id="home_inv_whiteMeat" min="0" oninput="window.homeSyncStock('home_inv_whiteMeat','nw_inv_whiteMeat')"><span class="unit">g</span></div></div>
         <div class="irow"><label>乾肉角</label><div class="ifield"><input type="number" id="home_inv_corner" min="0" oninput="window.homeSyncStock('home_inv_corner','nw_inv_corner')"><span class="unit">g</span></div></div>
         <div class="irow"><label>栗子</label><div class="ifield"><input type="number" id="home_inv_chestnut" min="0" oninput="window.homeSyncStock('home_inv_chestnut','nw_inv_chestnut')"><span class="unit">g</span></div></div>
+        <div class="irow"><label>粽子拌飯醬加量</label><div class="ifield"><input type="number" id="home_inv_zBanfanExtra" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_zBanfanExtra','nw_inv_zBanfanExtra')"><span class="unit">斤</span></div></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
@@ -2087,7 +2088,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span>🎋 粽子料庫存</span>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <button class="invck-btn" id="nw_invck-btn-zongzi" onclick="nwInvCkDoneGroup('zongzi',['inv_gLegFill','inv_mushroom','inv_redMeat','inv_whiteMeat','inv_corner','inv_chestnut'],['nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut'])">尚未盤點</button>
+            <button class="invck-btn" id="nw_invck-btn-zongzi" onclick="nwInvCkDoneGroup('zongzi',['inv_gLegFill','inv_mushroom','inv_redMeat','inv_whiteMeat','inv_corner','inv_chestnut','inv_zBanfanExtra'],['nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut','nw_inv_zBanfanExtra'])">尚未盤點</button>
             <span class="invck-status" id="nw_invck-status-zongzi"></span>
           </div>
         </div>
@@ -2097,6 +2098,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>乾肉片</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_whiteMeat" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_whiteMeat');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_whiteMeat_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_whiteMeat_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">片</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_whiteMeat" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_whiteMeat_rem_display" style="font-weight:700;color:var(--green)">—</span>片</div></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>乾肉角</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_corner" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_corner');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_corner_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_corner_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">個</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_corner" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_corner_rem_display" style="font-weight:700;color:var(--green)">—</span>個</div></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>栗子</label><div style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap"><div class="ifield"><input type="number" id="nw_inv_chestnut" value="0" min="0" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_chestnut');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">g</span></div><span style="font-size:12px;color:var(--red);white-space:nowrap;font-weight:700">扣除</span><input type="number" id="nw_inv_chestnut_deduct" value="0" min="0" oninput="saveNwInputs();(function(){var e=document.getElementById('inv_chestnut_deduct');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)" style="width:64px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-weight:700;color:var(--red);text-align:center;background:#fffef9;font-family:'Noto Sans TC',sans-serif;margin-left:2px"><span style="font-size:12px;color:var(--ink3);white-space:nowrap">顆</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_chestnut" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"><div style="display:inline;font-size:11px;color:var(--ink3)">≈<span id="inv_chestnut_rem_display" style="font-weight:700;color:var(--green)">—</span>顆</div></div></div>
+        <div class="irow"><label>粽子拌飯醬加量</label><div class="ifield"><input type="number" id="nw_inv_zBanfanExtra" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('zongzi');(function(){var e=document.getElementById('inv_zBanfanExtra');if(e){e.value=this.value;saveInputs();zCalcAllDebounced();}}).call(this)"><span class="unit">斤</span></div></div>
       </div>
 
       <div class="input-block" style="--label-w:9.5em">
@@ -4558,6 +4560,21 @@ var Z_SEA_DATA = {
     items:[{name:'香椿醬',liang:32},{name:'香菇頭料',liang:528},{name:'鮮味多',liang:12},{name:'胡椒粉',liang:6},{name:'糖',liang:9},{name:'甘草粉',liang:1,note:'2匙'},{name:'爌肉精',liang:9},{name:'菜脯料',liang:24},{name:'醬油',liang:176},{name:'蠔油',liang:192},{name:'拌飯料',liang:768,excludeFromTotal:true},{name:'拌飯油',liang:221,excludeFromTotal:true}]
   }
 };
+// ── 粽子拌飯醬加量（斤）→ 反推菜脯料／香菇頭料／香椿醬需增加量（g）──
+// 拌飯醬配方含：香椿醬32、香菇頭料528、菜脯料24（兩/鍋，合計989）
+// 菜脯料中香菇頭料佔 308/997.75；香菇頭料中香椿醬佔 99/990
+function zBanfanExtraCalc(extraJin) {
+  var g = (parseFloat(extraJin) || 0) * 600; // 1斤=600g
+  if (g <= 0) return { extraG:0, caipoG:0, dMush:0, dXiang:0, mushG:0, xiangG:0 };
+  var bf = Z_SEA_DATA.banfan;
+  function sh(n) { var it = bf.items.find(function(i){ return i.name === n; }); return it ? it.liang / bf.total : 0; }
+  var caipoG = g * sh('菜脯料');                         // 拌飯醬直接用的菜脯料
+  var dMush  = g * sh('香菇頭料');                       // 拌飯醬直接用的香菇頭料
+  var dXiang = g * sh('香椿醬');                         // 拌飯醬直接用的香椿醬
+  var mushG  = dMush + caipoG * (308 / 997.75);          // 香菇頭料總增加（含菜脯料連動）
+  var xiangG = dXiang + mushG * (99 / 990);              // 香椿醬總增加（含香菇頭料連動）
+  return { extraG:g, caipoG:caipoG, dMush:dMush, dXiang:dXiang, mushG:mushG, xiangG:xiangG };
+}
 var Z_MEAT_SEA = {
   jiao: { label:'乾肉角調味', inputId:'z-sea-jiao-g', base:6600,
     items:[{n:'香油',l:3},{n:'爌肉精',l:3},{n:'醬油',l:18},{n:'鹽',l:1.5},{n:'胡椒粉',l:1},{n:'鮮味多',l:3},{n:'甘草粉',l:0.3},{n:'糖',l:1.5},{n:'香菇水',l:48},{n:'青線',l:6}]
@@ -5084,6 +5101,9 @@ function zCalcCurrent() {
   // ── 比例常數 ──
   var caipoMushroomRatio = 308   / 997.75; // 菜脯料中「香菇頭料」佔比
   var mushroomXiangchunRatio = 99 / 990;   // 香菇頭料中「香椿醬」佔比
+  // 粽子拌飯醬加量（斤）→ 反推各醬增加量
+  var bfxJin = parseFloat((document.getElementById('inv_zBanfanExtra')||{}).value) || 0;
+  var bfx = zBanfanExtraCalc((totalZiCur > 0 || oilyTotalPans > 0) ? bfxJin : 0);
 
   var grid=document.getElementById('z-cur-seasoning-grid'); if(!grid) return;
   var icons={xiangchun:'🌿',mushroom:'🍄',caipo:'🧅',banfan:'🥄'};
@@ -5098,7 +5118,7 @@ function zCalcCurrent() {
     var caipoOrigG    = Z_SEA_DATA.caipo.total * caipoRatio * Z_LIANG; // 粽子菜脯料原始需求
     // 粽子菜脯料扣庫存後 + 油飯菜脯料 = 本次菜脯料總需求
     var caipoPureNeedG= Math.max(0, caipoOrigG - caipoStockG);
-    var caipoNeedG    = caipoPureNeedG + oilyRiceCaipoG;
+    var caipoNeedG    = caipoPureNeedG + oilyRiceCaipoG + bfx.caipoG; // ＋拌飯醬加量帶動的菜脯料
 
     // 依新菜脯料總量反推香菇頭料
     // 原本香菇頭料 = mushroom 2鍋 × ratio；但菜脯料裡有 308/997.75 的香菇頭料
@@ -5108,14 +5128,14 @@ function zCalcCurrent() {
     var mushroomOrigG    = Z_SEA_DATA.mushroom.total * mushroomRatio * Z_LIANG;
     var caipoMushroomOrigG = caipoOrigG * caipoMushroomRatio;
     var caipoMushroomNeedG = caipoNeedG * caipoMushroomRatio;
-    var mushroomAdjG     = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG;
+    var mushroomAdjG     = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG + bfx.dMush; // ＋拌飯醬直接用的香菇頭料
 
     // 依新香菇頭料總量反推香椿醬
     var xiangchunRatio   = ratio*1;
     var xiangchunOrigG   = Z_SEA_DATA.xiangchun.total * xiangchunRatio * Z_LIANG;
     var mushroomXiangchunOrigG = mushroomOrigG * mushroomXiangchunRatio;
     var mushroomXiangchunAdjG  = mushroomAdjG  * mushroomXiangchunRatio;
-    var xiangchunAdjG    = xiangchunOrigG - mushroomXiangchunOrigG + mushroomXiangchunAdjG;
+    var xiangchunAdjG    = xiangchunOrigG - mushroomXiangchunOrigG + mushroomXiangchunAdjG + bfx.dXiang; // ＋拌飯醬直接用的香椿醬
 
     grid.innerHTML=Object.keys(Z_SEA_DATA).map(function(key) {
       var data=Z_SEA_DATA[key];
@@ -5123,30 +5143,39 @@ function zCalcCurrent() {
       var origTotalG=data.total*curRatio*Z_LIANG;
       var adjTotalG=origTotalG, stockNote='';
 
+      if(key==='banfan' && bfx.extraG>0){
+        adjTotalG=origTotalG+bfx.extraG;
+        stockNote='<div style="font-size:11px;color:var(--red);margin-top:4px">＋粽子拌飯醬加量 '+bfxJin+' 斤（原始：'+zGToJinLiang(origTotalG)+' → 合計：'+zGToJinLiang(adjTotalG)+'）</div>';
+      }
       if(key==='caipo'){
         adjTotalG=caipoNeedG;
         var parts=[];
         if(caipoStockG>0) parts.push('庫存扣除：'+zGToJinLiang(caipoStockG)+'　粽子原始：'+zGToJinLiang(caipoOrigG));
         if(oilyRiceCaipoG>0) parts.push('＋油飯拌料醬菜脯料：'+zGToJinLiang(oilyRiceCaipoG)+'（'+oilyTotalPans+'盤）');
+        if(bfx.caipoG>0) parts.push('＋拌飯醬加量'+bfxJin+'斤帶動：'+zGToJinLiang(bfx.caipoG));
         if(parts.length) stockNote='<div style="font-size:11px;color:var(--green);margin-top:4px">'+parts.join('　')+'</div>';
       }
       if(key==='mushroom'){
         adjTotalG=mushroomAdjG;
         var parts2=[];
-        if(caipoStockG>0||oilyRiceCaipoG>0) parts2.push('依菜脯料總量調整　原始：'+zGToJinLiang(origTotalG));
+        if(caipoStockG>0||oilyRiceCaipoG>0||bfx.extraG>0) parts2.push('依菜脯料總量調整　原始：'+zGToJinLiang(origTotalG));
+        if(bfx.mushG>0) parts2.push('　＋拌飯醬加量'+bfxJin+'斤帶動：'+zGToJinLiang(bfx.mushG));
         if(parts2.length) stockNote='<div style="font-size:11px;color:var(--green);margin-top:4px">'+parts2.join('')+'</div>';
       }
       if(key==='xiangchun'){
         adjTotalG=xiangchunAdjG;
         var parts3=[];
-        if(caipoStockG>0||oilyRiceCaipoG>0) parts3.push('依香菇頭料調整　原始：'+zGToJinLiang(origTotalG));
+        if(caipoStockG>0||oilyRiceCaipoG>0||bfx.extraG>0) parts3.push('依香菇頭料調整　原始：'+zGToJinLiang(origTotalG));
+        if(bfx.xiangG>0) parts3.push('　＋拌飯醬加量'+bfxJin+'斤帶動：'+zGToJinLiang(bfx.xiangG));
         if(parts3.length) stockNote='<div style="font-size:11px;color:var(--green);margin-top:4px">'+parts3.join('')+'</div>';
       }
 
       var adjScale=origTotalG>0?adjTotalG/origTotalG:1;
       // caipo/mushroom/xiangchun 依調整後總量反推實際鍋數；banfan 維持原比例
       var onePotG = Z_SEA_DATA[key].total * Z_LIANG; // 單鍋量(g)，banfan total 已排除拌飯料/拌飯油
-      var cookPots = (key==='banfan') ? ratio*data.pot : (onePotG>0 ? adjTotalG/onePotG : ratio*data.pot);
+      // 鍋數不因「拌飯醬加量」增加：加量只增加總量，平均分攤到原鍋數（單鍋變重）
+      var bfxPart = (key==='caipo') ? bfx.caipoG : (key==='mushroom') ? bfx.mushG : (key==='xiangchun') ? bfx.xiangG : 0;
+      var cookPots = (key==='banfan') ? ratio*data.pot : (onePotG>0 ? Math.max(0, adjTotalG-bfxPart)/onePotG : ratio*data.pot);
       var cookPotsCeil = Math.ceil(cookPots); // 無條件進位
       var cookPotsDisp = cookPotsCeil+'鍋';
       // banfan 合計顯示排除 excludeFromTotal 的品項
@@ -5235,15 +5264,15 @@ function zCalcCurrent() {
   } else if (oilyTotalPans > 0) {
 
     // 菜脯料（油飯拌料醬用量）= oilyRiceCaipoG
-    var oCaipoG = oilyRiceCaipoG;
+    var oCaipoG = oilyRiceCaipoG + bfx.caipoG; // ＋粽子拌飯醬加量帶動的菜脯料
 
     // 依比例反推香菇頭料需炒多少
     // 菜脯料中香菇頭料佔比 = caipoMushroomRatio
     // 所以需要的香菇頭料(g) = oCaipoG × caipoMushroomRatio（這部分需要重新炒）
-    var oMushroomG = oCaipoG * caipoMushroomRatio;
+    var oMushroomG = oCaipoG * caipoMushroomRatio + bfx.dMush;
 
     // 依比例反推香椿醬
-    var oXiangchunG = oMushroomG * mushroomXiangchunRatio;
+    var oXiangchunG = oMushroomG * mushroomXiangchunRatio + bfx.dXiang;
 
     // 各品項用量（按比例縮放 Z_SEA_DATA 原始配方）
     // 縮放係數：以「菜脯料」總量為基準
@@ -5264,7 +5293,7 @@ function zCalcCurrent() {
 
     // 說明標語
     var oilyNoticeHtml = '<div style="grid-column:1/-1;background:linear-gradient(90deg,#e8f5e9,#fffde7);border-left:4px solid #2d6a4f;padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#155724;margin-bottom:4px">'
-      +'🍚 <strong>粽子總數為 0，依油飯拌料醬菜脯料用量計算</strong>　油飯 '+oilyTotalPans+' 盤　菜脯料需求：'+zGToJinLiang(oCaipoG)+'</div>';
+      +'🍚 <strong>粽子總數為 0，依油飯拌料醬菜脯料用量計算</strong>　油飯 '+oilyTotalPans+' 盤　菜脯料需求：'+zGToJinLiang(oCaipoG)+(bfx.extraG>0?'　（含粽子拌飯醬加量 '+bfxJin+' 斤；拌飯醬本身需另炒 '+zGToJinLiang(bfx.extraG)+'）':'')+'</div>';
 
     grid.innerHTML = oilyNoticeHtml + oilyOnlyCards.map(function(key) {
       var data = Z_SEA_DATA[key];
@@ -5273,7 +5302,7 @@ function zCalcCurrent() {
       // 原始斤兩合計 = 真正每鍋原始量（不含庫存/縮放調整），與各品項 item.liang*Z_LIANG 加總一致
       var perPotTotalG = data.items.reduce(function(s,i){ return s + i.liang*Z_LIANG; }, 0);
       // 縮放後鍋數（顯示用，可為小數）
-      var cookPots = sc * potBase[key];
+      var cookPots = (adjTotalG - ({xiangchun:bfx.xiangG, mushroom:bfx.mushG, caipo:bfx.caipoG}[key]||0)) / (data.total*Z_LIANG); // 鍋數不含加量
       var cookPotsDisp = (Math.abs(cookPots%1)<0.001) ? Math.round(cookPots)+'鍋' : cookPots.toFixed(2)+'鍋';
       // 菜脯料補充說明
       var stockNote='';
@@ -7143,7 +7172,7 @@ function recalcDaily() {
   if (schedHasGleg)   recalcGlegSauce();
 }
 
-var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_mushroom_left_inv','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','inv_wonton_glue','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
+var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_mushroom_left_inv','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','inv_zBanfanExtra','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','inv_wonton_glue','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
 function saveInputs() {
   INPUT_IDS.forEach(function(id) {
     try { var el = document.getElementById(id); if (el) localStorage.setItem('inp_'+id, el.value); } catch(e){}
@@ -7171,7 +7200,7 @@ var NW_INPUT_IDS = [
   'nw_inv_mushrHead','nw_inv_mince','nw_inv_radish',
   'nw_inv_tri_left','nw_inv_tri_fry','nw_inv_tri_next',
   'nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra',
-  'nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut',
+  'nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut','nw_inv_zBanfanExtra',
   'nw_inv_gLegFill_deduct','nw_inv_mushroom_deduct','nw_inv_redMeat_deduct','nw_inv_whiteMeat_deduct','nw_inv_corner_deduct','nw_inv_chestnut_deduct',
   'rmk_gLegFill','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut'
 ];
@@ -7872,6 +7901,7 @@ function nwCalcTriangle() {
       ['nw_inv_corner',   'inv_corner'],
       ['nw_inv_chestnut', 'inv_chestnut'],
       ['nw_inv_gLegFill', 'inv_gLegFill'],
+      ['nw_inv_zBanfanExtra', 'inv_zBanfanExtra'],
     ];
     _zongziPairs.forEach(function(pair) {
       var nwEl = document.getElementById(pair[0]);
@@ -8981,7 +9011,8 @@ function recalcOilySeasoning() {
       var zMap = [
         ['inv_gLegFill','nw_inv_gLegFill'],['inv_mushroom','nw_inv_mushroom'],
         ['inv_redMeat','nw_inv_redMeat'],['inv_whiteMeat','nw_inv_whiteMeat'],
-        ['inv_corner','nw_inv_corner'],['inv_chestnut','nw_inv_chestnut']
+        ['inv_corner','nw_inv_corner'],['inv_chestnut','nw_inv_chestnut'],
+        ['inv_zBanfanExtra','nw_inv_zBanfanExtra']
       ];
       var zChecked = false;
       try {
@@ -12355,17 +12386,18 @@ function recalcOilySeasoning() {
 
       var caipoOrigG = Z_SEA_DATA.caipo.total * (ratio * 3) * Z_L;
       var stockG     = isFirstDay ? (getV('inv_gLegFill') * Z_TJ) : 0;
-      var caipoNeedG = Math.max(0, caipoOrigG - stockG);
+      var _bfx       = zBanfanExtraCalc(isFirstDay ? getV('inv_zBanfanExtra') : 0); // 粽子拌飯醬加量（僅第一天計入）
+      var caipoNeedG = Math.max(0, caipoOrigG - stockG) + _bfx.caipoG;
 
       var mushroomOrigG      = Z_SEA_DATA.mushroom.total * (ratio * 2) * Z_L;
       var caipoMushroomOrigG = caipoOrigG * caipoMushroomRatio;
       var caipoMushroomNeedG = caipoNeedG * caipoMushroomRatio;
-      var mushroomAdjG       = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG;
+      var mushroomAdjG       = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG + _bfx.dMush;
 
-      var mushrPots  = Math.ceil(mushroomAdjG / (Z_SEA_DATA.mushroom.total * Z_L));
-      var caipoPots  = Math.ceil(caipoNeedG   / (Z_SEA_DATA.caipo.total   * Z_L));
+      var mushrPots  = Math.ceil((mushroomAdjG - _bfx.mushG) / (Z_SEA_DATA.mushroom.total * Z_L));
+      var caipoPots  = Math.ceil((caipoNeedG - _bfx.caipoG) / (Z_SEA_DATA.caipo.total   * Z_L));
       var banfanPots = Math.ceil(ratio * Z_SEA_DATA.banfan.pot);
-      var banfanTotalG = Z_SEA_DATA.banfan.total * (ratio * 2) * Z_L;
+      var banfanTotalG = Z_SEA_DATA.banfan.total * (ratio * 2) * Z_L + _bfx.extraG;
 
       // 回傳 g：品項佔比 × 本次總g ÷ 鍋數
       var mushrHead = Z_SEA_DATA.mushroom.items.find(function(i){ return i.name === '香菇頭'; });
@@ -12388,6 +12420,7 @@ function recalcOilySeasoning() {
 
       var stockNote = (isFirstDay && stockG > 0)
         ? '（菜脯料庫存 ' + (stockG / Z_TJ) + ' 斤已扣除）' : '';
+      if (_bfx.extraG > 0) stockNote += '（含粽子拌飯醬加量 ' + (_bfx.extraG / Z_TJ) + ' 斤）';
       var gmCaipo  = caipoItems.find(function(i){ return i.name === '甘草粉'; });
       var gmBanfan = banfanItems.find(function(i){ return i.name === '甘草粉'; });
 
@@ -12551,22 +12584,23 @@ function recalcOilySeasoning() {
 
       var caipoOrigG = Z_SEA_DATA.caipo.total * (ratio * 3) * Z_L;
       var stockG     = isFirstZongziDay ? (getV('inv_gLegFill') * Z_TJ) : 0;
-      var caipoNeedG = Math.max(0, caipoOrigG - stockG);
+      var _bfx       = zBanfanExtraCalc(isFirstZongziDay ? getV('inv_zBanfanExtra') : 0); // 粽子拌飯醬加量（僅第一天計入）
+      var caipoNeedG = Math.max(0, caipoOrigG - stockG) + _bfx.caipoG;
 
       var mushroomOrigG      = Z_SEA_DATA.mushroom.total * (ratio * 2) * Z_L;
       var caipoMushroomOrigG = caipoOrigG * caipoMushroomRatio;
       var caipoMushroomNeedG = caipoNeedG * caipoMushroomRatio;
-      var mushroomAdjG       = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG;
+      var mushroomAdjG       = mushroomOrigG - caipoMushroomOrigG + caipoMushroomNeedG + _bfx.dMush;
 
-      var mushrPots  = Math.ceil(mushroomAdjG / (Z_SEA_DATA.mushroom.total * Z_L));
-      var caipoPots  = Math.ceil(caipoNeedG   / (Z_SEA_DATA.caipo.total   * Z_L));
+      var mushrPots  = Math.ceil((mushroomAdjG - _bfx.mushG) / (Z_SEA_DATA.mushroom.total * Z_L));
+      var caipoPots  = Math.ceil((caipoNeedG - _bfx.caipoG) / (Z_SEA_DATA.caipo.total   * Z_L));
       var banfanPots = Math.ceil(ratio * Z_SEA_DATA.banfan.pot);
-      var banfanTotalG = Z_SEA_DATA.banfan.total * (ratio * 2) * Z_L;
+      var banfanTotalG = Z_SEA_DATA.banfan.total * (ratio * 2) * Z_L + _bfx.extraG;
 
       // ── 香椿醬（1鍋/48盤）──
       var xiangchunData = Z_SEA_DATA.xiangchun;
       var xiangchunPots = Math.ceil(ratio * xiangchunData.pot);
-      var xiangchunTotalG = xiangchunData.total * (ratio * 1) * Z_L;
+      var xiangchunTotalG = xiangchunData.total * (ratio * 1) * Z_L + _bfx.xiangG;
       function xp(name) {
         var it = xiangchunData.items.find(function(i){ return i.name === name; });
         return (it && xiangchunPots > 0)
@@ -16690,7 +16724,7 @@ function nwInvCkSyncAll() {
       // 油飯群組欄位
       var groupFields = groupId === 'oilyRiceInv'
         ? ['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra']
-        : ['nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut'];
+        : ['nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut','nw_inv_zBanfanExtra'];
       if (!nwBtn) return;
       if (raw) {
         var rec = JSON.parse(raw);
@@ -16711,7 +16745,7 @@ function nwInvCkSyncAll() {
             'inv_riceSourceExtra':'nw_inv_riceSourceExtra',
             'inv_gLegFill':'nw_inv_gLegFill','inv_mushroom':'nw_inv_mushroom',
             'inv_redMeat':'nw_inv_redMeat','inv_whiteMeat':'nw_inv_whiteMeat',
-            'inv_corner':'nw_inv_corner','inv_chestnut':'nw_inv_chestnut'
+            'inv_corner':'nw_inv_corner','inv_chestnut':'nw_inv_chestnut','inv_zBanfanExtra':'nw_inv_zBanfanExtra'
           };
           rec.ids.forEach(function(iid, idx) {
             var nwFid = srcToNwMap[iid];
@@ -20491,6 +20525,7 @@ function debugFixNow() {
 <input type="hidden" id="inv_whiteMeat_deduct" value="0">
 <input type="hidden" id="inv_corner_deduct" value="0">
 <input type="hidden" id="inv_chestnut_deduct" value="0">
+<input type="hidden" id="inv_zBanfanExtra" value="0">
 
 <script>
 // ============================================================
@@ -21080,10 +21115,11 @@ function debugFixNow() {
     ['home_inv_redMeat', 'nw_inv_redMeat'],
     ['home_inv_whiteMeat', 'nw_inv_whiteMeat'],
     ['home_inv_corner', 'nw_inv_corner'],
-    ['home_inv_chestnut', 'nw_inv_chestnut']
+    ['home_inv_chestnut', 'nw_inv_chestnut'],
+    ['home_inv_zBanfanExtra', 'nw_inv_zBanfanExtra']
   ];
-  var HOME_ZONGZI_SRC_IDS = ['inv_gLegFill', 'inv_mushroom', 'inv_redMeat', 'inv_whiteMeat', 'inv_corner', 'inv_chestnut'];
-  var HOME_ZONGZI_NW_IDS = ['nw_inv_gLegFill', 'nw_inv_mushroom', 'nw_inv_redMeat', 'nw_inv_whiteMeat', 'nw_inv_corner', 'nw_inv_chestnut'];
+  var HOME_ZONGZI_SRC_IDS = ['inv_gLegFill', 'inv_mushroom', 'inv_redMeat', 'inv_whiteMeat', 'inv_corner', 'inv_chestnut', 'inv_zBanfanExtra'];
+  var HOME_ZONGZI_NW_IDS = ['nw_inv_gLegFill', 'nw_inv_mushroom', 'nw_inv_redMeat', 'nw_inv_whiteMeat', 'nw_inv_corner', 'nw_inv_chestnut', 'nw_inv_zBanfanExtra'];
 
   // ── 碎肉：下週有做水餃 → 下週使用後預估剩餘量 +56 斤 ──
   window.nwHasDumplings = function() {
