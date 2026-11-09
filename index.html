@@ -12906,6 +12906,14 @@ function recalcOilySeasoning() {
       days.forEach(function(di) { weekTotalOily += di.oily; weekTotalMonkey += di.monkey; });
       var weekTotalPans = weekTotalOily + weekTotalMonkey;
       var weekTotalBags = weekTotalPans * 13.5 / 48;
+      // 與「油飯斤兩管理」頁相同：拌飯醬加量放大比例、飯上料扣庫存縮放比例（以當週油飯總盤數計算）
+      var wkRatios = _oilyRatios(weekTotalOily, weekTotalMonkey);
+      var extraBackRatio = wkRatios.extraBackRatio;
+      var topRatio = wkRatios.topRatio;
+      function amtStr(item, qty) {
+        if (item.unit === '包') return Math.ceil(qty) + ' 包';
+        return toJinDisplay(qty, item.unit, true);
+      }
 
       // 計算當週油飯所需菜脯料（兩，無條件進位整兩）
       var caipoBaseItem = riceData.find(function(i){ return i.name === '菜脯料' && i.sauce; });
@@ -12975,9 +12983,7 @@ function recalcOilySeasoning() {
         // ── 拌料醬用量（沙拉油以外） ──
         h += '<div style="margin-top:4px"><b>🥣 拌料醬</b>　';
         sauceItems.forEach(function(item) {
-          var qty = item.base * dayBags;
-          var liang = (item.unit === '斤') ? Math.ceil(qty) * 16 : Math.ceil(qty);
-          h += item.name + ' ' + jl(liang) + '　';
+          h += item.name + ' ' + amtStr(item, item.base * dayBags * extraBackRatio) + '　';
         });
         h = h.replace(/　$/, '');
         h += '</div>';
@@ -12986,17 +12992,15 @@ function recalcOilySeasoning() {
         var mixItemsNoGinger = mixItems.filter(function(i){ return i.name !== '薑汁'; });
         h += '<div><b>🍚 拌飯醬額外（香菇頭絲/紅糟肉絲/香菇絲/薑汁）</b>　';
         mixItemsNoGinger.forEach(function(item) {
-          var qty = item.base * dayBags;
-          var liang = (item.unit === '斤') ? Math.ceil(qty) * 16 : Math.ceil(qty);
-          h += item.name + ' ' + jl(liang) + '　';
+          h += item.name + ' ' + amtStr(item, item.base * dayBags * extraBackRatio) + '　';
         });
         // 薑汁合計（拌飯醬+飯上料）
         var rdGingerItem  = riceData.find(function(i){ return i.name === '薑汁' && i.mix; });
         var topGingerItem = oilyTopData.find(function(i){ return i.name === '薑汁'; });
         var rdGingerBase   = rdGingerItem  ? rdGingerItem.base  : 16;
         var topGingerBase  = topGingerItem ? topGingerItem.base : 8;
-        var mixGingerLiang = Math.ceil(rdGingerBase  * dayBags);
-        var topGingerLiang = Math.ceil(topGingerBase * dayOilyBags);
+        var mixGingerLiang = Math.ceil(rdGingerBase  * dayBags * extraBackRatio);
+        var topGingerLiang = Math.ceil(topGingerBase * dayOilyBags * topRatio);
         var gingerItemEl    = document.getElementById('ginger-base-jin');
         var sesameItemEl    = document.getElementById('ginger-base-oil');
         var gingerBaseRatio = parseFloat(gingerItemEl  ? gingerItemEl.value  : 13) || 13;
@@ -13012,10 +13016,8 @@ function recalcOilySeasoning() {
 
         // ── 飯上料用量（拌料醬除外）── 只用油飯（非猴菇）袋數
         h += '<div><b>🍽 飯上料</b>　';
-        topItems.forEach(function(item) {
-          var qty = item.base * dayOilyBags;
-          var liang = (item.unit === '斤') ? Math.ceil(qty) * 16 : Math.ceil(qty);
-          h += item.name + ' ' + jl(liang) + '　';
+        oilyTopData.forEach(function(item) {
+          h += item.name + ' ' + amtStr(item, item.base * dayOilyBags * topRatio) + '　';
         });
         h = h.replace(/　$/, '');
         h += '</div>';
