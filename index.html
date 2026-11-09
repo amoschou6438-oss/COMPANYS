@@ -10029,6 +10029,8 @@ function recalcOilySeasoning() {
     if (!el) return;
     // 只顯示餛飩（包）的配方斤兩；餛飩料（鍋）不顯示任何斤兩資料
     var wontonItem = items && items.find(function(it){ return it.prod === 'wonton' && parseFloat(it.qty) > 0; });
+    // 下週第一個工作日有餛飩 → 本週六日不顯示斤兩（改在該工作日顯示）
+    if (typeof isWeekendBeforeWontonWeekStart === 'function' && isWeekendBeforeWontonWeekStart(dateKey)) { el.innerHTML = ''; return; }
     var wontonQty = 0;
     var isPrepDay = false; // 當天本身無餛飩，但下一個工作日有 → 視為煮餛飩漿的前一天，仍顯示配方供備料
     if (wontonItem) {
@@ -14094,8 +14096,43 @@ function recalcOilySeasoning() {
   }
 
   // ── 餛飩煮漿備料：取得下一個工作日（跳過週六日）的餛飩（包）數量 ──
+  // ── 某日當天的餛飩（包）數量 ──
+  function getWontonQtyOnDay(dk) {
+    schLoad();
+    var r = schedData[dk], q = 0;
+    if (r && r.items) r.items.forEach(function(it) { if (it.prod === 'wonton') q += parseFloat(it.qty) || 0; });
+    return q;
+  }
+  // ── 某日是否為「當週第一個工作日」（週一～週五，跳過國定假日）──
+  function isWontonWeekFirstWorkday(dk) {
+    var dt = new Date(dk + 'T00:00:00');
+    var wdx = dt.getDay();
+    if (wdx === 0 || wdx === 6) return false;
+    for (var k = 1; k <= wdx; k++) {
+      var t = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - (wdx - k));
+      var tk = fmtDate(t.getFullYear(), t.getMonth()+1, t.getDate());
+      var hol = (typeof getTaiwanHolidayLabel === 'function') ? getTaiwanHolidayLabel(tk) : '';
+      if (!hol) return tk === dk;
+    }
+    return false;
+  }
+  // ── 週六日：若「下一週」的第一個工作日有餛飩 → 斤兩與煮餛飩漿都改在該工作日顯示，週末不顯示 ──
+  function isWeekendBeforeWontonWeekStart(dateKey) {
+    var d = new Date(dateKey + 'T00:00:00');
+    var wd = d.getDay();
+    if (wd !== 0 && wd !== 6) return false;
+    for (var i = 1; i <= 10; i++) {
+      d.setDate(d.getDate() + 1);
+      var k = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+      var w = d.getDay();
+      if (w === 0 || w === 6) continue;
+      if (isWontonWeekFirstWorkday(k)) return getWontonQtyOnDay(k) > 0;
+    }
+    return false;
+  }
   function getWontonNextWorkdayQty(dateKey) {
     schLoad();
+    if (isWeekendBeforeWontonWeekStart(dateKey)) return 0;
     function wq(dt) {
       var k = fmtDate(dt.getFullYear(), dt.getMonth()+1, dt.getDate());
       var r = schedData[k];
@@ -14121,7 +14158,9 @@ function recalcOilySeasoning() {
   // ── 煮餛飩漿文字提示（排程摘要用）──
   // 若下一個工作日有餛飩（包）製作 → 回傳「煮餛飩漿 X包」提示，顯示在製作前一天
   function getWontonSlurryPrepLabel(dateKey) {
-    var wontonQty = getWontonNextWorkdayQty(dateKey);
+    // 當週第一個工作日本身有餛飩 → 煮餛飩漿、切香菜顯示在該天
+    var ownQty = isWontonWeekFirstWorkday(dateKey) ? getWontonQtyOnDay(dateKey) : 0;
+    var wontonQty = ownQty > 0 ? ownQty : getWontonNextWorkdayQty(dateKey);
     if (wontonQty <= 0) return '';
     return '🥟 煮餛飩漿（' + wontonQty + '包）、切香菜';
   }
