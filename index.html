@@ -6308,13 +6308,13 @@ function recalcAll() {
         var zDaJinLiang = gToJinStr(zDaG);
         var zDaBags5 = Math.floor(zDaG / 5000);
         var zDaRemG = zDaG % 5000;
-        var zDaBagStr = '／' + zDaBags5 + '袋(5kg)' + (zDaRemG > 0 ? '+' + gToJinStr(zDaRemG) : '');
+        var zDaBagStr = '／' + zDaBags5 + '小袋(5kg)' + (zDaRemG > 0 ? '+' + gToJinStr(zDaRemG) : '');
         chips += chip('🥩 乾肉塊（角）', zDaJinLiang + ' ' + zDaBagStr);
         // 乾肉片換算5kg單位袋
         var zDpJinLiang = gToJinStr(zDpG);
         var zDpBags5 = Math.floor(zDpG / 5000);
         var zDpRemG = zDpG % 5000;
-        var zDpBagStr = '／' + zDpBags5 + '袋(5kg)' + (zDpRemG > 0 ? '+' + gToJinStr(zDpRemG) : '');
+        var zDpBagStr = '／' + zDpBags5 + '小袋(5kg)' + (zDpRemG > 0 ? '+' + gToJinStr(zDpRemG) : '');
         chips += chip('🥩 乾肉片', zDpJinLiang + ' ' + zDpBagStr);
         // 栗子用包數（1包1kg≈130粒，未處理重換算）
         var zDcPkg = zDcPrepare > 0 ? Math.ceil(zDcG / 1000) : 0;
@@ -7709,8 +7709,8 @@ function buildDryGoodsSummaryText(totals, prefix) {
     var bags = Math.floor(g / 5000);
     var remG = g % 5000;
     var remStr = remG > 0 ? _gts(remG) : '';
-    if (bags > 0 && remStr) return bags + '袋（5kg）+' + remStr;
-    if (bags > 0) return bags + '袋（5kg）';
+    if (bags > 0 && remStr) return bags + '小袋（5kg）+' + remStr;
+    if (bags > 0) return bags + '小袋（5kg）';
     return remStr;
   }
 
