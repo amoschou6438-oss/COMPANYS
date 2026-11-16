@@ -15,6 +15,17 @@ window.schedProdRank = function(prod) {
   var i = window._SCHED_PROD_ORDER.indexOf(prod);
   return i < 0 ? window._SCHED_PROD_ORDER.indexOf('dump_powder') + 0.5 : i; // 未列名品項：粉類之後、最後一組之前
 };
+// 猴菇用量：煮好猴菇總量 扣除「炒好的荷葉猴菇（斤）」庫存後，再換算未處理猴菇需求（斤）
+window.monkeyCookedStock = function() {
+  var el = document.getElementById('nw_inv_monkeyCooked');
+  return el ? (parseFloat(el.value) || 0) : 0;
+};
+window.monkeyNeed = function(pans) {
+  var cooked = Math.ceil(pans * 120 * 5 / 3000 * (300 / 12));
+  var stock = window.monkeyCookedStock();
+  var net = Math.max(0, cooked - stock);
+  return { cooked: cooked, stock: stock, net: net, raw: Math.ceil(net * 110 / 108) };
+};
 // 素肉燥（辣椒醬用）卡片：切換「0.3鍋」與「原斤兩（1鍋）」
 window.mincedCardView = function(btn, mode) {
   var card = btn.closest('[data-minced-card]');
@@ -1783,6 +1794,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="irow"><label>飯上料</label><div class="ifield"><input type="number" id="home_inv_riceTop" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceTop','nw_inv_riceTop')"><span class="unit">兩</span></div></div>
         <div class="irow"><label>紅糟肉絲</label><div class="ifield"><input type="number" id="home_inv_redShred" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_redShred','nw_inv_redShred')"><span class="unit">兩</span></div></div>
         <div class="irow"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="home_inv_riceMushr" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceMushr','nw_inv_riceMushr')"><span class="unit">兩</span></div></div>
+        <div class="irow"><label>炒好的荷葉猴菇</label><div class="ifield"><input type="number" id="home_inv_monkeyCooked" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_monkeyCooked','nw_inv_monkeyCooked')"><span class="unit">斤</span></div></div>
         <div class="irow"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="home_inv_riceSource" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSource','nw_inv_riceSource')"><span class="unit">斤</span></div></div>
         <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="home_inv_riceSourceExtra" min="0" step="0.1" oninput="window.homeSyncStock('home_inv_riceSourceExtra','nw_inv_riceSourceExtra')"><span class="unit">斤</span></div></div>
       </div>
@@ -2105,13 +2117,14 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
           <span>🍚 油飯料庫存</span>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-            <button class="invck-btn" id="nw_invck-btn-oilyRiceInv" onclick="nwInvCkDoneGroup('oilyRiceInv',['inv_riceTop','inv_redShred','inv_riceMushr','inv_riceSource','inv_riceSourceExtra'],['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra'])">尚未盤點</button>
+            <button class="invck-btn" id="nw_invck-btn-oilyRiceInv" onclick="nwInvCkDoneGroup('oilyRiceInv',['inv_riceTop','inv_redShred','inv_riceMushr','inv_monkeyCooked','inv_riceSource','inv_riceSourceExtra'],['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_monkeyCooked','nw_inv_riceSource','nw_inv_riceSourceExtra'])">尚未盤點</button>
             <span class="invck-status" id="nw_invck-status-oilyRiceInv"></span>
           </div>
         </div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>飯上料</label><div class="ifield"><input type="number" id="nw_inv_riceTop" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceTop" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>紅糟肉絲</label><div class="ifield"><input type="number" id="nw_inv_redShred" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_redShred');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_redShred" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯香菇絲</label><div class="ifield"><input type="number" id="nw_inv_riceMushr" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');(function(){var e=document.getElementById('inv_riceMushr');if(e&&e!==document.activeElement){e.value=this.value;saveInputs();recalcFryRiceDebounced();}}).call(this)"><span class="unit">兩</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceMushr" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
+        <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>炒好的荷葉猴菇</label><div class="ifield"><input type="number" id="nw_inv_monkeyCooked" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv');recalcFryRiceDebounced()"><span class="unit">斤</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_monkeyCooked" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
         <div class="irow-with-remark" style="flex-wrap:wrap;row-gap:2px"><label>油飯拌飯醬</label><div class="ifield"><input type="number" id="nw_inv_riceSource" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div><div style="display:flex;align-items:center;gap:4px;flex:0 0 100%;padding-left:0;flex-wrap:nowrap"><span style="font-size:13px;color:var(--ink3);white-space:nowrap">冷凍庫還有</span><input type="text" class="irow-remark-input" id="rmk_riceSource" placeholder="備註…" onchange="saveInputs()" style="flex:0 0 6em;width:6em"></div></div>
         <div class="irow"><label>油飯拌飯醬加量</label><div class="ifield"><input type="number" id="nw_inv_riceSourceExtra" value="0" min="0" step="0.1" oninput="saveNwInputs();invCkClear('oilyRiceInv')"><span class="unit">斤</span></div></div>
       </div>
@@ -6444,8 +6457,7 @@ function recalcAll() {
       // 猴頭菇：只在猴菇盤數 > 0 時顯示
       if (q.monkeyRice > 0) {
         // 直接用本週/下週猴菇盤數計算（不讀 DOM，避免切換來源時讀到舊值而顯示 0 斤）
-        var _monkeyCooked = Math.ceil(q.monkeyRice * 120 * 5 / 3000 * (300 / 12));
-        var monkeyRawDisp = Math.ceil(_monkeyCooked * 110 / 108) + ' 斤';
+        var monkeyRawDisp = window.monkeyNeed(q.monkeyRice).raw + ' 斤';
         chips += chip('🍄 猴頭菇', monkeyRawDisp);
       }
     }
@@ -7172,7 +7184,7 @@ function recalcDaily() {
   if (schedHasGleg)   recalcGlegSauce();
 }
 
-var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_mushroom_left_inv','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','inv_zBanfanExtra','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','inv_wonton_glue','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'];
+var INPUT_IDS = ['q_wonton','q_wonton_fill','inv_gleg_mushroom_left_inv','inv_gleg_powder_left_inv','inv_gleg_meat_left_inv','inv_gleg_glue_left_inv','inv_gleg_sauce_orig_left_inv','inv_gleg_sauce_spicy_left_inv','q_dumplings_xc','q_dumplings_hq','q_dumplings_hq_fill','q_minced','q_minced_chili','q_mushr_shred','q_curry','q_pepper_salt','q_triangle','q_gleg','q_gleg_times','q_gleg_powder_left','q_zongzi_d','q_zongzi_c','q_oily_rice','q_monkey_rice','inv_mushrHead','inv_mince','inv_radish','inv_soJiang','inv_gLegFill','inv_gLegFill_deduct','inv_zRadish','inv_mushroom','inv_mushroom_deduct','inv_redMeat','inv_redMeat_deduct','inv_whiteMeat','inv_whiteMeat_deduct','inv_corner','inv_corner_deduct','inv_chestnut','inv_chestnut_deduct','inv_zBanfanExtra','q_tri_left','q_tri_fry','q_tri_next','inv_wonton_frozen','inv_wonton_actual_fry','inv_wonton_cur_input','inv_wonton_next','inv_wonton_next2','inv_wonton_next3','inv_wonton_glue','rmk_gLegFill','rmk_zRadish','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut','rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_monkeyCooked','rmk_riceSource'];
 function saveInputs() {
   INPUT_IDS.forEach(function(id) {
     try { var el = document.getElementById(id); if (el) localStorage.setItem('inp_'+id, el.value); } catch(e){}
@@ -7199,7 +7211,7 @@ var NW_INPUT_IDS = [
   // 盤點庫存
   'nw_inv_mushrHead','nw_inv_mince','nw_inv_radish',
   'nw_inv_tri_left','nw_inv_tri_fry','nw_inv_tri_next',
-  'nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra',
+  'nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_monkeyCooked','nw_inv_riceSource','nw_inv_riceSourceExtra',
   'nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut','nw_inv_zBanfanExtra',
   'nw_inv_gLegFill_deduct','nw_inv_mushroom_deduct','nw_inv_redMeat_deduct','nw_inv_whiteMeat_deduct','nw_inv_corner_deduct','nw_inv_chestnut_deduct',
   'rmk_gLegFill','rmk_mushroom','rmk_redMeat','rmk_whiteMeat','rmk_corner','rmk_chestnut'
@@ -7772,7 +7784,7 @@ function buildDryGoodsSummaryText(totals, prefix) {
 
     // 猴頭菇
     if (monkeyRice > 0) {
-      var _monkeyRawJin = Math.ceil(Math.ceil(monkeyRice * 120 * 5 / 3000 * (300 / 12)) * 110 / 108);
+      var _monkeyRawJin = window.monkeyNeed(monkeyRice).raw;
       if (_monkeyRawJin > 0) oilyParts.push('猴頭菇：' + _monkeyRawJin + ' 斤');
     }
   }
@@ -8296,10 +8308,10 @@ function recalcFryRice() {
   // 煮好的猴菇：依公式 monkeyPans * 120 * 5 / 3000 * (300/12)，無條件進位整數
   // 未處理猴菇需求：煮好猴菇總量 * 110 / 108，無條件進位整數
   (function() {
-    var cooked = Math.ceil(monkeyPans * 120 * 5 / 3000 * (300 / 12));
-    var rawJin = Math.ceil(cooked * 110 / 108);
+    var mn = window.monkeyNeed(monkeyPans);
+    var cooked = mn.cooked, rawJin = mn.raw;
     function s(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
-    s('fry-monkey-cooked-g', cooked + '');
+    s('fry-monkey-cooked-g', cooked + (mn.stock > 0 ? '（扣炒好 ' + mn.stock + ' 斤 → ' + mn.net + '）' : ''));
     s('fry-monkey-raw',      rawJin + ' 斤');
   })();
 
@@ -8458,8 +8470,7 @@ function recalcOilySeasoning() {
   }
   // fallback：直接算
   if (monkeyJin === 0 && monkeyPansS > 0) {
-    var cooked = Math.ceil(monkeyPansS * 120 * 5 / 3000 * (300 / 12));
-    monkeyJin = Math.ceil(cooked * 110 / 108);
+    monkeyJin = window.monkeyNeed(monkeyPansS).raw;
   }
 
   var monkeyJinEl = document.getElementById('or-monkey-jin-display');
@@ -8975,7 +8986,7 @@ function recalcOilySeasoning() {
     (function() {
       var oilyMap = [
         ['inv_riceTop','nw_inv_riceTop'],['inv_redShred','nw_inv_redShred'],
-        ['inv_riceMushr','nw_inv_riceMushr'],['inv_riceSource','nw_inv_riceSource'],
+        ['inv_riceMushr','nw_inv_riceMushr'],['inv_monkeyCooked','nw_inv_monkeyCooked'],['inv_riceSource','nw_inv_riceSource'],
         ['inv_riceSourceExtra','nw_inv_riceSourceExtra']
       ];
       // 判斷油飯庫存是否已盤點完成（群組）
@@ -9644,7 +9655,9 @@ function recalcOilySeasoning() {
         }
         return redNums(emoji+(p?p.label:it.prod) + ' ' + window.zq(it.prod,aQty) + (p?p.unit:'') + cn + spicyStrBuild);
       });
-      summaryRanked = summaryRanked.map(function(str, i){ return { r: (normalItems[i].prod === 'egg_crepe') ? 9999 : (normalItems[i].prod === 'fried_mushr') ? window.schedProdRank('triangle') + 0.3 : window.schedProdRank(normalItems[i].prod), s: str }; }); // 蛋餅皮固定顯示在最後
+      // 當週第一個工作日且當天有餛飩 → 餛飩、煮餛飩漿、切香菜 固定排在最前面
+      var wontonFirstDay = (typeof isWontonWeekFirstWorkday === 'function' && isWontonWeekFirstWorkday(dateKey) && typeof getWontonQtyOnDay === 'function' && getWontonQtyOnDay(dateKey) > 0);
+      summaryRanked = summaryRanked.map(function(str, i){ return { r: (wontonFirstDay && normalItems[i].prod === 'wonton') ? -2 : (normalItems[i].prod === 'egg_crepe') ? 9999 : (normalItems[i].prod === 'fried_mushr') ? window.schedProdRank('triangle') + 0.3 : window.schedProdRank(normalItems[i].prod), s: str }; }); // 蛋餅皮固定顯示在最後
       var sjyLabel = (typeof getSanJiaoYuanLabel === 'function') ? getSanJiaoYuanLabel(dateKey) : '';
       if (sjyLabel) summaryRanked.push({ r: window.schedProdRank('triangle') + 0.4, s: redNums(sjyLabel) });
       var zprLabel = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'zha') : '';
@@ -9658,7 +9671,7 @@ function recalcOilySeasoning() {
       var monkeyPrepLabel = (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dateKey) : '';
       if (monkeyPrepLabel) summaryRanked.push({ r: (zprLabel ? window.schedProdRank('triangle') + 0.46 : window.schedProdRank('monkey_rice') + 0.41), s: redNums(monkeyPrepLabel) });
       var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
-      if (wontonSlurryLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
+      if (wontonSlurryLabel) summaryRanked.push({ r: wontonFirstDay ? -1.9 : window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
       var sugarWaterLabel = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
       if (sugarWaterLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.45, s: redNums(sugarWaterLabel) });
       var summaryParts = summaryRanked.map(function(o, i){ return { o: o, i: i }; })
@@ -9720,6 +9733,9 @@ function recalcOilySeasoning() {
     html += '</div>';
 
     // 各品項面板佔位
+    // 當週第一個工作日且有餛飩 → 餛飩斤兩面板排在最前面（與摘要排程順序一致）
+    var wontonPanelFirst = (typeof isWontonWeekFirstWorkday === 'function' && isWontonWeekFirstWorkday(dateKey) && typeof getWontonQtyOnDay === 'function' && getWontonQtyOnDay(dateKey) > 0);
+    if (wontonPanelFirst) html += '<div id="sched-wonton-recipe-' + dateKey + '"></div>';
     html += '<div id="sched-gleg-powder-' + dateKey + '"></div>';
     html += '<div id="sched-soup-refill-' + dateKey + '"></div>';
     html += '<div id="sched-oily-prep-' + dateKey + '"></div>';
@@ -9748,7 +9764,7 @@ function recalcOilySeasoning() {
     html += '<div id="sched-zongzi-drysea-' + dateKey + '"></div>';
     html += '<div id="sched-zongzi-drysea-manual-' + dateKey + '"></div>';
     html += '<div id="sched-oily-redshred-' + dateKey + '"></div>';
-    html += '<div id="sched-wonton-recipe-' + dateKey + '"></div>';
+    if (!wontonPanelFirst) html += '<div id="sched-wonton-recipe-' + dateKey + '"></div>';
     html += '<div id="sched-sesame-monkey-' + dateKey + '"></div>';
     html += '<div id="sched-gleg-sauce-prep-' + dateKey + '"></div>';
 
@@ -13030,11 +13046,12 @@ function recalcOilySeasoning() {
 
         // ── 猴菇用量（僅猴菇荷葉油飯有盤數時顯示） ──
         if (dayInfo.monkey > 0) {
-          var monkeyCooked = Math.ceil(dayInfo.monkey * 120 * 5 / 3000 * (300 / 12));
-          var monkeyRawJin = Math.ceil(monkeyCooked * 110 / 108);
+          var _mnD = window.monkeyNeed(dayInfo.monkey);
+          var monkeyCooked = _mnD.cooked;
+          var monkeyRawJin = _mnD.raw;
           h += '<div style="margin-top:2px"><b>🌿 猴菇用量</b>　';
           h += '未處理猴菇需求 <span style="color:var(--red);font-weight:700">' + monkeyRawJin + ' 斤</span>';
-          h += '　<span style="font-size:11px;color:var(--ink3)">（煮好 ' + monkeyCooked + ' 斤，' + dayInfo.monkey + ' 盤）</span>';
+          h += '　<span style="font-size:11px;color:var(--ink3)">（煮好 ' + monkeyCooked + ' 斤' + (_mnD.stock > 0 ? '，扣炒好荷葉猴菇 ' + _mnD.stock + ' 斤' : '') + '，' + dayInfo.monkey + ' 盤）</span>';
           h += '</div>';
 
           // ── 猴頭菇調味料 ──
@@ -13398,6 +13415,19 @@ function recalcOilySeasoning() {
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
         (function(){ var ei = normItems2.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts2.length) { var ep = parts2.splice(ei,1)[0]; parts2.push(ep); } })(); // 蛋餅皮文字放最後
         (function(){ var tl2 = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : ''; if (tl2) parts2.push(tl2); })(); // 醃粽子料、備粽子料、調味料放最後
+        // 當週第一個工作日且有餛飩 → 餛飩、煮餛飩漿、切香菜 排最前面
+        (function(){
+          try {
+            if (typeof isWontonWeekFirstWorkday === 'function' && isWontonWeekFirstWorkday(dateKey) && getWontonQtyOnDay(dateKey) > 0) {
+              var wi = normItems2.findIndex(function(it){ return it.prod === 'wonton'; });
+              var front = [];
+              if (wi >= 0 && wi < parts2.length) front.push(parts2.splice(wi,1)[0]);
+              var wl = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
+              if (wl) front.push(wl);
+              parts2 = front.concat(parts2);
+            }
+          } catch (e) {}
+        })();
         sum.innerHTML = window.schedJoinItems(parts2, false);
         header.querySelector('.sched-day-header').insertBefore(sum, icon);
         // 自動縮小摘要字體
@@ -16764,7 +16794,7 @@ function nwInvCkSyncAll() {
       var nwStatus = document.getElementById('nw_invck-status-'+groupId);
       // 油飯群組欄位
       var groupFields = groupId === 'oilyRiceInv'
-        ? ['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_riceSource','nw_inv_riceSourceExtra']
+        ? ['nw_inv_riceTop','nw_inv_redShred','nw_inv_riceMushr','nw_inv_monkeyCooked','nw_inv_riceSource','nw_inv_riceSourceExtra']
         : ['nw_inv_gLegFill','nw_inv_mushroom','nw_inv_redMeat','nw_inv_whiteMeat','nw_inv_corner','nw_inv_chestnut','nw_inv_zBanfanExtra'];
       if (!nwBtn) return;
       if (raw) {
@@ -16782,7 +16812,7 @@ function nwInvCkSyncAll() {
         } else if (rec.ids && rec.vals) {
           var srcToNwMap = {
             'inv_riceTop':'nw_inv_riceTop','inv_redShred':'nw_inv_redShred',
-            'inv_riceMushr':'nw_inv_riceMushr','inv_riceSource':'nw_inv_riceSource',
+            'inv_riceMushr':'nw_inv_riceMushr','inv_monkeyCooked':'nw_inv_monkeyCooked','inv_riceSource':'nw_inv_riceSource',
             'inv_riceSourceExtra':'nw_inv_riceSourceExtra',
             'inv_gLegFill':'nw_inv_gLegFill','inv_mushroom':'nw_inv_mushroom',
             'inv_redMeat':'nw_inv_redMeat','inv_whiteMeat':'nw_inv_whiteMeat',
@@ -20117,7 +20147,7 @@ if (document.readyState !== 'loading') {
     if (!ref) return;
     var w = ref.offsetWidth;
     if (!w) return;
-    ['rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_riceSource'].forEach(function(id) {
+    ['rmk_riceTop','rmk_redShred','rmk_riceMushr','rmk_monkeyCooked','rmk_riceSource'].forEach(function(id) {
       var el = document.getElementById(id);
       if (el) { el.style.flex = '0 0 ' + w + 'px'; el.style.width = w + 'px'; }
     });
@@ -21144,11 +21174,12 @@ function debugFixNow() {
     ['home_inv_riceTop', 'nw_inv_riceTop'],
     ['home_inv_redShred', 'nw_inv_redShred'],
     ['home_inv_riceMushr', 'nw_inv_riceMushr'],
+    ['home_inv_monkeyCooked', 'nw_inv_monkeyCooked'],
     ['home_inv_riceSource', 'nw_inv_riceSource'],
     ['home_inv_riceSourceExtra', 'nw_inv_riceSourceExtra']
   ];
-  var HOME_OILY_RICE_SRC_IDS = ['inv_riceTop', 'inv_redShred', 'inv_riceMushr', 'inv_riceSource', 'inv_riceSourceExtra'];
-  var HOME_OILY_RICE_NW_IDS = ['nw_inv_riceTop', 'nw_inv_redShred', 'nw_inv_riceMushr', 'nw_inv_riceSource', 'nw_inv_riceSourceExtra'];
+  var HOME_OILY_RICE_SRC_IDS = ['inv_riceTop', 'inv_redShred', 'inv_riceMushr', 'inv_monkeyCooked', 'inv_riceSource', 'inv_riceSourceExtra'];
+  var HOME_OILY_RICE_NW_IDS = ['nw_inv_riceTop', 'nw_inv_redShred', 'nw_inv_riceMushr', 'nw_inv_monkeyCooked', 'nw_inv_riceSource', 'nw_inv_riceSourceExtra'];
 
   var HOME_ZONGZI_PAIRS = [
     ['home_inv_gLegFill', 'nw_inv_gLegFill'],
