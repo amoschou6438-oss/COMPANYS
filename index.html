@@ -14244,9 +14244,9 @@ function recalcOilySeasoning() {
     return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '') + (dumpDays > 0 ? '、備鹽巴' : '');
   }
 
-  // ── 備薑片／備麻油薑提示（排程摘要用，不含週六日）──
+  // ── 備薑片／麻油薑退冰提示（排程摘要用，不含週六日）──
   // 備薑片：下一個工作日（週一至週五）有紅麴水餃 → 前一個工作日顯示「備薑片」
-  // 備麻油薑：當日（週一至週五）有補湯 → 顯示「備麻油薑」；連續工作日都有補湯時，只在第一天顯示
+  // 麻油薑退冰：當日（週一至週五）有補湯 → 顯示「麻油薑退冰」；連續工作日都有補湯時，只在第一天顯示
   function getGingerPrepLabel(dateKey) {
     schLoad();
     function keyOf(d) { return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
@@ -14264,8 +14264,8 @@ function recalcOilySeasoning() {
     var wd = base.getDay();
     if (wd === 0 || wd === 6) return '';
     var parts = [];
-    if (qtyOf(stepWeekday(dateKey, 1), 'dumplings_hq') > 0) parts.push('🫚 備薑片');
-    if (qtyOf(dateKey, 'soup_refill') > 0 && qtyOf(stepWeekday(dateKey, -1), 'soup_refill') <= 0) parts.push('🫚 備麻油薑');
+    if (qtyOf(stepWeekday(dateKey, 1), 'dumplings_hq') > 0) parts.push('🫚 備紅麴水餃薑片');
+    if (qtyOf(dateKey, 'soup_refill') > 0 && qtyOf(stepWeekday(dateKey, -1), 'soup_refill') <= 0) parts.push('🫚 麻油薑退冰');
     return parts.join('、');
   }
 
