@@ -9672,6 +9672,8 @@ function recalcOilySeasoning() {
       if (monkeyPrepLabel) summaryRanked.push({ r: (zprLabel ? window.schedProdRank('triangle') + 0.46 : window.schedProdRank('monkey_rice') + 0.41), s: redNums(monkeyPrepLabel) });
       var wontonSlurryLabel = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabel) summaryRanked.push({ r: wontonFirstDay ? -1.9 : window.schedProdRank('wonton') + 0.4, s: redNums(wontonSlurryLabel) });
+      var gingerPrepLabel = (typeof getGingerPrepLabel === 'function') ? getGingerPrepLabel(dateKey) : '';
+      if (gingerPrepLabel) summaryRanked.push({ r: window.schedProdRank('soup_refill') + 0.3, s: redNums(gingerPrepLabel) });
       var sugarWaterLabel = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
       if (sugarWaterLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.45, s: redNums(sugarWaterLabel) });
       var summaryParts = summaryRanked.map(function(o, i){ return { o: o, i: i }; })
@@ -9696,6 +9698,8 @@ function recalcOilySeasoning() {
       if (monkeyPrepLabelNI) noItemParts.push(redNumsNI(monkeyPrepLabelNI));
       var wontonSlurryLabelNI = (typeof getWontonSlurryPrepLabel === 'function') ? getWontonSlurryPrepLabel(dateKey) : '';
       if (wontonSlurryLabelNI) noItemParts.push(redNumsNI(wontonSlurryLabelNI));
+      var gingerPrepLabelNI = (typeof getGingerPrepLabel === 'function') ? getGingerPrepLabel(dateKey) : '';
+      if (gingerPrepLabelNI) noItemParts.push(redNumsNI(gingerPrepLabelNI));
       var zprTailNI = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dateKey, 'tail') : '';
       if (zprTailNI) noItemParts.push(redNumsNI(zprTailNI)); // 放最後
       if (noItemParts.length > 0) {
@@ -13307,6 +13311,8 @@ function recalcOilySeasoning() {
         if (oilyL) parts.push(oilyL);
         var monkeyL= (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dk) : '';
         if (monkeyL) parts.push(monkeyL);
+        var gingerL = (typeof getGingerPrepLabel === 'function') ? getGingerPrepLabel(dk) : '';
+        if (gingerL) parts.push(gingerL);
         (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
         (function(){ var tl = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dk, 'tail') : ''; if (tl) parts.push(tl); })(); // 醃粽子料、備粽子料、調味料放最後
         if (parts.length > 0) {
@@ -13410,6 +13416,8 @@ function recalcOilySeasoning() {
         if (oilyPrepLabel2) parts2.push(oilyPrepLabel2);
         var monkeyPrepLabel2 = (typeof getMonkeyPrepLabel === 'function') ? getMonkeyPrepLabel(dateKey) : '';
         if (monkeyPrepLabel2) parts2.push(monkeyPrepLabel2);
+        var gingerPrepLabel2 = (typeof getGingerPrepLabel === 'function') ? getGingerPrepLabel(dateKey) : '';
+        if (gingerPrepLabel2) parts2.push(gingerPrepLabel2);
         var sugarWaterLabel2 = (typeof getSugarWaterPrepLabel === 'function') ? getSugarWaterPrepLabel(dateKey) : '';
         if (sugarWaterLabel2) parts2.push(sugarWaterLabel2);
         // 補湯備料提示（已改為在隔天面板顯示斤兩，summary 不再重複顯示）
@@ -14234,6 +14242,31 @@ function recalcOilySeasoning() {
     }
     if (mushDays <= 0 && dumpDays <= 0) return '';
     return '🍯 煮糖水' + (mushDays > 0 ? (5 * mushDays) + '斤' : '') + (dumpDays > 0 ? '、備鹽巴' : '');
+  }
+
+  // ── 備薑片／備麻油薑提示（排程摘要用，不含週六日）──
+  // 備薑片：下一個工作日（週一至週五）有紅麴水餃 → 前一個工作日顯示「備薑片」
+  // 備麻油薑：當日（週一至週五）有補湯 → 顯示「備麻油薑」；連續工作日都有補湯時，只在第一天顯示
+  function getGingerPrepLabel(dateKey) {
+    schLoad();
+    function keyOf(d) { return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
+    function qtyOf(dk, prod) {
+      var r = schedData[dk], q = 0;
+      if (r && r.items) r.items.forEach(function(it){ if (it.prod === prod) q += parseFloat(it.qty) || 0; });
+      return q;
+    }
+    function stepWeekday(dk, dir) {
+      var d = new Date(dk + 'T00:00:00');
+      do { d.setDate(d.getDate() + dir); } while (d.getDay() === 0 || d.getDay() === 6);
+      return keyOf(d);
+    }
+    var base = new Date(dateKey + 'T00:00:00');
+    var wd = base.getDay();
+    if (wd === 0 || wd === 6) return '';
+    var parts = [];
+    if (qtyOf(stepWeekday(dateKey, 1), 'dumplings_hq') > 0) parts.push('🫚 備薑片');
+    if (qtyOf(dateKey, 'soup_refill') > 0 && qtyOf(stepWeekday(dateKey, -1), 'soup_refill') <= 0) parts.push('🫚 備麻油薑');
+    return parts.join('、');
   }
 
   // ── 拌猴菇、炸猴菇提示（排程摘要用）──
