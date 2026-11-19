@@ -16263,11 +16263,25 @@ riceSeaLoadAll();
     var toDeduct = []; // [{ dateKey, qty }]
     var weekMonKey = getWeekMondayKey(now);
     var staleDates = [];
+    // 本週若有多次製作餛飩：等到「最後一次餛飩當天 07:00」才一次扣除本週量並自動勾選「已扣除本週量」
+    var weekEndD = new Date(now);
+    weekEndD.setDate(weekEndD.getDate() - ((now.getDay() === 0) ? 6 : now.getDay() - 1) + 6);
+    var weekEndKey = fmtDate(weekEndD);
+    var lastWontonKey = '';
+    Object.keys(schedData).forEach(function(dk) {
+      if (dk < weekMonKey || dk > weekEndKey) return;
+      var r = schedData[dk];
+      if (!r || !r.items) return;
+      var hasW = r.items.some(function(it){ return it.prod === 'wonton' && parseFloat(it.qty) > 0; });
+      if (hasW && dk > lastWontonKey) lastWontonKey = dk;
+    });
+    var holdCurrentWeek = (lastWontonKey && lastWontonKey > todayKey); // 最後一次餛飩還沒到 → 本週暫不扣
     Object.keys(schedData).forEach(function(dk) {
       if (dk > todayKey) return; // 未來的跳過
       if (deductedDates.indexOf(dk) >= 0) return; // 已扣過的跳過
       // 上週（含更早）的排程：冷凍庫存已由實際盤點反映，不再扣除，也不會標記「已扣除本週量」
       if (dk < weekMonKey) { staleDates.push(dk); return; }
+      if (holdCurrentWeek) return;
       var rec = schedData[dk];
       if (!rec || !rec.items) return;
       var dayQty = 0;
