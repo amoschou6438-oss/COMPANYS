@@ -13319,7 +13319,7 @@ function recalcOilySeasoning() {
         if (gingerL) parts.push(gingerL);
         (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
         (function(){ var tl = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dk, 'tail') : ''; if (tl) parts.push(tl); })(); // 醃粽子料、備粽子料、調味料放最後
-        (function(){ var sp = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dk) : ''; if (sp) parts.push(sp); })(); // 辣醬退冰放最後
+        (function(){ var sp = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dk) : ''; if (sp) parts.push(sp); })(); // G腿辣醬退冰放最後
         if (parts.length > 0) {
           var icon = h.querySelector('.sched-toggle-icon');
           var sum  = document.createElement('span');
@@ -13441,7 +13441,7 @@ function recalcOilySeasoning() {
             }
           } catch (e) {}
         })();
-        (function(){ var sp2 = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : ''; if (sp2) parts2.push(sp2); })(); // 辣醬退冰放最後
+        (function(){ var sp2 = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : ''; if (sp2) parts2.push(sp2); })(); // G腿辣醬退冰放最後
         sum.innerHTML = window.schedJoinItems(parts2, false);
         header.querySelector('.sched-day-header').insertBefore(sum, icon);
         // 自動縮小摘要字體
@@ -14287,7 +14287,7 @@ function recalcOilySeasoning() {
     var k = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     var r = schedData[k], q = 0;
     if (r && r.items) r.items.forEach(function(it){ if (it.prod === 'gleg_spicy') q += parseFloat(it.qty) || 0; });
-    return q > 0 ? '🌶️ 辣醬退冰' : '';
+    return q > 0 ? '🌶️ G腿辣醬退冰' + (Math.round(q * 100) / 100) + '包' : ''; // 幾鍋用幾包
   }
 
   // ── 拌猴菇、炸猴菇提示（排程摘要用）──
