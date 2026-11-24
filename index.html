@@ -15012,6 +15012,23 @@ function recalcOilySeasoning() {
 
   // 對外暴露，供其他區塊（如 Excel 匯入）在批次變更排程後觸發「炒三角圓料」重新計算
   window.autoTriangleLogic = autoTriangleLogic;
+  // 載入後一次性修正：國定假日／週末上殘留的自動「炒三角圓料」（舊資料）→ 重算並移到前一個工作日
+  setTimeout(function() {
+    try {
+      schLoad();
+      var bad = '';
+      Object.keys(schedData).forEach(function(dk) {
+        var r = schedData[dk];
+        if (!bad && r && r.items && r.items.some(function(it){ return it.prod === 'fry_triangle_fill' || it.prod === 'fry_triangle'; })
+            && window._twOff(new Date(dk + 'T00:00:00'))) bad = dk;
+      });
+      if (!bad) return;
+      autoTriangleLogic(bad);
+      Object.keys(schedData).forEach(function(dk) {
+        if (document.getElementById('sched-items-' + dk)) refreshDayDisplay(dk);
+      });
+    } catch (e) {}
+  }, 1200);
 
   // ── 一次性修正：既有排程裡落在休息日（國定假日）的「炒三角圓料」，搬到前一個工作日 ──
   (function migrateFryFillFromRestDays() {
