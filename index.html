@@ -10956,7 +10956,7 @@ function recalcOilySeasoning() {
 
     // 單鍋固定配方
     var SR = [
-      { name:'鹽',     val: 1,   unit:'斤' },
+      { name:'鹽',     val: 1,   unit:'斤', text:'1斤10兩', note:'備註：鹽原本是1斤，改為800 g' }, // 原 1 斤，改 800 g（25.6 兩，進位 10 兩）
       { name:'鮮味多', val: 4,   unit:'兩' },
       { name:'味琳',   val: 0.5, unit:'斤' },
       { name:'麻油薑', val: 1,   unit:'kg' },
@@ -10971,7 +10971,10 @@ function recalcOilySeasoning() {
     SR.forEach(function(item) {
       var v = item.val;
       var disp;
-      if (item.unit === '兩' && CONDIMENT_PACK_CFG[item.name]) {
+      if (item.text) {
+        disp = '<div style="font-size:13px;font-weight:700;color:#e65100">' + item.text + '</div>'
+          + (item.note ? '<div style="font-size:10px;color:#b45309">' + item.note + '</div>' : '');
+      } else if (item.unit === '兩' && CONDIMENT_PACK_CFG[item.name]) {
         var d = condimentDisplayDual(item.name, v, null);
         var sub = d.sub ? '<div style="font-size:10px;color:#b45309">' + d.sub + '</div>' : '';
         disp = '<div style="font-size:13px;font-weight:700;color:#e65100">' + d.main + '</div>' + sub;
@@ -14436,12 +14439,13 @@ function recalcOilySeasoning() {
     function buildLabel(pots) {
       if (pots <= 0) return '';
       var SR = [
-        { name:'鹽',     val: 1,   unit:'斤' },
+        { name:'鹽',     val: 1,   unit:'斤', text:'1斤10兩（原1斤，改800 g）' },
         { name:'鮮味多', val: 4,   unit:'兩' },
         { name:'味琳',   val: 0.5, unit:'斤' },
         { name:'麻油薑', val: 1,   unit:'kg' },
       ];
       var parts = SR.map(function(item){
+        if (item.text) return item.name + item.text;
         var disp = (item.val % 1 === 0 ? item.val : item.val);
         return item.name + disp + item.unit;
       });
