@@ -9271,6 +9271,13 @@ function recalcOilySeasoning() {
     return '';
   }
 
+  // 休息日：週六日 或 台灣國定假日（行憲紀念日等）。傳入 Date 物件。
+  window._twOff = function(d) {
+    var wd = d.getDay();
+    if (wd === 0 || wd === 6) return true;
+    return !!getTaiwanHolidayLabel(fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()));
+  };
+
   // Calculate ingredient totals from items list
   function calcIngredients(items) {
     var totals = {}; // name+unit -> { name, unit, total }
@@ -9545,7 +9552,7 @@ function recalcOilySeasoning() {
     var pp = String(dateKey).split('-');
     var dt = new Date(parseInt(pp[0],10), parseInt(pp[1],10)-1, parseInt(pp[2],10));
     var wdx = dt.getDay();
-    if (wdx === 0 || wdx === 6) return false;
+    if (window._twOff(dt)) return false;
     for (var k = 1; k <= wdx; k++) {
       var t = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - (wdx - k));
       var tk = t.getFullYear() + '-' + String(t.getMonth()+1).padStart(2,'0') + '-' + String(t.getDate()).padStart(2,'0');
@@ -10913,7 +10920,7 @@ function recalcOilySeasoning() {
       for (var i = 0; i < 14; i++) {
         d.setDate(d.getDate() + 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) {
+        if (!window._twOff(d)) {
           return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
         }
       }
@@ -11835,7 +11842,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 14; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd === 0 || wd === 6) continue;
+        if (window._twOff(d)) continue;
         found++;
         if (found === 2) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       }
@@ -12351,7 +12358,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 7; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        if (!window._twOff(d)) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       }
       return null;
     }
@@ -12731,7 +12738,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 14; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd === 0 || wd === 6) continue;
+        if (window._twOff(d)) continue;
         found++;
         if (found === 2) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       }
@@ -12873,7 +12880,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 7; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+        if (!window._twOff(d)) return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       }
       return null;
     }
@@ -13195,7 +13202,7 @@ function recalcOilySeasoning() {
       for (var i = 0; i < 14; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) {
+        if (!window._twOff(d)) {
           var prevWdKey = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
           var prevRec = schedData[prevWdKey] || { items:[], note:'' };
           if (prevRec.items && prevRec.items.find(function(x){ return x.prod === 'soup_refill' && parseFloat(x.qty) > 0; })) {
@@ -13779,7 +13786,7 @@ function recalcOilySeasoning() {
             for (var pi = 0; pi < 14; pi++) {
               d.setDate(d.getDate() - 1);
               var wd = d.getDay();
-              if (wd !== 0 && wd !== 6) {
+              if (!window._twOff(d)) {
                 return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
               }
             }
@@ -13856,7 +13863,7 @@ function recalcOilySeasoning() {
       var lastWorkDayOfNextWk = null;
       for (var lwi = nextWk.length - 1; lwi >= 0; lwi--) {
         var wd2 = new Date(nextWk[lwi] + 'T00:00:00').getDay();
-        if (wd2 !== 0 && wd2 !== 6) { lastWorkDayOfNextWk = nextWk[lwi]; break; }
+        if (!window._twOff(new Date(nextWk[lwi] + 'T00:00:00'))) { lastWorkDayOfNextWk = nextWk[lwi]; break; }
       }
       var hasFryOneOnLastDay = false;
       if (lastWorkDayOfNextWk) {
@@ -13933,7 +13940,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 14; i++) {
         prev.setDate(prev.getDate() - 1);
         var wd = prev.getDay();
-        if (wd === 0 || wd === 6) continue; // 跳過週末
+        if (window._twOff(prev)) continue; // 跳過週末
         // 找到前一個工作日，判斷它的週一是否與 dk 同週
         var prevOff = (wd === 0) ? 6 : wd - 1;
         var prevMon = new Date(prev); prevMon.setDate(prev.getDate() - prevOff);
@@ -13951,7 +13958,7 @@ function recalcOilySeasoning() {
       while (count < n) {
         d.setDate(d.getDate() + 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) count++;
+        if (!window._twOff(d)) count++;
       }
       return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     }
@@ -13963,7 +13970,7 @@ function recalcOilySeasoning() {
       while (count < n) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) count++;
+        if (!window._twOff(d)) count++;
       }
       return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     }
@@ -13981,7 +13988,7 @@ function recalcOilySeasoning() {
       for (var i = 0; i < 7; i++) {
         var dd = new Date(prevMon); dd.setDate(prevMon.getDate() + i);
         var wd2 = dd.getDay();
-        if (wd2 !== 0 && wd2 !== 6) {
+        if (!window._twOff(dd)) {
           prevWeekDays.push(fmtDate(dd.getFullYear(), dd.getMonth()+1, dd.getDate()));
         }
       }
@@ -13998,7 +14005,7 @@ function recalcOilySeasoning() {
       for (var i = 1; i <= 14; i++) {
         d.setDate(d.getDate() - 1);
         var wd = d.getDay();
-        if (wd === 0 || wd === 6) continue;
+        if (window._twOff(d)) continue;
         var prevDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
         var rec = schedData[prevDk];
         if (!rec || !rec.items) return true; // 前工作日無排程 → 第一天
@@ -14133,7 +14140,7 @@ function recalcOilySeasoning() {
     for (var i = 1; i <= 14; i++) {
       d.setDate(d.getDate() - 1);
       var wd = d.getDay();
-      if (wd === 0 || wd === 6) continue;
+      if (window._twOff(d)) continue;
       var prevDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       var prevRec = schedData[prevDk];
       if (!prevRec || !prevRec.items) return '🍗 備G腿醬'; // 前一工作日無排程 → 明天是第一天
@@ -14156,7 +14163,7 @@ function recalcOilySeasoning() {
   function isWontonWeekFirstWorkday(dk) {
     var dt = new Date(dk + 'T00:00:00');
     var wdx = dt.getDay();
-    if (wdx === 0 || wdx === 6) return false;
+    if (window._twOff(dt)) return false;
     for (var k = 1; k <= wdx; k++) {
       var t = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate() - (wdx - k));
       var tk = fmtDate(t.getFullYear(), t.getMonth()+1, t.getDate());
@@ -14174,7 +14181,7 @@ function recalcOilySeasoning() {
       d.setDate(d.getDate() + 1);
       var k = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
       var w = d.getDay();
-      if (w === 0 || w === 6) continue;
+      if (window._twOff(d)) continue;
       if (isWontonWeekFirstWorkday(k)) return getWontonQtyOnDay(k) > 0;
     }
     return false;
@@ -14199,7 +14206,7 @@ function recalcOilySeasoning() {
     for (var i = 1; i <= 7; i++) {
       d.setDate(d.getDate() + 1);
       var wd = d.getDay();
-      if (wd !== 0 && wd !== 6) break;
+      if (!window._twOff(d)) break;
     }
     return wq(d);
   }
@@ -14223,7 +14230,7 @@ function recalcOilySeasoning() {
       var r = schedData[dk];
       return !!(r && r.items && r.items.some(function(it){ return (parseFloat(it.qty) || 0) > 0; }));
     }
-    function isWeekday(d) { var w = d.getDay(); return w >= 1 && w <= 5; }
+    function isWeekday(d) { return !window._twOff(d); }
     function keyOf(d) { return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()); }
     // 本日必須是週一至週五且有排程
     var base = new Date(dateKey + 'T00:00:00');
@@ -14266,12 +14273,12 @@ function recalcOilySeasoning() {
     }
     function stepWeekday(dk, dir) {
       var d = new Date(dk + 'T00:00:00');
-      do { d.setDate(d.getDate() + dir); } while (d.getDay() === 0 || d.getDay() === 6);
+      do { d.setDate(d.getDate() + dir); } while (window._twOff(d));
       return keyOf(d);
     }
     var base = new Date(dateKey + 'T00:00:00');
     var wd = base.getDay();
-    if (wd === 0 || wd === 6) return '';
+    if (window._twOff(base)) return '';
     var parts = [];
     if (qtyOf(stepWeekday(dateKey, 1), 'dumplings_hq') > 0) parts.push('🫚 備紅麴水餃薑片');
     if (qtyOf(dateKey, 'soup_refill') > 0 && qtyOf(stepWeekday(dateKey, -1), 'soup_refill') <= 0) parts.push('🫚 麻油薑退冰');
@@ -14283,9 +14290,9 @@ function recalcOilySeasoning() {
   function getSpicySauceThawLabel(dateKey) {
     schLoad();
     var d = new Date(dateKey + 'T00:00:00');
-    if (d.getDay() === 0 || d.getDay() === 6) return ''; // 週六日不顯示
+    if (window._twOff(d)) return ''; // 週六日／國定假日不顯示
     for (var n = 0; n < 3; n++) { // 往後數 3 個工作日（跳過週六日）
-      do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);
+      do { d.setDate(d.getDate() + 1); } while (window._twOff(d));
     }
     var k = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     var r = schedData[k], q = 0;
@@ -14301,7 +14308,7 @@ function recalcOilySeasoning() {
     for (var i = 1; i <= 7; i++) {
       d.setDate(d.getDate() + 1);
       var wd = d.getDay();
-      if (wd !== 0 && wd !== 6) break;
+      if (!window._twOff(d)) break;
     }
     var nextDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     var rec = schedData[nextDk];
@@ -14320,7 +14327,7 @@ function recalcOilySeasoning() {
     for (var i = 1; i <= 7; i++) {
       d.setDate(d.getDate() + 1);
       var wd = d.getDay();
-      if (wd !== 0 && wd !== 6) break;
+      if (!window._twOff(d)) break;
     }
     var nextDk = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
     var rec = schedData[nextDk];
@@ -14414,7 +14421,7 @@ function recalcOilySeasoning() {
       for (var i = 0; i < 14; i++) {
         d.setDate(d.getDate() + 1);
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) {
+        if (!window._twOff(d)) {
           return fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
         }
       }
@@ -14562,7 +14569,7 @@ function recalcOilySeasoning() {
         // 若已跨出本週範圍，停止搜尋
         if (!weekKeySet[candidate]) return null;
         var wd = d.getDay();
-        if (wd !== 0 && wd !== 6) {
+        if (!window._twOff(d)) {
           // 排休日（週一~五但無真實排程）也跳過，不能顯示炒料
           var cr = schedData[candidate];
           var hasReal = cr && cr.items && cr.items.filter(function(it){
@@ -15848,7 +15855,7 @@ function recalcOilySeasoning() {
         for (var i = 1; i <= 14; i++) {
           d.setDate(d.getDate() - 1);
           var wd = d.getDay();
-          if (wd !== 0 && wd !== 6) return fmtYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
+          if (!window._twOff(d)) return fmtYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
         }
         return null;
       })();
@@ -15860,7 +15867,7 @@ function recalcOilySeasoning() {
         for (var i = 1; i <= 14; i++) {
           d.setDate(d.getDate() - 1);
           var wd = d.getDay();
-          if (wd !== 0 && wd !== 6) {
+          if (!window._twOff(d)) {
             found++;
             if (found === 2) return fmtYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
           }
@@ -15879,7 +15886,7 @@ function recalcOilySeasoning() {
         for (var i2 = 1; i2 <= 14; i2++) {
           prev.setDate(prev.getDate() - 1);
           var wd2 = prev.getDay();
-          if (wd2 === 0 || wd2 === 6) continue;
+          if (window._twOff(prev)) continue;
           var prevOff = (wd2 === 0) ? 6 : wd2 - 1;
           var prevMon = new Date(prev); prevMon.setDate(prev.getDate() - prevOff);
           var prevMonKey = fmtYMD(prevMon.getFullYear(), prevMon.getMonth()+1, prevMon.getDate());
@@ -15894,7 +15901,7 @@ function recalcOilySeasoning() {
         for (var i = 1; i <= 14; i++) {
           d.setDate(d.getDate() - 1);
           var wd = d.getDay();
-          if (wd === 0 || wd === 6) continue;
+          if (window._twOff(d)) continue;
           var prevDk = fmtYMD(d.getFullYear(), d.getMonth()+1, d.getDate());
           var prevRec = schedData[prevDk];
           if (!prevRec || !prevRec.items) return true;
@@ -15919,7 +15926,7 @@ function recalcOilySeasoning() {
         for (var j = 0; j < 7; j++) {
           var dd2 = new Date(prevMon2); dd2.setDate(prevMon2.getDate() + j);
           var wd3 = dd2.getDay();
-          if (wd3 !== 0 && wd3 !== 6) days2.push(fmtYMD(dd2.getFullYear(), dd2.getMonth()+1, dd2.getDate()));
+          if (!window._twOff(dd2)) days2.push(fmtYMD(dd2.getFullYear(), dd2.getMonth()+1, dd2.getDate()));
         }
         if (!days2.length) return null;
         var idx2 = days2.length - lastN;
