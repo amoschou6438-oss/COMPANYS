@@ -8616,6 +8616,7 @@ function recalcOilySeasoning() {
   window._SCHD_KEY = SCHD_KEY;
 
   function schLoad() {
+    if (window.__atlRunning) return; // 自動三角圓重算中：保留記憶體內的暫時修改，避免被 localStorage 舊資料覆蓋
     try { schedData = JSON.parse(localStorage.getItem(SCHD_KEY) || '{}'); } catch(e){ schedData={}; }
     window._schedData = schedData;
   }
@@ -10062,6 +10063,8 @@ function recalcOilySeasoning() {
     var wontonItem = items && items.find(function(it){ return it.prod === 'wonton' && parseFloat(it.qty) > 0; });
     // 下週第一個工作日有餛飩 → 本週六日不顯示斤兩（改在該工作日顯示）
     if (typeof isWeekendBeforeWontonWeekStart === 'function' && isWeekendBeforeWontonWeekStart(dateKey)) { el.innerHTML = ''; return; }
+    // 國定假日且前一天是工作日 → 斤兩改在前一天顯示
+    if (typeof isHolidayWithWorkdayBefore === 'function' && isHolidayWithWorkdayBefore(dateKey)) { el.innerHTML = ''; return; }
     var wontonQty = 0;
     var isPrepDay = false; // 當天本身無餛飩，但下一個工作日有 → 視為煮餛飩漿的前一天，仍顯示配方供備料
     if (wontonItem) {
@@ -13730,6 +13733,7 @@ function recalcOilySeasoning() {
   // 針對 changedDateKey 所在週 + 前一週（前一週的「炒三角圓料1」需視本週是否有三角圓）
   function autoTriangleLogic(changedDateKey) {
     schLoad();
+    window.__atlRunning = true; setTimeout(function(){ window.__atlRunning = false; }, 0);
 
     // 決定需要重新處理的週清單（去重）
     var changedWeekKeys = getWeekKeysForDate(changedDateKey);
@@ -13816,6 +13820,7 @@ function recalcOilySeasoning() {
         // 找本週週五（weekKeys[4]），若週五有真實排程就用週五
         var fridayKey = weekKeys[4];
         var fridayHasReal = (function(){
+          if (window._twOff(new Date(fridayKey + 'T00:00:00'))) return false; // 週五若是國定假日 → 改找前一個工作日
           var r = schedData[fridayKey];
           return r && r.items && r.items.filter(function(it){
             return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
@@ -13828,6 +13833,7 @@ function recalcOilySeasoning() {
         } else {
           // 找本週最後一個有真實排程的天
           for (var li = Math.min(weekKeys.length, 5) - 1; li >= 0; li--) { // 只看週一~週五，週六日不算
+            if (window._twOff(new Date(weekKeys[li] + 'T00:00:00'))) continue; // 跳過國定假日
             var lr = schedData[weekKeys[li]];
             if (lr && lr.items && lr.items.filter(function(it){
               return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
@@ -13843,6 +13849,7 @@ function recalcOilySeasoning() {
       }
     });
 
+    window.__atlRunning = false;
     schSave();
 
     // ── 步驟4：自動同步「先炒數量」與「下禮拜先備」欄位 ──
@@ -14172,6 +14179,15 @@ function recalcOilySeasoning() {
     }
     return false;
   }
+  // ── 國定假日（週一～週五）且前一天是工作日 → 餛飩斤兩、煮餛飩漿、切香菜改在前一天顯示，假日當天不顯示 ──
+  function isHolidayWithWorkdayBefore(dk) {
+    var d = new Date(dk + 'T00:00:00');
+    var wd = d.getDay();
+    if (wd === 0 || wd === 6) return false;
+    if (!window._twOff(d)) return false;
+    d.setDate(d.getDate() - 1);
+    return !window._twOff(d);
+  }
   // ── 週六日：若「下一週」的第一個工作日有餛飩 → 斤兩與煮餛飩漿都改在該工作日顯示，週末不顯示 ──
   function isWeekendBeforeWontonWeekStart(dateKey) {
     var d = new Date(dateKey + 'T00:00:00');
@@ -14214,6 +14230,8 @@ function recalcOilySeasoning() {
   // ── 煮餛飩漿文字提示（排程摘要用）──
   // 若下一個工作日有餛飩（包）製作 → 回傳「煮餛飩漿 X包」提示，顯示在製作前一天
   function getWontonSlurryPrepLabel(dateKey) {
+    // 國定假日且前一天是工作日 → 煮餛飩漿、切香菜改在前一天顯示
+    if (isHolidayWithWorkdayBefore(dateKey)) return '';
     // 當週第一個工作日本身有餛飩 → 煮餛飩漿、切香菜顯示在該天
     var ownQty = isWontonWeekFirstWorkday(dateKey) ? getWontonQtyOnDay(dateKey) : 0;
     var wontonQty = ownQty > 0 ? ownQty : getWontonNextWorkdayQty(dateKey);
