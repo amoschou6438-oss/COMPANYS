@@ -14528,6 +14528,7 @@ function recalcOilySeasoning() {
     if (nextWeekFirstHasTriPrep) {
       var lastWorkDayPrep = null;
       for (var lwi = Math.min(weekKeys.length, 5) - 1; lwi >= 0; lwi--) { // 只看週一~週五，週六日不算
+        if (window._twOff(new Date(weekKeys[lwi] + 'T00:00:00'))) continue; // 國定假日不算工作日
         var lwr = schedData[weekKeys[lwi]];
         if (lwr && lwr.items && lwr.items.filter(function(it){
           return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle';
@@ -15024,9 +15025,22 @@ function recalcOilySeasoning() {
       });
       if (!bad) return;
       autoTriangleLogic(bad);
-      Object.keys(schedData).forEach(function(dk) {
-        if (document.getElementById('sched-items-' + dk)) refreshDayDisplay(dk);
+      // 資料已修正；重新載入一次讓畫面依新資料重畫（以 sessionStorage 防止重複重載）
+      var still = Object.keys(schedData).some(function(dk) {
+        var r = schedData[dk];
+        return r && r.items && r.items.some(function(it){ return it.prod === 'fry_triangle_fill' || it.prod === 'fry_triangle'; })
+          && window._twOff(new Date(dk + 'T00:00:00'));
       });
+      var flag = null;
+      try { flag = sessionStorage.getItem('tri_fix_reloaded'); } catch (e2) {}
+      if (!still && !flag) {
+        try { sessionStorage.setItem('tri_fix_reloaded', '1'); } catch (e3) {}
+        location.reload();
+      } else {
+        Object.keys(schedData).forEach(function(dk) {
+          if (document.getElementById('sched-items-' + dk)) refreshDayDisplay(dk);
+        });
+      }
     } catch (e) {}
   }, 1200);
 
