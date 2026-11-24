@@ -15012,6 +15012,37 @@ function recalcOilySeasoning() {
 
   // 對外暴露，供其他區塊（如 Excel 匯入）在批次變更排程後觸發「炒三角圓料」重新計算
   window.autoTriangleLogic = autoTriangleLogic;
+
+  // ── 一次性修正：既有排程裡落在休息日（國定假日）的「炒三角圓料」，搬到前一個工作日 ──
+  (function migrateFryFillFromRestDays() {
+    try {
+      schLoad();
+      var moved = false;
+      Object.keys(schedData).forEach(function(dk) {
+        var rec = schedData[dk];
+        if (!rec || !rec.items) return;
+        var d0 = new Date(dk + 'T00:00:00');
+        if (!window._twOff(d0)) return;
+        var idx = rec.items.findIndex(function(it){ return it.prod === 'fry_triangle_fill'; });
+        if (idx < 0) return;
+        var qty = parseFloat(rec.items[idx].qty) || 0;
+        var d = new Date(d0), prevKey = null;
+        for (var i = 0; i < 14; i++) {
+          d.setDate(d.getDate() - 1);
+          if (!window._twOff(d)) { prevKey = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate()); break; }
+        }
+        if (!prevKey) return;
+        rec.items.splice(idx, 1);
+        if (rec.items.length === 0 && !rec.note) delete schedData[dk];
+        if (!schedData[prevKey]) schedData[prevKey] = { items: [], note: '' };
+        var ex = schedData[prevKey].items.find(function(it){ return it.prod === 'fry_triangle_fill'; });
+        if (ex) ex.qty = Math.max(parseFloat(ex.qty) || 0, qty);
+        else schedData[prevKey].items.push({ prod: 'fry_triangle_fill', qty: qty });
+        moved = true;
+      });
+      if (moved) schSave();
+    } catch (e) {}
+  })();
   // 對外暴露，供其他區塊（如 Excel 匯入）把排程總量同步帶入「製作數量輸入」欄位，
   // 這樣「三角圓（袋）需炒 X 鍋」等畫面數字才會跟著重新計算
   window.autoSyncInputsIfNeeded = autoSyncInputsIfNeeded;
