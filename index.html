@@ -4,7 +4,7 @@
 <script>
 // ── 排程品項顯示順序（回報文字、每日摘要共用）──
 // G腿／粽子／油飯／水餃 → 三角圓 → 醬料類、炒菇、炒香菇絲 → 餛飩料 → 粉類 → 餛飩／麻油猴菇／補湯
-window._SCHED_PROD_ORDER = ['gleg','gleg_spicy','zongzi_d','zongzi_c','oily_rice','monkey_rice',
+window._SCHED_PROD_ORDER = ['gleg','gleg_spicy','gleg_steak','zongzi_d','zongzi_c','oily_rice','monkey_rice',
   'dumplings_xc','dumplings_hq','dumplings_hq_fill',
   'triangle','fry_triangle','fry_triangle_fill',
   'minced','minced_chili','white_sauce','red_sauce','green_sauce','mushroom_sauce','black_pepper_sauce','rice_sauce','sesame_ginger','fried_mushr','mushr_shred',
@@ -1948,6 +1948,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="cw_q_gleg" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">鍋</span></div></div>
         <div class="irow"><label>辣G腿（鍋）</label><div id="cw-spicy-gleg-days" style="flex:1"></div></div>
+        <div class="irow"><label>G排（鍋）</label><div id="cw-gleg-steak-days" style="flex:1"></div></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="cw_q_gleg_times" value="0" min="0" oninput="this._cwManualEdit=true;saveInputs();recalcAllDebounced()" style="color:var(--red);font-weight:700"><span class="unit">次</span></div></div>
       </div>
 
@@ -1992,6 +1993,7 @@ window.zqARIn = function(id, v){ if (!window.zzIs(id)) return v; var n = parseFl
         <div class="input-block-title">🍗 G腿</div>
         <div class="irow"><label>G腿（鍋）</label><div class="ifield"><input type="number" id="nw_q_gleg" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">鍋</span></div></div>
         <div class="irow"><label>辣G腿（鍋）</label><div id="nw-spicy-gleg-days" style="flex:1"></div></div>
+        <div class="irow"><label>G排（鍋）</label><div id="nw-gleg-steak-days" style="flex:1"></div></div>
         <div style="display:none" aria-hidden="true"><input type="number" id="nw_q_minced" value="0"><input type="number" id="nw_q_minced_chili" value="0"><input type="number" id="nw_q_mushr_shred" value="0"><input type="number" id="nw_q_curry" value="0"><input type="number" id="nw_q_pepper_salt" value="0"></div>
         <div class="irow"><label>G腿製作次數</label><div class="ifield"><input type="number" id="nw_q_gleg_times" value="0" min="0" oninput="this._nwManualEdit=true;saveNwInputs();nwRecalcDebounced()"><span class="unit">次</span></div></div>
       </div>
@@ -8510,6 +8512,7 @@ function recalcOilySeasoning() {
     { id:'triangle',     label:'三角圓',         unit:'袋' },
     { id:'gleg',         label:'G腿',            unit:'鍋' },
     { id:'gleg_spicy',   label:'辣G腿',          unit:'鍋', hidden:true },
+    { id:'gleg_steak',   label:'G排',            unit:'鍋', hidden:true },
     { id:'zongzi_d',     label:'得來素粽子',     unit:'車' },
     { id:'zongzi_c',     label:'慈濟粽子',       unit:'車' },
     { id:'oily_rice',    label:'油飯',           unit:'盤' },
@@ -8535,6 +8538,23 @@ function recalcOilySeasoning() {
     { id:'dump_powder',        label:'水餃粉',       unit:'份' },
   ];
   window._PRODUCTS = PRODUCTS;
+  // G排：從當天G腿總鍋數中分出來的鍋數。當天全部是辣味 → 辣味G排；否則 → 原味G排
+  // T=G腿總鍋數、S=辣G腿鍋數、P=G排鍋數；回傳摘要字串（P<=0 回傳 null）
+  window._glegSteakStr = function(T, cn, S, P, unit) {
+    function r(x) { return Math.round((parseFloat(x) || 0) * 100) / 100; }
+    T = r(T); S = r(S); P = r(P); unit = unit || '鍋';
+    if (!(P > 0)) return null;
+    var out = [];
+    var rest = r(T - P);
+    if (S > 0 && S >= T) {
+      if (rest > 0) out.push('🌶️ 辣G腿' + rest + unit + (cn || ''));
+      out.push('🍖 辣味G排' + P + unit);
+    } else {
+      if (rest > 0) out.push('🍗 G腿 ' + rest + unit + (cn || '') + (S > 0 ? '《辣G腿' + S + unit + '》' : ''));
+      out.push('🍖 原味G排' + P + unit);
+    }
+    return out.join('、');
+  };
   // Ingredient formulas per product (unit, multiplier per 1 of product unit)
   // format: { name, base, unit, per } where 1 product unit = base of ingredient unit per 'per' product units
   var INGREDIENT_FORMULAS = {
@@ -9611,7 +9631,7 @@ function recalcOilySeasoning() {
     // 摘要
     if (hasItems) {
       html += '<span class="sched-summary">';
-      var normalItems = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+      var normalItems = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy' && it.prod !== 'gleg_steak'; });
       var spicyGlegItemBuild = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
       var PROD_EMOJI_BUILD = {
         wonton:             '🥟',
@@ -9654,6 +9674,13 @@ function recalcOilySeasoning() {
         var cn = (pQty != aQty) ? '(原'+window.zq(it.prod,pQty)+'改'+window.zq(it.prod,aQty)+')' : '';
         var emoji = PROD_EMOJI_BUILD[it.prod] ? PROD_EMOJI_BUILD[it.prod]+' ' : '';
         var spicyStrBuild = '';
+        if (it.prod === 'gleg') {
+          var stkB = dayRec.items.find(function(x){ return x.prod === 'gleg_steak'; });
+          if (stkB) {
+            var stkStrB = window._glegSteakStr(aQty, cn, spicyGlegItemBuild ? ((spicyGlegItemBuild.actualQty != null) ? spicyGlegItemBuild.actualQty : spicyGlegItemBuild.qty) : 0, (stkB.actualQty != null) ? stkB.actualQty : stkB.qty, p ? p.unit : '鍋');
+            if (stkStrB) return redNums(stkStrB);
+          }
+        }
         if (it.prod === 'gleg' && spicyGlegItemBuild) {
           var spQtyBuild = (spicyGlegItemBuild.actualQty != null) ? spicyGlegItemBuild.actualQty : spicyGlegItemBuild.qty;
           if (parseFloat(spQtyBuild) > 0 && parseFloat(spQtyBuild) === parseFloat(aQty)) {
@@ -13300,7 +13327,7 @@ function recalcOilySeasoning() {
         var sumEl = h.querySelector('.sched-summary');
         if (sumEl) sumEl.remove();
         var rec = schedData[dk] || { items:[] };
-        var normItems = (rec.items || []).filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+        var normItems = (rec.items || []).filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy' && it.prod !== 'gleg_steak'; });
         var spicyGlegItemRS = (rec.items || []).find(function(it){ return it.prod === 'gleg_spicy'; });
         normItems = normItems.filter(function(it){ return it.prod !== 'egg_crepe'; }).concat(normItems.filter(function(it){ return it.prod === 'egg_crepe'; })); // 蛋餅皮排最後
         var parts = normItems.map(function(it){
@@ -13309,6 +13336,13 @@ function recalcOilySeasoning() {
           var aQty = (it.actualQty  != null) ? it.actualQty  : it.qty;
           var cn   = (pQty != aQty) ? '(原'+window.zq(it.prod,pQty)+'改'+window.zq(it.prod,aQty)+')' : '';
           var spicyStrRS = '';
+          if (it.prod === 'gleg') {
+            var stkR = (rec.items || []).find(function(x){ return x.prod === 'gleg_steak'; });
+            if (stkR) {
+              var stkStrR = window._glegSteakStr(aQty, cn, spicyGlegItemRS ? ((spicyGlegItemRS.actualQty != null) ? spicyGlegItemRS.actualQty : spicyGlegItemRS.qty) : 0, (stkR.actualQty != null) ? stkR.actualQty : stkR.qty, p ? p.unit : '鍋');
+              if (stkStrR) return stkStrR;
+            }
+          }
           if (it.prod === 'gleg' && spicyGlegItemRS) {
             var spQtyRS = (spicyGlegItemRS.actualQty != null) ? spicyGlegItemRS.actualQty : spicyGlegItemRS.qty;
             if (parseFloat(spQtyRS) > 0 && parseFloat(spQtyRS) === parseFloat(aQty)) {
@@ -13369,7 +13403,7 @@ function recalcOilySeasoning() {
         var sum = document.createElement('span');
         sum.className = 'sched-summary';
         sum.setAttribute('data-autoshrink', '');
-        var normItems2 = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy'; });
+        var normItems2 = dayRec.items.filter(function(it){ return it.prod !== 'fry_triangle_fill' && it.prod !== 'fry_triangle' && it.prod !== 'gleg_spicy' && it.prod !== 'gleg_steak'; });
         var spicyGlegItem2 = dayRec.items.find(function(it){ return it.prod === 'gleg_spicy'; });
         var autoItems2 = dayRec.items.filter(function(it){ return it.prod === 'fry_triangle_fill' || it.prod === 'fry_triangle'; });
         var PROD_EMOJI = {
@@ -13410,6 +13444,13 @@ function recalcOilySeasoning() {
           var cn2 = (pQty2 != aQty2) ? '(原'+window.zq(it.prod,pQty2)+'改'+window.zq(it.prod,aQty2)+')' : '';
           var emoji = PROD_EMOJI[it.prod] ? PROD_EMOJI[it.prod]+' ' : '';
           var spicyStr2 = '';
+          if (it.prod === 'gleg') {
+            var stk2 = dayRec.items.find(function(x){ return x.prod === 'gleg_steak'; });
+            if (stk2) {
+              var stkStr2 = window._glegSteakStr(aQty2, cn2, spicyGlegItem2 ? ((spicyGlegItem2.actualQty != null) ? spicyGlegItem2.actualQty : spicyGlegItem2.qty) : 0, (stk2.actualQty != null) ? stk2.actualQty : stk2.qty, p ? p.unit : '鍋');
+              if (stkStr2) return stkStr2;
+            }
+          }
           if (it.prod === 'gleg' && spicyGlegItem2) {
             var spQty2 = (spicyGlegItem2.actualQty != null) ? spicyGlegItem2.actualQty : spicyGlegItem2.qty;
             if (parseFloat(spQty2) > 0 && parseFloat(spQty2) === parseFloat(aQty2)) {
@@ -14799,8 +14840,64 @@ function recalcOilySeasoning() {
     el.innerHTML = html;
   }
 
-  window.spicyGlegRenderCw = function() { spicyGlegRenderPicker('cw-spicy-gleg-days', getCurrentWeekKeys()); };
-  window.spicyGlegRenderNw = function() { spicyGlegRenderPicker('nw-spicy-gleg-days', getNextWeekKeys()); };
+  window.spicyGlegRenderCw = function() { spicyGlegRenderPicker('cw-spicy-gleg-days', getCurrentWeekKeys()); glegSteakRenderPicker('cw-gleg-steak-days', getCurrentWeekKeys()); };
+  window.spicyGlegRenderNw = function() { spicyGlegRenderPicker('nw-spicy-gleg-days', getNextWeekKeys()); glegSteakRenderPicker('nw-gleg-steak-days', getNextWeekKeys()); };
+
+  // ====== G排（鍋）：從當天G腿總鍋數中分出來的鍋數（當天全部辣味 → 辣味G排，否則 → 原味G排）======
+  function glegSteakRenderPicker(containerId, weekKeys) {
+    var el = document.getElementById(containerId);
+    if (!el) return;
+    // 正在這個清單裡輸入時不重繪，避免打斷焦點
+    var act = document.activeElement;
+    if (act && el.contains(act)) return;
+    var days = spicyGlegCandidateDays(weekKeys);
+    if (days.length === 0) {
+      el.innerHTML = '<span style="font-size:11px;color:var(--ink3)">（本週排程尚無G腿，暫無可輸入日期）</span>';
+      return;
+    }
+    var html = '<div style="font-size:11px;color:var(--ink3);margin-bottom:3px">輸入該天G腿總鍋數中有幾鍋做G排（辣味日＝辣味G排，其他＝原味G排）：</div>';
+    html += '<div style="display:flex;gap:14px;flex-wrap:wrap">';
+    days.forEach(function(d) {
+      var rec = schedData[d.key];
+      var stk = rec && rec.items ? rec.items.find(function(it){ return it.prod === 'gleg_steak'; }) : null;
+      var stkQty = stk ? ((stk.actualQty != null) ? stk.actualQty : stk.qty) : 0;
+      var mdParts = d.key.split('-');
+      var md = parseInt(mdParts[1],10) + '/' + parseInt(mdParts[2],10);
+      var glegItem = rec.items.find(function(it){ return it.prod === 'gleg'; });
+      var gq = parseFloat((glegItem.actualQty != null) ? glegItem.actualQty : glegItem.qty) || 0;
+      var flavor = (d.spicyQty > 0 && d.spicyQty >= gq) ? '辣味' : '原味';
+      html += '<label style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2)">'
+        + '（' + weekdayLabel(d.wd) + '）' + md + ' ' + flavor
+        + '<input type="number" min="0" step="1" value="' + (parseFloat(stkQty) || 0) + '" data-datekey="' + d.key + '"'
+        + ' style="width:56px;color:var(--red);font-weight:700"'
+        + ' oninput="glegSteakDayQtyChanged(this)">鍋'
+        + '</label>';
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function glegSteakWrite(dateKey, qty) {
+    schLoad();
+    if (!schedData[dateKey]) schedData[dateKey] = { items: [], note: '' };
+    var items = schedData[dateKey].items;
+    var glegItem = items.find(function(it){ return it.prod === 'gleg'; });
+    var gq = glegItem ? (parseFloat((glegItem.actualQty != null) ? glegItem.actualQty : glegItem.qty) || 0) : 0;
+    if (qty > gq) qty = gq; // G排不能超過當天G腿總鍋數
+    var idx = items.findIndex(function(it){ return it.prod === 'gleg_steak'; });
+    if (qty > 0) {
+      if (idx >= 0) { items[idx].plannedQty = qty; items[idx].actualQty = qty; items[idx].qty = qty; }
+      else items.push({ prod: 'gleg_steak', plannedQty: qty, actualQty: qty, qty: qty });
+    } else if (idx >= 0) {
+      items.splice(idx, 1);
+    }
+    schSave();
+    refreshDayDisplay(dateKey);
+  }
+  window.glegSteakDayQtyChanged = function(input) {
+    var dateKey = input.getAttribute('data-datekey');
+    glegSteakWrite(dateKey, parseFloat(input.value) || 0);
+  };
 
   // 寫入／移除某天的「辣G腿」品項
   function spicyGlegWrite(dateKey, qty) {
