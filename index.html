@@ -16615,6 +16615,70 @@ riceSeaLoadAll();
   // 每分鐘檢查一次（確保 07:00 後一開啟即觸發，且跨週時能即時回復）
   setInterval(tick, 60 * 1000);
 
+  // ── G腿拌粉自動歸零：當週G腿做超過一次時，除最後一次外，每次G腿的隔天 06:00 歸零，把G腿拌粉庫存歸零（每個製作日只歸零一次）──
+  (function() {
+    var MARK_KEY = 'glegPowderZeroDone';
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function keyOf(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+    function off(d) { return (typeof window._twOff === 'function') ? window._twOff(d) : (d.getDay() === 0 || d.getDay() === 6); }
+    function glegQty(sd, k) {
+      var r = sd[k], q = 0;
+      if (r && r.items) r.items.forEach(function(it){ if (it.prod === 'gleg') q += parseFloat((it.actualQty != null) ? it.actualQty : it.qty) || 0; });
+      return q;
+    }
+    function zeroNow() {
+      var inv = document.getElementById('inv_gleg_powder_left_inv');
+      var home = document.getElementById('home_inv_gleg_powder_left');
+      if (inv) { inv.value = 0; try { inv.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {} }
+      else {
+        var q = document.getElementById('q_gleg_powder_left'); if (q) q.value = 0;
+        if (typeof window.syncGlegPowderInvToScheduleToday === 'function') window.syncGlegPowderInvToScheduleToday(0);
+      }
+      if (home) home.value = 0;
+    }
+    function check() {
+      try {
+        var sd = {};
+        try { sd = JSON.parse(localStorage.getItem(window._SCHD_KEY || 'schedule_v2') || '{}'); } catch (e) {}
+        var now = new Date();
+        var latest = '';
+        // 依週（週一～週日）分組：當週G腿做超過一次 → 除了「當週最後一次」之外，每次G腿的隔天 06:00 歸零；
+        // 最後一次之後輸入的拌粉，保留給下次（下一週）製作的第一天，不歸零
+        var weeks = {};
+        Object.keys(sd).forEach(function(dk) {
+          if (glegQty(sd, dk) <= 0) return;
+          var d0 = new Date(dk + 'T00:00:00');
+          var off0 = (d0.getDay() === 0) ? 6 : d0.getDay() - 1;
+          d0.setDate(d0.getDate() - off0);
+          var wk = keyOf(d0);
+          (weeks[wk] = weeks[wk] || []).push(dk);
+        });
+        Object.keys(weeks).forEach(function(wk) {
+          var days = weeks[wk].sort();
+          if (days.length < 2) return;
+          days.slice(0, days.length - 1).forEach(function(dk) {
+            var at = new Date(dk + 'T00:00:00'); at.setDate(at.getDate() + 1); at.setHours(6, 0, 0, 0);
+            if (now >= at && dk > latest) latest = dk;
+          });
+        });
+        if (!latest) return;
+        var done = '';
+        try { done = localStorage.getItem(MARK_KEY) || ''; } catch (e) {}
+        if (!done) { // 第一次執行：只記錄，不歸零（避免一更新就清掉現有庫存）
+          try { localStorage.setItem(MARK_KEY, latest); } catch (e) {}
+          return;
+        }
+        if (latest > done) {
+          try { localStorage.setItem(MARK_KEY, latest); } catch (e) {}
+          zeroNow();
+        }
+      } catch (e) {}
+    }
+    setTimeout(check, 2000);
+    setInterval(check, 60 * 1000);
+    window._glegPowderZeroCheck = check;
+  })();
+
   // 暴露給外部（例如手動測試）
   window._wontonDeductRun = runDeduct;
   window._wontonWeeklyResetCheck = checkWeeklyReset;
