@@ -9714,6 +9714,8 @@ function recalcOilySeasoning() {
       if (sugarWaterLabel) summaryRanked.push({ r: window.schedProdRank('wonton') + 0.45, s: redNums(sugarWaterLabel) });
       var spicyThawLabel = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : '';
       if (spicyThawLabel) summaryRanked.push({ r: 10001, s: redNums(spicyThawLabel) }); // 排程最後
+      var sesameThawLabel = (typeof getSesameGingerThawLabel === 'function') ? getSesameGingerThawLabel(dateKey) : '';
+      if (sesameThawLabel) summaryRanked.push({ r: 10002, s: redNums(sesameThawLabel) }); // 排程最後
       var summaryParts = summaryRanked.map(function(o, i){ return { o: o, i: i }; })
         .sort(function(a, b){ return (a.o.r - b.o.r) || (a.i - b.i); })
         .map(function(x){ return x.o.s; });
@@ -9742,6 +9744,8 @@ function recalcOilySeasoning() {
       if (zprTailNI) noItemParts.push(redNumsNI(zprTailNI)); // 放最後
       var spicyThawLabelNI = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : '';
       if (spicyThawLabelNI) noItemParts.push(redNumsNI(spicyThawLabelNI)); // 排程最後
+      var sesameThawLabelNI = (typeof getSesameGingerThawLabel === 'function') ? getSesameGingerThawLabel(dateKey) : '';
+      if (sesameThawLabelNI) noItemParts.push(redNumsNI(sesameThawLabelNI)); // 排程最後
       if (noItemParts.length > 0) {
         html += '<span class="sched-summary">' + window.schedJoinItems(noItemParts, true) + '</span>';
       }
@@ -13367,7 +13371,7 @@ function recalcOilySeasoning() {
         if (gingerL) parts.push(gingerL);
         (function(){ var ei = normItems.findIndex(function(it){return it.prod==='egg_crepe';}); if (ei >= 0 && ei < parts.length) { var ep = parts.splice(ei,1)[0]; parts.push(ep); } })();
         (function(){ var tl = (typeof getZongziPrepLabel === 'function') ? getZongziPrepLabel(dk, 'tail') : ''; if (tl) parts.push(tl); })(); // 醃粽子料、備粽子料、調味料放最後
-        (function(){ var sp = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dk) : ''; if (sp) parts.push(sp); })(); // G腿辣醬退冰放最後
+        (function(){ var sp = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dk) : ''; if (sp) parts.push(sp); var sg = (typeof getSesameGingerThawLabel === 'function') ? getSesameGingerThawLabel(dk) : ''; if (sg) parts.push(sg); })(); // G腿辣醬退冰、麻油薑退冰放最後
         if (parts.length > 0) {
           var icon = h.querySelector('.sched-toggle-icon');
           var sum  = document.createElement('span');
@@ -13496,7 +13500,7 @@ function recalcOilySeasoning() {
             }
           } catch (e) {}
         })();
-        (function(){ var sp2 = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : ''; if (sp2) parts2.push(sp2); })(); // G腿辣醬退冰放最後
+        (function(){ var sp2 = (typeof getSpicySauceThawLabel === 'function') ? getSpicySauceThawLabel(dateKey) : ''; if (sp2) parts2.push(sp2); var sg2 = (typeof getSesameGingerThawLabel === 'function') ? getSesameGingerThawLabel(dateKey) : ''; if (sg2) parts2.push(sg2); })(); // G腿辣醬退冰、麻油薑退冰放最後
         sum.innerHTML = window.schedJoinItems(parts2, false);
         header.querySelector('.sched-day-header').insertBefore(sum, icon);
         // 自動縮小摘要字體
@@ -14343,6 +14347,22 @@ function recalcOilySeasoning() {
     if (qtyOf(stepWeekday(dateKey, 1), 'dumplings_hq') > 0) parts.push('🫚 備紅麴水餃薑片');
     if (qtyOf(dateKey, 'soup_refill') > 0 && qtyOf(stepWeekday(dateKey, -1), 'soup_refill') <= 0) parts.push('🫚 麻油薑退冰');
     return parts.join('、');
+  }
+
+  // ── 麻油薑退冰（燴飯醬／麻油猴菇 前一個工作日，放排程最後）──
+  function getSesameGingerThawLabel(dateKey) {
+    schLoad();
+    var d = new Date(dateKey + 'T00:00:00');
+    if (window._twOff(d)) return '';
+    do { d.setDate(d.getDate() + 1); } while (window._twOff(d));
+    var k = fmtDate(d.getFullYear(), d.getMonth()+1, d.getDate());
+    var r = schedData[k], q = 0;
+    if (r && r.items) r.items.forEach(function(it){ if ((it.prod === 'rice_sauce' || it.prod === 'sesame_monkey')) q += parseFloat((it.actualQty != null) ? it.actualQty : it.qty) || 0; });
+    if (!(q > 0)) return '';
+    // 若當天已因補湯顯示「麻油薑退冰」就不重複
+    var g = (typeof getGingerPrepLabel === 'function') ? getGingerPrepLabel(dateKey) : '';
+    if (g.indexOf('麻油薑退冰') >= 0) return '';
+    return '🫚 麻油薑退冰';
   }
 
   // ── 辣醬退冰提示（排程摘要用）──
